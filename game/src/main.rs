@@ -1,11 +1,51 @@
+#![allow(dead_code)]
+
 use minifb::{Key, Window, WindowOptions};
 
 type Player = (usize,usize);
 
 const WIDTH: usize = 640;
 const HEIGHT: usize = 480;
-const STEP: usize = 5;
+const STEP: usize = 3;
+const MAPX: usize = 8;
+const MAPY: usize = 8;
+const MAPSIZE: usize = 64;
+const MAP: [usize;64] = [
+    1,1,1,1,1,1,1,1,
+    1,0,1,0,0,0,0,1,
+    1,0,1,0,0,0,0,1,
+    1,0,1,0,0,0,0,1,
+    1,0,1,0,0,1,0,1,
+    1,0,0,0,0,1,0,1,
+    1,0,0,0,0,0,0,1,
+    1,1,1,1,1,1,1,1
+];
 
+fn draw_map (buffer: &mut [u32]) {
+    for y in 0..MAPY {
+        for x in 0..MAPY {
+            let color: u32 = if MAP[y * MAPX + x] == 1 {
+                0xFF000000 // The Dark Side muhahaha
+            } else {
+                0xFFFFFFFF //white
+            };
+
+            //Top left corner of current cell
+            let xo = x*MAPSIZE;
+            let yo = y*MAPSIZE;
+
+            for py in yo..yo+MAPSIZE{
+                for px in xo..xo+MAPSIZE{
+                    if px < WIDTH && py < HEIGHT {
+                        buffer[py*WIDTH+px] = color;
+                    }
+                }
+            }
+
+
+        }
+    }
+}
 
 fn put_pixel (buffer: &mut [u32], x: usize, y: usize, color: u32){
     buffer[y* WIDTH+x] = color;
@@ -27,7 +67,13 @@ fn move_player (window: &Window, player: & mut Player) {
 
 
 fn draw_player (buffer: &mut [u32], player: Player) {
-    put_pixel(buffer, player.0 , player.1, 0xFFFF00);
+    //make player thicccker but have to check for out of bounds
+    for x in player.0.saturating_sub(1)..player.0+1.min(HEIGHT-1) {
+        for y in player.1.saturating_sub(1)..player.1+1.min(WIDTH-1) {
+            
+            put_pixel(buffer, x , y, 0xFF0000);
+        }
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -68,10 +114,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 buffer[y * WIDTH + x] = (r << 16) | (g<<8) | b;
             }
         }
+
+        draw_map(& mut buffer);
         
         draw_player(&mut buffer, player);
         move_player(&window, &mut player);
        
+
         //show buffer safely
         if let Err(e) = window.update_with_buffer(&buffer, WIDTH, HEIGHT) {
             eprintln!("failed to update the window: {e}");
