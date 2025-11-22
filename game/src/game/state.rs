@@ -1,5 +1,5 @@
 use super::player::Player;
-use super::map::{Map,MAPX,MAPY};
+use super::map::{Map};
 use minifb::Window;
 
 pub struct Game{

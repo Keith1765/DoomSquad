@@ -1,5 +1,6 @@
+use crate::game::map::Point;
 use crate::{HEIGHT, WIDTH};
-use crate::game::{Game, map::{MAPSIZE, MAPX, MAPY}};
+use crate::game::{Game,Map};
 
 pub fn draw(buffer: &mut [u32], game: &Game) {
     //Clear the buffer
@@ -12,33 +13,7 @@ pub fn draw(buffer: &mut [u32], game: &Game) {
 
 
 fn draw_map (buffer: &mut [u32], game: &Game) {
-    for y in 0..MAPY {
-        for x in 0..MAPX {
-            let color: u32 = if game.map.data[y * MAPX + x] == 1 {
-                0xFF000000 // The Dark Side muhahaha
-            } else {
-                0xFFFFFFFF //white
-            };
-
-            //Top left corner of current cell
-            let xo = x*MAPSIZE;
-            let yo = y*MAPSIZE;
-
-            for py in yo..yo+MAPSIZE{
-                for px in xo..xo+MAPSIZE{
-                    if px < WIDTH && py < HEIGHT {
-                        if py == yo || py == yo+MAPSIZE||px == xo ||px == xo + MAPSIZE{
-                           buffer[py*WIDTH+px] = 0xFF00FF00; 
-                        } else {
-                            buffer[py*WIDTH+px] = color;
-                        }
-                    }
-                }
-            }
-
-
-        }
-    }
+    
 }
 
 
@@ -108,3 +83,6 @@ fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, col
 }
 
 
+fn intersect(p1: Point,p1a: f64, p2: Point, p3: Point){
+    
+}

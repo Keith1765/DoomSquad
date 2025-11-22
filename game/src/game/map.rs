@@ -1,25 +1,42 @@
-pub const MAPX: usize = 8;
-pub const MAPY: usize = 8;
-pub const MAPSIZE: usize = 64;
+pub type Point = (f64,f64);
+
+enum SideType {
+    Wall,
+    Block,
+}
+
+pub struct Side {
+    point1: Point,
+    point2: Point,
+    side_type: SideType,
+}
+
+pub struct Shape {
+    points: Vec<Point>
+}
+
 
 pub struct Map {
-    pub data : [usize; 64],
+    pub boarder: Shape,
+    pub objects: Vec<Shape>,
 }
 
 impl Map {
     pub fn new() -> Self {
         Self { 
-            data: [
-                1,1,1,1,1,1,1,1,
-                1,0,1,0,0,0,0,1,
-                1,0,1,0,0,0,0,1,
-                1,0,1,0,0,0,0,1,
-                1,0,1,0,0,1,0,1,
-                1,0,0,0,0,1,0,1,
-                1,0,0,0,0,0,0,1,
-                1,1,1,1,1,1,1,1
-    ],
+            boarder: Shape{
+                points: vec![
+                    (100.0,100.0),
+                    (300.0,100.0),
+                    (300.0,300.0),
+                    (100.0,300.0),
+                    ]
+            },
+            objects: Vec::new(), 
         }
-        
     }
+
+    
+
+    
 }

@@ -15,6 +15,9 @@ pub struct Player {
     pub pa:f64,
 }
 
+//TODO remove pdx and pdy
+//TODO long variable names
+
 impl Player {
     pub fn new() -> Self {
         let pa:f64=-PI/2.0;
