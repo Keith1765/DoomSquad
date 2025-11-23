@@ -9,7 +9,8 @@ pub struct Game{
 
 impl Game {
     pub fn new() -> Self {
-        Self { player: Player::new(), 
+        Self { 
+            player: Player::new(), 
             map: Map::new(),
         }
     }

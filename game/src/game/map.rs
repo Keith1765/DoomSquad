@@ -1,4 +1,21 @@
-pub type Point = (f64,f64);
+use std::ops::Sub;
+
+#[derive(Clone,Copy)]
+pub struct Point {
+    pub x : f64,
+    pub y : f64,
+}
+
+impl Sub for Point {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
+    }
+}
 
 enum SideType {
     Wall,
@@ -11,25 +28,26 @@ pub struct Side {
     side_type: SideType,
 }
 
+//Points are counterclockwise
 pub struct Shape {
-    points: Vec<Point>
+    pub points: Vec<Point>
 }
 
 
 pub struct Map {
-    pub boarder: Shape,
+    pub border: Shape,
     pub objects: Vec<Shape>,
 }
 
 impl Map {
     pub fn new() -> Self {
         Self { 
-            boarder: Shape{
+            border: Shape{
                 points: vec![
-                    (100.0,100.0),
-                    (300.0,100.0),
-                    (300.0,300.0),
-                    (100.0,300.0),
+                    Point {x: 100.0, y: 100.0},
+                    Point {x: 100.0, y: 300.0},
+                    Point {x: 300.0, y: 300.0},
+                    Point {x: 300.0, y: 100.0},
                     ]
             },
             objects: Vec::new(), 

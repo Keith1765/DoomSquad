@@ -1,4 +1,7 @@
-use crate::game::map::Point;
+use std::f64::consts::PI;
+use std::f64::EPSILON;
+
+use crate::game::map::{Point, Shape};
 use crate::{HEIGHT, WIDTH};
 use crate::game::{Game,Map};
 
@@ -12,8 +15,15 @@ pub fn draw(buffer: &mut [u32], game: &Game) {
 }
 
 
-fn draw_map (buffer: &mut [u32], game: &Game) {
-    
+fn draw_map (buffer: &mut [u32], game: &Game) -> Result<(),Box<dyn  std::error::Error>>{
+    for x in 0..WIDTH {
+        for y in 0..HEIGHT{
+            if point_in_polygon(&game.map.border, Point { x: (game.player.px), y: (game.player.py) }){
+                buffer[y*WIDTH+x] = 0xFF000000;
+            }
+        }
+    }
+    Ok(())
 }
 
 
@@ -83,6 +93,49 @@ fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, col
 }
 
 
-fn intersect(p1: Point,p1a: f64, p2: Point, p3: Point){
+fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_point2: Point) -> bool{
     
+
+    //makes ray_point origin
+    let side_point1_relative = side_point1-ray_origin_point;
+    let side_point2_relative = side_point2-ray_origin_point;
+
+    let mut side_point1_transformed = rotate_point_around_origin(side_point1_relative, -ray_angle);
+    let mut side_point2_transformed = rotate_point_around_origin(side_point2_relative, -ray_angle);
+
+    if side_point1_transformed.y > side_point2_transformed.y {
+        return false;
+    }
+
+    if side_point1_transformed.y < 0.0 || side_point2_transformed.y > 0.0 {
+        return false;
+    }
+    
+    let proportion = side_point2_transformed.y / (side_point2_transformed.y-side_point1_transformed.y);
+    let distance_to_intersect = (side_point1_transformed.x-ray_origin_point.x)*proportion;
+
+    if distance_to_intersect < 0.0 {
+        return false;
+    }
+
+    return true;
+}
+
+fn rotate_point_around_origin (point: Point, angle: f64) -> Point {
+    let transformed_x = point.x * angle.cos() - point.y * angle.sin();
+    let transformed_y = point.x * angle.sin() + point.y * angle.cos();
+    
+    return Point { x: transformed_x, y: transformed_y };
+}
+
+fn point_in_polygon (shape: &Shape, point: Point) -> bool{
+    let mut point1 : Point = Point {x: 0.0, y: 0.0};
+    let mut point2: Point  = *shape.points.last().unwrap();
+    let mut intersects = false;
+    for i in 0..shape.points.len() {
+        point1 = point2;
+        point2 = *shape.points.get(i).unwrap();
+        if intersect(point, 0.0, point1, point2) {intersects=!intersects;}
+    }
+    intersects
 }
