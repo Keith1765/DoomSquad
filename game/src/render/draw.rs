@@ -19,7 +19,7 @@ fn draw_map (buffer: &mut [u32], game: &Game) -> Result<(),Box<dyn  std::error::
     for x in 0..WIDTH {
         for y in 0..HEIGHT{
             if point_in_polygon(&game.map.border, Point { x: (game.player.px), y: (game.player.py) }){
-                buffer[y*WIDTH+x] = 0xFF000000;
+                buffer[y*WIDTH+x] = 0x00ff00;
             }
         }
     }
@@ -100,19 +100,21 @@ fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_p
     let side_point1_relative = side_point1-ray_origin_point;
     let side_point2_relative = side_point2-ray_origin_point;
 
-    let mut side_point1_transformed = rotate_point_around_origin(side_point1_relative, -ray_angle);
-    let mut side_point2_transformed = rotate_point_around_origin(side_point2_relative, -ray_angle);
+    let side_point1_transformed = rotate_point_around_origin(side_point1_relative, -ray_angle);
+    let side_point2_transformed = rotate_point_around_origin(side_point2_relative, -ray_angle);
 
-    if side_point1_transformed.y > side_point2_transformed.y {
-        return false;
-    }
+    // if side_point1_transformed.y < side_point2_transformed.y {
+    //     return false;
+    // }
+
+    
 
     if side_point1_transformed.y < 0.0 || side_point2_transformed.y > 0.0 {
         return false;
     }
     
     let proportion = side_point2_transformed.y / (side_point2_transformed.y-side_point1_transformed.y);
-    let distance_to_intersect = (side_point1_transformed.x-ray_origin_point.x)*proportion;
+    let distance_to_intersect = (side_point1_transformed.x-side_point2_transformed.x)*proportion + side_point1_transformed.x;
 
     if distance_to_intersect < 0.0 {
         return false;
@@ -138,4 +140,39 @@ fn point_in_polygon (shape: &Shape, point: Point) -> bool{
         if intersect(point, 0.0, point1, point2) {intersects=!intersects;}
     }
     intersects
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_intersect () {
+        let ray_origin = Point{x:10.0, y: 200.0};
+        let side_point1 = Point{x:100.0, y: 300.0};
+        let side_point2 = Point{x:100.0, y: 100.0};
+        let intersects = intersect(ray_origin, 0.0, side_point1, side_point2);
+        assert!(intersects);
+    }
+
+    #[test]
+    fn test_point_in_polygon () {
+        let shape = Shape{
+                points: vec![
+                    Point {x: 100.0, y: 100.0},
+                    Point {x: 300.0, y: 100.0},
+                    Point {x: 300.0, y: 300.0},
+                    Point {x: 100.0, y: 300.0},
+                ]
+        };
+
+        let point_inside = Point { x: 200.0, y: 200.0 };
+        let point_outside = Point { x: 10.0, y: 200.0 };
+        let inside = point_in_polygon(&shape, point_inside);
+        let outside = point_in_polygon(&shape, point_outside);
+
+        assert!(inside);
+        assert!(!outside);
+
+    }
+
 }
