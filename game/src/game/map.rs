@@ -47,7 +47,10 @@ impl Map {
                     Point {x: 100.0, y: 100.0},
                     Point {x: 100.0, y: 300.0},
                     Point {x: 300.0, y: 300.0},
-                    Point {x: 300.0, y: 100.0},
+                    Point {x: 300.0, y: 400.0},
+                    Point {x: 500.0, y: 400.0},
+                    //Point {x: 500.0, y: 300.0},
+                    Point {x: 500.0, y: 100.0},
                     ]
             },
             objects: Vec::new(), 
