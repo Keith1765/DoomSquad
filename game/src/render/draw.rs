@@ -2,17 +2,32 @@ use std::f64::consts::PI;
 use std::f64::EPSILON;
 
 use crate::game::map::{Point, Shape};
-use crate::{HEIGHT, WIDTH};
+use crate::{HEIGHT, WIDTH, game};
 use crate::game::{Game,Map};
 
-pub fn draw(buffer: &mut [u32], game: &Game) {
+pub fn draw(buffer: &mut [u32], game: & mut Game) {
     //Clear the buffer
     for px in buffer.iter_mut() {
         *px = 0x222222;
     }
+    if (game.map.loaded_map==0){
+        load_map(game);
+    }
     draw_map(buffer, game);
     draw_player(buffer, game);
     draw_reference_points (buffer);
+}
+
+fn load_map (game: & mut Game) -> Result<(),Box<dyn  std::error::Error>>{
+    for x in 0..WIDTH {
+        for y in 0..HEIGHT{
+            if point_in_polygon(&game.map.border, Point { x: x as f64, y: y as f64 }){
+                game.map.points_in_border.push(Point{x: x as f64, y: y as f64});
+            }
+        }
+    }
+    game.map.loaded_map=1;
+    Ok(())
 }
 
 fn draw_reference_points (buffer: &mut [u32]) -> Result<(),Box<dyn  std::error::Error>>{
@@ -28,11 +43,9 @@ fn draw_reference_points (buffer: &mut [u32]) -> Result<(),Box<dyn  std::error::
 
 
 fn draw_map (buffer: &mut [u32], game: &Game) -> Result<(),Box<dyn  std::error::Error>>{
-    for x in 0..WIDTH {
-        for y in 0..HEIGHT{
-            if point_in_polygon(&game.map.border, Point { x: x as f64, y: y as f64 }){
-                buffer[y*WIDTH+x] = 0x00ff00;
-            }
+    for points in game.map.points_in_border.clone() {
+            if point_in_polygon(&game.map.border, Point { x: points.x as f64, y: points.y as f64 }){
+                buffer[points.y as usize*WIDTH+points.x as usize] = 0x00ff00;
         }
     }
     Ok(())

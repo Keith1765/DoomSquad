@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         game.update(&window);
 
-        render::draw(&mut buffer, &game);
+        render::draw(&mut buffer, & mut game);
        
 
         //show buffer safely

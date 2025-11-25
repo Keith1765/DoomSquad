@@ -37,6 +37,8 @@ pub struct Shape {
 pub struct Map {
     pub border: Shape,
     pub objects: Vec<Shape>,
+    pub points_in_border: Vec<Point>,
+    pub loaded_map: usize,
 }
 
 impl Map {
@@ -45,20 +47,20 @@ impl Map {
             border: Shape{
                 points: vec![
                     Point { x: 200.0, y: 100.0 },
-Point { x: 250.0, y: 200.0 },
-Point { x: 350.0, y: 200.0 },
-Point { x: 275.0, y: 250.0 },
-Point { x: 300.0, y: 350.0 },
-Point { x: 200.0, y: 300.0 },
-Point { x: 100.0, y: 350.0 },
-Point { x: 125.0, y: 250.0 },
-Point { x: 50.0,  y: 200.0 },
-Point { x: 150.0, y: 200.0 },
-
-
+                    Point { x: 250.0, y: 200.0 },
+                    Point { x: 350.0, y: 200.0 },
+                    Point { x: 275.0, y: 250.0 },
+                    Point { x: 300.0, y: 350.0 },
+                    Point { x: 200.0, y: 300.0 },
+                    Point { x: 100.0, y: 350.0 },
+                    Point { x: 125.0, y: 250.0 },
+                    Point { x: 50.0,  y: 200.0 },
+                    Point { x: 150.0, y: 200.0 },
                     ]
             },
-            objects: Vec::new(), 
+            objects: Vec::new(),
+            points_in_border: Vec::new(), 
+            loaded_map: 0,
         }
     }
 
