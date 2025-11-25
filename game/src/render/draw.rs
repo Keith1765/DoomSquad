@@ -12,13 +12,25 @@ pub fn draw(buffer: &mut [u32], game: &Game) {
     }
     draw_map(buffer, game);
     draw_player(buffer, game);
+    draw_reference_points (buffer);
+}
+
+fn draw_reference_points (buffer: &mut [u32]) -> Result<(),Box<dyn  std::error::Error>>{
+    for x in 0..WIDTH {
+        for y in 0..HEIGHT{
+            if x %50 == 0 && y % 50 == 0{
+                buffer[y*WIDTH+x] = 0xff0000;
+            }
+        }
+    }
+    Ok(())
 }
 
 
 fn draw_map (buffer: &mut [u32], game: &Game) -> Result<(),Box<dyn  std::error::Error>>{
     for x in 0..WIDTH {
         for y in 0..HEIGHT{
-            if point_in_polygon(&game.map.border, Point { x: (game.player.px), y: (game.player.py) }){
+            if point_in_polygon(&game.map.border, Point { x: x as f64, y: y as f64 }){
                 buffer[y*WIDTH+x] = 0x00ff00;
             }
         }
@@ -96,25 +108,30 @@ fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, col
 fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_point2: Point) -> bool{
     
 
-    //makes ray_point origin
+    //makes ray_point origin (=(0|0))
     let side_point1_relative = side_point1-ray_origin_point;
     let side_point2_relative = side_point2-ray_origin_point;
 
-    let side_point1_transformed = rotate_point_around_origin(side_point1_relative, -ray_angle);
-    let side_point2_transformed = rotate_point_around_origin(side_point2_relative, -ray_angle);
+    let mut side_point1_transformed = rotate_point_around_origin(side_point1_relative, -ray_angle);
+    let mut side_point2_transformed = rotate_point_around_origin(side_point2_relative, -ray_angle);
 
     // if side_point1_transformed.y < side_point2_transformed.y {
     //     return false;
     // }
 
+    //lemme cook Jakob
+    // if side_point1_transformed.y < side_point2_transformed.y {
+    //     std::mem::swap(& mut side_point1_transformed, & mut side_point2_transformed);
+    // }
+
     
 
-    if side_point1_transformed.y < 0.0 || side_point2_transformed.y > 0.0 {
+    if (side_point1_transformed.y > 0.0) == (side_point2_transformed.y > 0.0) {
         return false;
     }
     
-    let proportion = side_point2_transformed.y / (side_point2_transformed.y-side_point1_transformed.y);
-    let distance_to_intersect = (side_point1_transformed.x-side_point2_transformed.x)*proportion + side_point1_transformed.x;
+    let proportion = -side_point1_transformed.y / (side_point2_transformed.y-side_point1_transformed.y);
+    let distance_to_intersect = (side_point2_transformed.x-side_point1_transformed.x)*proportion + side_point1_transformed.x;
 
     if distance_to_intersect < 0.0 {
         return false;
@@ -147,11 +164,20 @@ mod test {
     use super::*;
     #[test]
     fn test_intersect () {
-        let ray_origin = Point{x:10.0, y: 200.0};
+        let ray_origin1 = Point{x:50.0, y: 200.0};
+        let ray_origin2 = Point{x:50.0, y: 400.0};
+        let ray_origin3 = Point{x:150.0, y: 200.0};
+        let ray_origin4 = Point{x:150.0, y: 400.0};
         let side_point1 = Point{x:100.0, y: 300.0};
         let side_point2 = Point{x:100.0, y: 100.0};
-        let intersects = intersect(ray_origin, 0.0, side_point1, side_point2);
-        assert!(intersects);
+        let intersects1 = intersect(ray_origin1, 0.0, side_point1, side_point2);
+        let intersects2 = intersect(ray_origin2, 0.0, side_point1, side_point2);
+        let intersects3 = intersect(ray_origin3, 0.0, side_point1, side_point2);
+        let intersects4 = intersect(ray_origin4, 0.0, side_point1, side_point2);
+        assert!(intersects1);
+        assert!(!intersects2);
+        assert!(!intersects3);
+        assert!(!intersects4);
     }
 
     #[test]
@@ -165,13 +191,16 @@ mod test {
                 ]
         };
 
-        let point_inside = Point { x: 200.0, y: 200.0 };
-        let point_outside = Point { x: 10.0, y: 200.0 };
-        let inside = point_in_polygon(&shape, point_inside);
-        let outside = point_in_polygon(&shape, point_outside);
+        let point_inside1 = Point { x: 200.0, y: 200.0 };
+        let point_outside1 = Point { x: 10.0, y: 200.0 };
+        let point_outside2 = Point{x:10.0, y: 10.0};
+        let inside1 = point_in_polygon(&shape, point_inside1);
+        let outside1 = point_in_polygon(&shape, point_outside1);
+        let outside2 = point_in_polygon(&shape, point_outside2);
 
-        assert!(inside);
-        assert!(!outside);
+        assert!(inside1);
+        assert!(!outside2);
+
 
     }
 
