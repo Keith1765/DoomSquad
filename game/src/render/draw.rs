@@ -1,21 +1,28 @@
 use std::f64::consts::PI;
-use std::f64::EPSILON;
 
 use crate::game::map::{Point, Shape};
-use crate::{HEIGHT, WIDTH, game};
-use crate::game::{Game,Map};
+use crate::{HEIGHT, WIDTH};
+use crate::game::{Game};
+const FOW : f64 = PI/2.09;
 
+////!unsafe just for testing, later remove unwrap
 pub fn draw(buffer: &mut [u32], game: & mut Game) {
     //Clear the buffer
     for px in buffer.iter_mut() {
         *px = 0x222222;
     }
-    if (game.map.loaded_map==0){
-        load_map(game);
+    if game.map.loaded_map==0 {
+        load_map(game).unwrap();
     }
-    draw_map(buffer, game);
+    draw_map(buffer, game).unwrap();
     draw_player(buffer, game);
-    draw_reference_points (buffer);
+    let mut angle = -FOW/2.0;
+    let step = 0.05;
+    while angle < (FOW/2.0){
+        draw_raycast(buffer, game, angle);
+        angle += step;
+    }
+    draw_reference_points (buffer).unwrap();
 }
 
 fn load_map (game: & mut Game) -> Result<(),Box<dyn  std::error::Error>>{
@@ -81,6 +88,38 @@ fn draw_player (buffer: &mut [u32], game: &Game) {
     draw_line(buffer, x0, y0, x1, y1, 0xFFFF0000);
 }
 
+fn draw_raycast (buffer: &mut [u32], game: & Game, ray_angle_relative_to_player_angle: f64) {
+    let mut point1 : Point;
+    let mut point2: Point  = *game.map.border.points.last().unwrap();
+    let mut intersected_sides: Vec<f64> = Vec::new();
+    let ray_angle= game.player.pa+ray_angle_relative_to_player_angle;
+    for i in 0..game.map.border.points.len(){
+        point1 = point2;
+        point2 = *game.map.border.points.get(i).unwrap();
+        let intersect_value = intersect(Point { x: game.player.px, y: game.player.py }, ray_angle, point1, point2);
+        if intersect_value.0{
+            intersected_sides.push(intersect_value.1);
+        }
+    }
+    let mut distance_to_wall: f64=4000.0;
+    
+    let mut y:f64;
+    if let Some(t) = intersected_sides.first() {
+        y = *t;
+    }
+    for i in 0..intersected_sides.len(){
+        y=*intersected_sides.get(i).unwrap();
+        distance_to_wall= distance_to_wall.min(y);
+    }
+
+    let ray_dx = ray_angle.cos();
+    let ray_dy =ray_angle.sin();
+
+    let wall_point = Point{x:game.player.px+ray_dx*distance_to_wall ,y:game.player.py + ray_dy*distance_to_wall};
+    draw_line(buffer, game.player.px as usize, game.player.py as usize, wall_point.x as usize, wall_point.y as usize, 0xff0000);
+
+}
+
 fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, color: u32) {
     // Convert to signed for math (avoids underflow)
     let mut x0 = x0 as isize;
@@ -118,15 +157,15 @@ fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, col
 }
 
 
-fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_point2: Point) -> bool{
+fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_point2: Point) -> (bool, f64){
     
 
     //makes ray_point origin (=(0|0))
     let side_point1_relative = side_point1-ray_origin_point;
     let side_point2_relative = side_point2-ray_origin_point;
 
-    let mut side_point1_transformed = rotate_point_around_origin(side_point1_relative, -ray_angle);
-    let mut side_point2_transformed = rotate_point_around_origin(side_point2_relative, -ray_angle);
+    let  side_point1_transformed = rotate_point_around_origin(side_point1_relative, -ray_angle);
+    let  side_point2_transformed = rotate_point_around_origin(side_point2_relative, -ray_angle);
 
     // if side_point1_transformed.y < side_point2_transformed.y {
     //     return false;
@@ -140,17 +179,17 @@ fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_p
     
 
     if (side_point1_transformed.y > 0.0) == (side_point2_transformed.y > 0.0) {
-        return false;
+        return (false,0.0);
     }
     
     let proportion = -side_point1_transformed.y / (side_point2_transformed.y-side_point1_transformed.y);
     let distance_to_intersect = (side_point2_transformed.x-side_point1_transformed.x)*proportion + side_point1_transformed.x;
 
     if distance_to_intersect < 0.0 {
-        return false;
+        return (false,0.0);
     }
 
-    return true;
+    return (true,distance_to_intersect);
 }
 
 fn rotate_point_around_origin (point: Point, angle: f64) -> Point {
@@ -161,13 +200,13 @@ fn rotate_point_around_origin (point: Point, angle: f64) -> Point {
 }
 
 fn point_in_polygon (shape: &Shape, point: Point) -> bool{
-    let mut point1 : Point = Point {x: 0.0, y: 0.0};
+    let mut point1 : Point;
     let mut point2: Point  = *shape.points.last().unwrap();
     let mut intersects = false;
     for i in 0..shape.points.len() {
         point1 = point2;
         point2 = *shape.points.get(i).unwrap();
-        if intersect(point, 0.0, point1, point2) {intersects=!intersects;}
+        if intersect(point, 0.0, point1, point2).0 {intersects=!intersects;}
     }
     intersects
 }
@@ -187,10 +226,10 @@ mod test {
         let intersects2 = intersect(ray_origin2, 0.0, side_point1, side_point2);
         let intersects3 = intersect(ray_origin3, 0.0, side_point1, side_point2);
         let intersects4 = intersect(ray_origin4, 0.0, side_point1, side_point2);
-        assert!(intersects1);
-        assert!(!intersects2);
-        assert!(!intersects3);
-        assert!(!intersects4);
+        assert!(intersects1.0);
+        assert!(!intersects2.0);
+        assert!(!intersects3.0);
+        assert!(!intersects4.0);
     }
 
     #[test]
@@ -212,6 +251,7 @@ mod test {
         let outside2 = point_in_polygon(&shape, point_outside2);
 
         assert!(inside1);
+        assert!(!outside1);
         assert!(!outside2);
 
 
