@@ -6,7 +6,7 @@ mod render;
 use minifb::{Key, Window, WindowOptions};
 
 
-const WIDTH: usize = 800;
+const WIDTH: usize = 1240;
 const HEIGHT: usize = 560;
 
 

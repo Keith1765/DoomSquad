@@ -3,7 +3,8 @@ use std::f64::consts::PI;
 use crate::game::map::{Point, Shape};
 use crate::{HEIGHT, WIDTH};
 use crate::game::{Game};
-const FOW : f64 = PI/2.09;
+const FOV : f64 = PI/2.09;
+const RENDERSCREENPOINT: Point = Point{x:400.0, y:0.0};
 
 ////!unsafe just for testing, later remove unwrap
 pub fn draw(buffer: &mut [u32], game: & mut Game) {
@@ -16,9 +17,9 @@ pub fn draw(buffer: &mut [u32], game: & mut Game) {
     }
     draw_map(buffer, game).unwrap();
     draw_player(buffer, game);
-    let mut angle = -FOW/2.0;
-    let step = 0.05;
-    while angle < (FOW/2.0){
+    let mut angle = -FOV/2.0;
+    let step = 0.0005;
+    while angle < (FOV/2.0){
         draw_raycast(buffer, game, angle);
         angle += step;
     }
@@ -117,7 +118,25 @@ fn draw_raycast (buffer: &mut [u32], game: & Game, ray_angle_relative_to_player_
 
     let wall_point = Point{x:game.player.px+ray_dx*distance_to_wall ,y:game.player.py + ray_dy*distance_to_wall};
     draw_line(buffer, game.player.px as usize, game.player.py as usize, wall_point.x as usize, wall_point.y as usize, 0xff0000);
+    draw_dimensional_cast(buffer, game, distance_to_wall,ray_angle_relative_to_player_angle);
+}
 
+fn draw_dimensional_cast (buffer: &mut [u32], game: & Game, distance_to_wall: f64, ray_angle_relative_to_player_angle: f64){
+    let angle = (FOV/2.0+ray_angle_relative_to_player_angle);
+    let normalized_distance_to_wall = (distance_to_wall * ray_angle_relative_to_player_angle.cos())/17.0;
+    
+    let wall_heigth = (RENDERSCREENPOINT.x as f64 / normalized_distance_to_wall ).clamp(1.0, RENDERSCREENPOINT.x);
+
+    let draw_percent_based_on_angle = (FOV/2.0+ray_angle_relative_to_player_angle)/FOV.clamp(0.0, 1.0);
+
+    let draw_srting_point = (RENDERSCREENPOINT.x - wall_heigth)/2.0;
+
+    let x = (RENDERSCREENPOINT.x + (RENDERSCREENPOINT.x * draw_percent_based_on_angle)) as usize;
+
+
+    for y in draw_srting_point as usize..(draw_srting_point+wall_heigth).min(400.0) as usize{
+        buffer[y*WIDTH+x] = 0x00ff00;
+    }
 }
 
 fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, color: u32) {
