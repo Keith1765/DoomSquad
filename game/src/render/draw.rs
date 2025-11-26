@@ -5,6 +5,7 @@ use crate::{HEIGHT, WIDTH};
 use crate::game::{Game};
 const FOV : f64 = PI/2.09;
 const RENDERSCREENPOINT: Point = Point{x:400.0, y:0.0};
+const WALLSCALING : f64 = 23.0;
 
 ////!unsafe just for testing, later remove unwrap
 pub fn draw(buffer: &mut [u32], game: & mut Game) {
@@ -92,25 +93,30 @@ fn draw_player (buffer: &mut [u32], game: &Game) {
 fn draw_raycast (buffer: &mut [u32], game: & Game, ray_angle_relative_to_player_angle: f64) {
     let mut point1 : Point;
     let mut point2: Point  = *game.map.border.points.last().unwrap();
-    let mut intersected_sides: Vec<f64> = Vec::new();
+    let mut intersected_sides: Vec<(f64,f64)> = Vec::new();
     let ray_angle= game.player.pa+ray_angle_relative_to_player_angle;
     for i in 0..game.map.border.points.len(){
         point1 = point2;
         point2 = *game.map.border.points.get(i).unwrap();
         let intersect_value = intersect(Point { x: game.player.px, y: game.player.py }, ray_angle, point1, point2);
         if intersect_value.0{
-            intersected_sides.push(intersect_value.1);
+            intersected_sides.push((intersect_value.1,intersect_value.2));
         }
     }
     let mut distance_to_wall: f64=4000.0;
+    let mut angle_of_wall: f64 = 0.0;
     
-    let mut y:f64;
+    let mut y:(f64,f64);
     if let Some(t) = intersected_sides.first() {
         y = *t;
     }
     for i in 0..intersected_sides.len(){
         y=*intersected_sides.get(i).unwrap();
-        distance_to_wall= distance_to_wall.min(y);
+        if distance_to_wall > y.0 {
+            distance_to_wall= y.0;
+            angle_of_wall = y.1;
+        }
+
     }
 
     let ray_dx = ray_angle.cos();
@@ -118,12 +124,12 @@ fn draw_raycast (buffer: &mut [u32], game: & Game, ray_angle_relative_to_player_
 
     let wall_point = Point{x:game.player.px+ray_dx*distance_to_wall ,y:game.player.py + ray_dy*distance_to_wall};
     draw_line(buffer, game.player.px as usize, game.player.py as usize, wall_point.x as usize, wall_point.y as usize, 0xff0000);
-    draw_dimensional_cast(buffer, game, distance_to_wall,ray_angle_relative_to_player_angle);
+    draw_dimensional_cast(buffer, game, distance_to_wall,ray_angle_relative_to_player_angle, angle_of_wall);
 }
 
-fn draw_dimensional_cast (buffer: &mut [u32], game: & Game, distance_to_wall: f64, ray_angle_relative_to_player_angle: f64){
-    let angle = (FOV/2.0+ray_angle_relative_to_player_angle);
-    let normalized_distance_to_wall = (distance_to_wall * ray_angle_relative_to_player_angle.cos())/17.0;
+fn draw_dimensional_cast (buffer: &mut [u32], game: & Game, distance_to_wall: f64, ray_angle_relative_to_player_angle: f64, angle_of_wall: f64){
+    //let angle = (FOV/2.0+ray_angle_relative_to_player_angle);
+    let normalized_distance_to_wall = (distance_to_wall * ray_angle_relative_to_player_angle.cos())/WALLSCALING;
     
     let wall_heigth = (RENDERSCREENPOINT.x as f64 / normalized_distance_to_wall ).clamp(1.0, RENDERSCREENPOINT.x);
 
@@ -135,7 +141,23 @@ fn draw_dimensional_cast (buffer: &mut [u32], game: & Game, distance_to_wall: f6
 
 
     for y in draw_srting_point as usize..(draw_srting_point+wall_heigth).min(400.0) as usize{
-        buffer[y*WIDTH+x] = 0x00ff00;
+        let brightness = angle_of_wall.cos().abs();
+        let color = 0x00ff00;
+            // 2. Extract channels
+        let a = (color >> 24) & 0xFF;
+        let r = (color >> 16) & 0xFF;
+        let g = (color >> 8)  & 0xFF;
+        let b =  color        & 0xFF;
+
+        // 3. Scale each channel
+        let r = (r as f64 * brightness) as u32;
+        let g = (g as f64 * brightness) as u32;
+        let b = (b as f64 * brightness) as u32;
+
+        // 4. Repack
+        
+        buffer[y*WIDTH+x] = (a << 24) | (r << 16) | (g << 8) | b;
+
     }
 }
 
@@ -176,7 +198,7 @@ fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, col
 }
 
 
-fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_point2: Point) -> (bool, f64){
+fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_point2: Point) -> (bool, f64, f64){
     
 
     //makes ray_point origin (=(0|0))
@@ -198,17 +220,18 @@ fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_p
     
 
     if (side_point1_transformed.y > 0.0) == (side_point2_transformed.y > 0.0) {
-        return (false,0.0);
+        return (false,0.0,0.0);
     }
     
     let proportion = -side_point1_transformed.y / (side_point2_transformed.y-side_point1_transformed.y);
     let distance_to_intersect = (side_point2_transformed.x-side_point1_transformed.x)*proportion + side_point1_transformed.x;
 
     if distance_to_intersect < 0.0 {
-        return (false,0.0);
+        return (false,0.0,0.0);
     }
 
-    return (true,distance_to_intersect);
+    let angle = (side_point2.y-side_point1.y).atan2(side_point2.x-side_point1.x);
+    return (true,distance_to_intersect,angle);
 }
 
 fn rotate_point_around_origin (point: Point, angle: f64) -> Point {
