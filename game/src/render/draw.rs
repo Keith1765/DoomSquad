@@ -9,24 +9,31 @@ const WALLSCALING : f64 = 23.0;
 
 ////!unsafe just for testing, later remove unwrap
 pub fn draw(buffer: &mut [u32], game: & mut Game) {
-    //Clear the buffer
+    //write grey plane as background to overwrite past player position
     for px in buffer.iter_mut() {
         *px = 0x222222;
     }
+    //load map if not loaded, this safes all points in vec all other points are not used anymore for rendering
     if game.map.loaded_map==0 {
         load_map(game).unwrap();
     }
+    //draw the top down map
     draw_map(buffer, game).unwrap();
-    draw_player(buffer, game);
+    //go through FOW in small steps, for each draw ray in top down view and corresponding line based on distance in 2.5 view
     let mut angle = -FOV/2.0;
     let step = 0.0005;
     while angle < (FOV/2.0){
         draw_raycast(buffer, game, angle);
         angle += step;
     }
+    //draw player with his looking angle
+    draw_player(buffer, game);
+    //draw grid of reference points spaced each 50 pixels for debugging
     draw_reference_points (buffer).unwrap();
 }
 
+//save all points from the screen that are in the polygon of the map boarder and note that map is loaded now
+////! right now load map is working not as intended in the game, because right now it loads the init of map, so right now it just means that we init the map, later however it will indicate what map was loaded into the map boarder
 fn load_map (game: & mut Game) -> Result<(),Box<dyn  std::error::Error>>{
     for x in 0..WIDTH {
         for y in 0..HEIGHT{
@@ -39,6 +46,7 @@ fn load_map (game: & mut Game) -> Result<(),Box<dyn  std::error::Error>>{
     Ok(())
 }
 
+//draw refernce points spaced 50 pixels apart for debugging
 fn draw_reference_points (buffer: &mut [u32]) -> Result<(),Box<dyn  std::error::Error>>{
     for x in 0..WIDTH {
         for y in 0..HEIGHT{
@@ -50,11 +58,15 @@ fn draw_reference_points (buffer: &mut [u32]) -> Result<(),Box<dyn  std::error::
     Ok(())
 }
 
-
+//draw the top down view of the map init
 fn draw_map (buffer: &mut [u32], game: &Game) -> Result<(),Box<dyn  std::error::Error>>{
     for points in game.map.points_in_border.clone() {
             if point_in_polygon(&game.map.border, Point { x: points.x as f64, y: points.y as f64 }){
                 buffer[points.y as usize*WIDTH+points.x as usize] = 0x00ff00;
+        }
+        //draw object
+        if point_in_polygon(&game.map.objects.get(0).unwrap(), Point { x: points.x as f64, y: points.y as f64 }){
+                buffer[points.y as usize*WIDTH+points.x as usize] = 0x0000ff;
         }
     }
     Ok(())
@@ -75,10 +87,11 @@ fn draw_player (buffer: &mut [u32], game: &Game) {
                 let ux = px as usize;
                 let uy = py as usize;
                 let index = uy * WIDTH + ux;
-                buffer[index] = 0xFFFF0000;
+                buffer[index] = 0xff0000;
             }
         }
     }
+    //draw direction of player looking as a small line
     let x1f = game.player.px+game.player.pdx*5.0;
     let y1f = game.player.py+game.player.pdy*5.0;
 
@@ -87,14 +100,16 @@ fn draw_player (buffer: &mut [u32], game: &Game) {
     let x0 = game.player.px.clamp(0.0, (WIDTH-1) as f64) as usize;
     let y0 = game.player.py.clamp(0.0, (HEIGHT-1) as f64) as usize;
 
-    draw_line(buffer, x0, y0, x1, y1, 0xFFFF0000);
+    draw_line(buffer, x0, y0, x1, y1, 0x00ffff);
 }
 
 fn draw_raycast (buffer: &mut [u32], game: & Game, ray_angle_relative_to_player_angle: f64) {
+    
     let mut point1 : Point;
     let mut point2: Point  = *game.map.border.points.last().unwrap();
     let mut intersected_sides: Vec<(f64,f64)> = Vec::new();
     let ray_angle= game.player.pa+ray_angle_relative_to_player_angle;
+    //collect intersects with map boarder edges
     for i in 0..game.map.border.points.len(){
         point1 = point2;
         point2 = *game.map.border.points.get(i).unwrap();
@@ -103,6 +118,18 @@ fn draw_raycast (buffer: &mut [u32], game: & Game, ray_angle_relative_to_player_
             intersected_sides.push((intersect_value.1,intersect_value.2));
         }
     }
+
+    //collect intersects with object (only one)
+    for i in 0..game.map.objects.get(0).unwrap().points.len(){
+        point1 = point2;
+        point2 = *game.map.objects.get(0).unwrap().points.get(i).unwrap();
+        let intersect_value = intersect(Point { x: game.player.px, y: game.player.py }, ray_angle, point1, point2);
+        if intersect_value.0{
+            intersected_sides.push((intersect_value.1,intersect_value.2));
+        }
+    }
+
+    //find shortest intersect and save it
     let mut distance_to_wall: f64=4000.0;
     let mut angle_of_wall: f64 = 0.0;
     
@@ -119,29 +146,32 @@ fn draw_raycast (buffer: &mut [u32], game: & Game, ray_angle_relative_to_player_
 
     }
 
+    //find the point the ray intersects the wall
     let ray_dx = ray_angle.cos();
     let ray_dy =ray_angle.sin();
 
     let wall_point = Point{x:game.player.px+ray_dx*distance_to_wall ,y:game.player.py + ray_dy*distance_to_wall};
+    //draw the line of this ray up to its intersect
     draw_line(buffer, game.player.px as usize, game.player.py as usize, wall_point.x as usize, wall_point.y as usize, 0xff0000);
+    //draw the line for the ray in the 2.5 view
     draw_dimensional_cast(buffer, game, distance_to_wall,ray_angle_relative_to_player_angle, angle_of_wall);
 }
 
 fn draw_dimensional_cast (buffer: &mut [u32], game: & Game, distance_to_wall: f64, ray_angle_relative_to_player_angle: f64, angle_of_wall: f64){
-    //let angle = (FOV/2.0+ray_angle_relative_to_player_angle);
+    
     let normalized_distance_to_wall = (distance_to_wall * ray_angle_relative_to_player_angle.cos())/WALLSCALING;
     
     let wall_heigth = (RENDERSCREENPOINT.x as f64 / normalized_distance_to_wall ).clamp(1.0, RENDERSCREENPOINT.x);
-
+    //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
     let draw_percent_based_on_angle = (FOV/2.0+ray_angle_relative_to_player_angle)/FOV.clamp(0.0, 1.0);
 
     let draw_srting_point = (RENDERSCREENPOINT.x - wall_heigth)/2.0;
 
     let x = (RENDERSCREENPOINT.x + (RENDERSCREENPOINT.x * draw_percent_based_on_angle)) as usize;
 
-
+    //shading based on angle of the side
     for y in draw_srting_point as usize..(draw_srting_point+wall_heigth).min(400.0) as usize{
-        let brightness = angle_of_wall.cos().abs();
+        let brightness = (angle_of_wall.cos() * 0.5 + 0.5).clamp(0.2, 1.0);
         let color = 0x00ff00;
             // 2. Extract channels
         let a = (color >> 24) & 0xFF;
@@ -161,6 +191,7 @@ fn draw_dimensional_cast (buffer: &mut [u32], game: & Game, distance_to_wall: f6
     }
 }
 
+////! this func is a random chatgbt function, rewrite if we want to use it in the final code
 fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, color: u32) {
     // Convert to signed for math (avoids underflow)
     let mut x0 = x0 as isize;
@@ -197,7 +228,7 @@ fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, col
     }
 }
 
-
+//checks wether a ray intersect the line between two given points
 fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_point2: Point) -> (bool, f64, f64){
     
 
@@ -205,6 +236,7 @@ fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_p
     let side_point1_relative = side_point1-ray_origin_point;
     let side_point2_relative = side_point2-ray_origin_point;
 
+    //rotates points so that the ray angle is 0
     let  side_point1_transformed = rotate_point_around_origin(side_point1_relative, -ray_angle);
     let  side_point2_transformed = rotate_point_around_origin(side_point2_relative, -ray_angle);
 

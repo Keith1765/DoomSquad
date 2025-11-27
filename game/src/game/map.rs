@@ -67,7 +67,13 @@ impl Map {
                      ]
                 
             },
-            objects: Vec::new(),
+            objects: vec![Shape{points: vec![
+                Point { x: 190.0, y: 210.0 },
+                Point { x: 210.0, y: 230.0 },
+                Point { x: 230.0, y: 210.0 },
+                Point { x: 210.0, y: 190.0 },
+
+            ]}],
             points_in_border: Vec::new(), 
             loaded_map: 0,
         }
