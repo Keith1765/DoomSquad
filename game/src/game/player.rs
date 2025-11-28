@@ -1,9 +1,9 @@
-use minifb::{Key, Window};
+use minifb::{Key, MouseMode, Window};
 use std::f64::consts::PI;
-
+use crate::{HEIGHT, WIDTH};
 use super::map::Map;
 
-const ROTATIONSPEED: f64 = 3.0;
+const ROTATIONSPEED: f64 = 2.0;
 const MOVESPEED: f64 = 2.0;
 
 #[derive(Clone, Copy)]
@@ -13,6 +13,7 @@ pub struct Player {
     pub pdx:f64,
     pub pdy:f64,
     pub pa:f64,
+    pub last_mouse_x: f32,
 }
 
 //TODO remove pdx and pdy
@@ -27,17 +28,27 @@ impl Player {
             pdx : pa.cos()*ROTATIONSPEED,
             pdy : pa.sin()*ROTATIONSPEED,
             pa ,
+            last_mouse_x: WIDTH as f32 / 2.0,
         }
     }
 
     pub fn update(&mut self, window: &Window, map: &Map) {
-        if window.is_key_down(Key::A) {
+        if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
+            self.check_angle();
+            let dx = mx - self.last_mouse_x;        // mouse delta
+            self.pa += dx as f64 * 0.003; // sensitivity
+
+            self.last_mouse_x = mx; // store for next frame
+            self.update_dir();
+            
+    }
+        if window.is_key_down(Key::Q) {
             self.check_angle();
             self.pa -= 0.1;
             self.update_dir();
         }
 
-        if window.is_key_down(Key::D) {
+        if window.is_key_down(Key::E) {
             self.check_angle();
             self.pa += 0.1;
             self.update_dir();
@@ -46,6 +57,15 @@ impl Player {
         if window.is_key_down(Key::W){
             self.px += self.pdx * MOVESPEED;
             self.py += self.pdy * MOVESPEED;
+        }
+
+        if window.is_key_down(Key::A){
+            self.px += self.pdy * MOVESPEED;
+            self.py -= self.pdx * MOVESPEED;
+        }
+        if window.is_key_down(Key::D){
+            self.px -= self.pdy * MOVESPEED;
+            self.py += self.pdx * MOVESPEED;
         }
 
         if window.is_key_down(Key::S){

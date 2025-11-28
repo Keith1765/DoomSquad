@@ -3,7 +3,7 @@
 mod game;
 mod render;
 
-use minifb::{Key, Window, WindowOptions};
+use minifb::{Key, Window, WindowOptions,MouseMode};
 
 use std::time::{Instant, Duration};
 
@@ -36,6 +36,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             return Err(Box::new(e));
         }
     };
+    window.set_cursor_visibility(false);      // hide mouse 
+    
 
     //to reduce CPU load by decreasing refresh rate oder so lol
     window.set_target_fps(60);
@@ -45,7 +47,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut game = game::Game::new();
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
-
 
         game.update(&window);
 
