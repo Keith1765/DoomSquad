@@ -5,6 +5,9 @@ mod render;
 
 use minifb::{Key, Window, WindowOptions};
 
+use std::time::{Instant, Duration};
+
+
 
 const WIDTH: usize = 1240;
 const HEIGHT: usize = 560;
@@ -14,6 +17,11 @@ const HEIGHT: usize = 560;
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    //for fps count
+    let mut last_time = Instant::now();
+    let mut frame_count = 0;
+    let mut fps_value = 0.0;
+
 
     //creates window Safely
     let mut window = match Window::new(
@@ -43,7 +51,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         render::draw(&mut buffer, & mut game);
        
+        //fps calc
+        frame_count += 1;
+        let elapsed = last_time.elapsed().as_secs_f32();
 
+        if elapsed >= 1.0 {
+        fps_value = frame_count as f32 / elapsed; 
+        frame_count = 0;
+        last_time = Instant::now();
+
+        window.set_title(&format!("My Window | FPS: {:.1}", fps_value));
+    }
         //show buffer safely
         if let Err(e) = window.update_with_buffer(&buffer, WIDTH, HEIGHT) {
             eprintln!("failed to update the window: {e}");

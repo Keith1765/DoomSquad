@@ -1,3 +1,4 @@
+use core::f64;
 use std::f64::consts::PI;
 
 use crate::game::map::{Point, Shape};
@@ -236,9 +237,11 @@ fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_p
     let side_point1_relative = side_point1-ray_origin_point;
     let side_point2_relative = side_point2-ray_origin_point;
 
+    let sin_of_angle = (-ray_angle).sin();
+    let cos_of_angle = (-ray_angle).cos();
     //rotates points so that the ray angle is 0
-    let  side_point1_transformed = rotate_point_around_origin(side_point1_relative, -ray_angle);
-    let  side_point2_transformed = rotate_point_around_origin(side_point2_relative, -ray_angle);
+    let  side_point1_transformed = rotate_point_around_origin(side_point1_relative, sin_of_angle, cos_of_angle);
+    let  side_point2_transformed = rotate_point_around_origin(side_point2_relative, sin_of_angle, cos_of_angle);
 
     // if side_point1_transformed.y < side_point2_transformed.y {
     //     return false;
@@ -266,9 +269,10 @@ fn intersect(ray_origin_point: Point, ray_angle: f64, side_point1: Point, side_p
     return (true,distance_to_intersect,angle);
 }
 
-fn rotate_point_around_origin (point: Point, angle: f64) -> Point {
-    let transformed_x = point.x * angle.cos() - point.y * angle.sin();
-    let transformed_y = point.x * angle.sin() + point.y * angle.cos();
+fn rotate_point_around_origin (point: Point, sin_of_angle: f64, cos_of_angle: f64) -> Point {
+    
+    let transformed_x = point.x * cos_of_angle - point.y * sin_of_angle;
+    let transformed_y = point.x * sin_of_angle + point.y * cos_of_angle;
     
     return Point { x: transformed_x, y: transformed_y };
 }
