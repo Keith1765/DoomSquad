@@ -1,4 +1,4 @@
-use std::ops::Sub;
+use std::ops::{Sub,Add};
 
 #[derive(Clone,Copy)]
 pub struct Point {
@@ -16,36 +16,83 @@ impl Sub for Point {
         }
     }
 }
+impl Add for Point {
+    type Output = Self;
 
-enum SideType {
+    fn add(self, other: Self) -> Self::Output {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
+
+#[derive(Clone,Copy)]
+pub enum SideType {
     Wall,
     Block,
 }
 
+#[derive(Clone)]
 pub struct Side {
-    point1: Point,
-    point2: Point,
-    side_type: SideType,
+    pub point1: Point,
+    pub point2: Point,
+    pub side_type: SideType,
+    pub angle_in_world: f64
 }
 
-//Points are counterclockwise
+#[derive(Clone)]
 pub struct Shape {
-    pub points: Vec<Point>
+    pub sides: Vec<Side>,
+    pub shape_type: SideType
 }
 
+impl Shape {
+    pub fn from_points(points: Vec<Point>, shape_type: SideType) -> Option<Self> {
+        if points.is_empty() {
+            return None;
+        }
+        let mut sides: Vec<Side> = Vec::new();
+        let mut point1 : Point;
+        let mut point2: Point  = *points.last()?;
+        for i in 0..points.len() {
+            point1 = point2;
+            point2 = *points.get(i)?;
+            sides.push(
+                Side {
+                    point1: point1,
+                    point2: point2,
+                    side_type: shape_type,
+                    angle_in_world: 0.0 // TODO actually calculate angle
+                }
+            );
+        }
+        Some(
+            Shape {
+                sides: sides,
+                shape_type: shape_type
+            }
+        )
+    }
+}
+
+// TODO master shape and side list
 
 pub struct Map {
-    pub border: Shape,
-    pub objects: Vec<Shape>,
-    pub points_in_border: Vec<Point>,
-    pub loaded_map: usize,
+
+    pub id: usize,
+    pub border: Shape, // mainly for topdown renderer
+    pub walls: Vec<Shape>,
+    pub blocks: Vec<Shape>,
+    //pub points_in_border: Vec<Point>,
 }
 
 impl Map {
-    pub fn new() -> Self {
-        Self { 
-            border: Shape{
-                 points: vec![
+    pub fn new() -> Option<Self> {
+        Some(Self { 
+            id: 0,
+            border: Shape::from_points(
+                vec![
                     Point { x: 200.0, y: 100.0 },
                     Point { x: 250.0, y: 200.0 },
                     Point { x: 350.0, y: 200.0 },
@@ -56,27 +103,13 @@ impl Map {
                     Point { x: 125.0, y: 250.0 },
                     Point { x: 50.0,  y: 200.0 },
                     Point { x: 150.0, y: 200.0 },
-//                 Point { x: 100.0, y: 100.0 },
-// Point { x: 300.0, y: 100.0 },
-// Point { x: 300.0, y: 300.0 },
-// Point { x: 225.0, y: 300.0 },
-// Point { x: 225.0, y: 175.0 },
-// Point { x: 175.0, y: 175.0 },
-// Point { x: 175.0, y: 300.0 },
-// Point { x: 100.0, y: 300.0 },
-                     ]
-                
-            },
-            objects: vec![Shape{points: vec![
-                Point { x: 190.0, y: 210.0 },
-                Point { x: 210.0, y: 230.0 },
-                Point { x: 230.0, y: 210.0 },
-                Point { x: 210.0, y: 190.0 },
-
-            ]}],
-            points_in_border: Vec::new(), 
-            loaded_map: 0,
-        }
+                ],
+                SideType::Wall
+            )?,
+            walls: Vec::new(),
+            blocks: Vec::new(),
+            //points_in_border: Vec::new(),
+        })
     }
 
     
