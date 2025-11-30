@@ -5,7 +5,7 @@ use crate::game::Game;
 use crate::game::map::{Point, Shape, Side, SideType};
 use crate::{HEIGHT, WIDTH};
 const FOV: f64 = PI / 2.09;
-const RENDERSCREENPOINT: Point = Point { x: 400.0, y: 0.0 };
+const RENDERSCREENPOINT: Point = Point { x: 500.0, y: 0.0 };
 const WALLSCALING: f64 = 23.0;
 
 ////!unsafe just for testing, later remove unwrap
@@ -145,7 +145,7 @@ fn draw_column(
     for rh in rayhits {
         if distance_to_wall > rh.distance {
             distance_to_wall = rh.distance;
-            angle_of_wall = 0.0; // TODO change this default value
+            angle_of_wall = rh.side.angle_in_world; // TODO change this default value
         }
     }
 
@@ -177,20 +177,18 @@ fn draw_dimensional_cast(
     angle_of_wall: f64,
 ) {
     let normalized_distance_to_wall =
-        (distance_to_wall * ray_angle_relative_to_player_angle.cos()) / WALLSCALING; // cos for anti-fisheye effect
+        (distance_to_wall * ray_angle_relative_to_player_angle.cos())/ WALLSCALING; // cos for anti-fisheye effect
 
     let wall_heigth =
         (RENDERSCREENPOINT.x as f64 / normalized_distance_to_wall).clamp(1.0, RENDERSCREENPOINT.x);
     //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
-    let draw_percent_based_on_angle =
-        (FOV / 2.0 + ray_angle_relative_to_player_angle) / FOV.clamp(0.0, 1.0);
-
+    let center_x = RENDERSCREENPOINT.x * 0.5;
+    let proj_dist = center_x / (FOV * 0.5).tan();
     let draw_srting_point = (RENDERSCREENPOINT.x - wall_heigth) / 2.0;
-
-    let x = (RENDERSCREENPOINT.x + (RENDERSCREENPOINT.x * draw_percent_based_on_angle)) as usize;
+    let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
 
     //shading based on angle of the side
-    for y in draw_srting_point as usize..(draw_srting_point + wall_heigth).min(400.0) as usize {
+    for y in draw_srting_point as usize..(draw_srting_point + wall_heigth).min(RENDERSCREENPOINT.x) as usize {
         let brightness = (angle_of_wall.cos() * 0.5 + 0.5).clamp(0.2, 1.0);
         let color = 0x00ff00;
         // 2. Extract channels
