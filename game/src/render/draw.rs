@@ -6,26 +6,182 @@ use crate::game::map::{Point, Shape, Side, SideType};
 use crate::{HEIGHT, WIDTH};
 const FOV: f64 = PI / 2.09;
 const WALLSCALING: f64 = 23.0;
+const BACKGROUND_COLOR: u32 = 0x222222;
 
 ////!unsafe just for testing, later remove unwrap
-pub fn draw(buffer: &mut [u32], game: &mut Game) {
-    //write grey plane as background to overwrite past player position
+pub fn draw(buffer: &mut [u32], game: &Game) {
+    //write grey plane as background to overwrite past frames
     for px in buffer.iter_mut() {
-        *px = 0x222222;
+        *px = BACKGROUND_COLOR;
     }
     //draw the top down map
     // draw_map(buffer, game).unwrap();
     //go through FOW in small steps, for each draw ray in top down view and corresponding line based on distance in 2.5 view
-    let mut angle_relative_to_player = -FOV / 2.0;
-    let step = 0.0005;
-    while angle_relative_to_player < (FOV / 2.0) {
-        draw_column(buffer, game, angle_relative_to_player);
-        angle_relative_to_player += step;
-    }
+    draw_screen(buffer, game);
     //draw player with his looking angle
     // draw_player(buffer, game);
     //draw grid of reference points spaced each 50 pixels for debugging
     draw_reference_points(buffer).unwrap();
+}
+
+fn draw_screen(buffer: &mut [u32], game: &Game) {
+    let mut angle_relative_to_player = -FOV / 2.0;
+    let step = FOV/WIDTH as f64;
+    for x in 0..WIDTH {
+        let column: [u32; HEIGHT] = get_drawing_column(
+            game,
+            angle_relative_to_player,
+            game.player.view_angle,
+        );
+        //draw column into buffer
+        for y in 0..column.len() {
+            buffer[y*WIDTH+x] = column[y];
+        }
+        angle_relative_to_player += step;
+    }
+}
+
+fn get_drawing_column(
+    game: &Game,
+    angle_relative_to_player: f64,
+    player_angle: f64,
+) -> [u32; HEIGHT] {
+    // // let mut side1 : Side;
+    //     let shape_content: Shape = (*shape).clone()?; // TODO remove necessity for clone() maybe?
+    //     let mut intersects = false;
+    //     for side in shape_content.sides {
+    //         if intersect(point, 0.0, side).is_some() {
+    //             intersects=!intersects;
+    //         }
+    //     }
+    //     Some(intersects)
+    let mut column: [u32; HEIGHT] = [BACKGROUND_COLOR; HEIGHT]; // initialized with default value
+
+    let ray_angle = player_angle + angle_relative_to_player;
+    let mut rayhits: Vec<RayHit> = Vec::new();
+    //collect intersects with map border edges
+    for w in game.map.walls.clone() {
+        for s in w.sides {
+            let intersection = intersect(
+                Point {
+                    x: game.player.position_x,
+                    y: game.player.position_y,
+                },
+                ray_angle,
+                s,
+            );
+            if let Some(intersect) = intersection {
+                rayhits.push(intersect);
+            }
+        }
+    }
+    if rayhits.is_empty() {
+        return [BACKGROUND_COLOR; HEIGHT]; // default return value: empty column
+    }
+    //find closest rayhit and save it
+    let mut closest_hit: RayHit;
+    if let Some(h) = rayhits.first() {
+        closest_hit = h.clone();
+        for rh in rayhits {
+            if closest_hit.distance > rh.distance {
+                closest_hit = rh;
+            }
+        }
+
+        let normalized_distance_to_wall =
+            (closest_hit.distance * angle_relative_to_player.cos()) / WALLSCALING; // cos for anti-fisheye effect
+        let wall_heigth = (HEIGHT as f64 / normalized_distance_to_wall).clamp(0.0, HEIGHT as f64);
+        //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
+        //let center_x = WIDTH as f64 * 0.5;
+        //let proj_dist = center_x / (FOV * 0.5).tan();
+        //let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
+
+        // we draw wall bottom to top, with shading
+        let side_bottom_screen_y = (HEIGHT as f64 - wall_heigth) / 2.0;
+        for y in side_bottom_screen_y as usize
+            ..(side_bottom_screen_y + wall_heigth).min(HEIGHT as f64) as usize
+        {
+            let brightness = (closest_hit.side.angle_in_world.cos() * 0.5 + 0.5).clamp(0.2, 1.0);
+            let color = 0x00ff00;
+            // 2. Extract channels
+            let a = (color >> 24) & 0xFF;
+            let r = (color >> 16) & 0xFF;
+            let g = (color >> 8) & 0xFF;
+            let b = color & 0xFF;
+
+            // 3. Scale each channel
+            let r = (r as f64 * brightness) as u32;
+            let g = (g as f64 * brightness) as u32;
+            let b = (b as f64 * brightness) as u32;
+
+            // 4. Repack
+            column[y] = (a << 24) | (r << 16) | (g << 8) | b;
+        }
+    }
+
+    //find the point the ray intersects the wall
+    // let ray_dx = ray_angle.cos();
+    // let ray_dy = ray_angle.sin();
+
+    // let wall_point = Point {
+    //     x: game.player.position_x + ray_dx * distance_to_wall,
+    //     y: game.player.position_y + ray_dy * distance_to_wall,
+    // };
+    //draw the line of this ray up to its intersect
+    //draw_line(buffer, game.player.position_x as usize, game.player.position_y as usize, wall_point.x as usize, wall_point.y as usize, 0xff0000);
+    return column;
+}
+
+fn draw_dimensional_cast(
+    buffer: &mut [u32],
+    distance_to_wall: f64,
+    ray_angle_relative_to_player_angle: f64,
+    angle_of_wall: f64,
+) {
+    let normalized_distance_to_wall =
+        (distance_to_wall * ray_angle_relative_to_player_angle.cos()) / WALLSCALING; // cos for anti-fisheye effect
+
+    let wall_heigth = (HEIGHT as f64 / normalized_distance_to_wall).clamp(0.0, HEIGHT as f64);
+    //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
+    let center_x = WIDTH as f64 * 0.5;
+    let proj_dist = center_x / (FOV * 0.5).tan();
+    let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
+
+    let draw_srting_point = (HEIGHT as f64 - wall_heigth) / 2.0;
+
+    //draw the vertical line; shading based on angle of the side
+    for y in
+        draw_srting_point as usize..(draw_srting_point + wall_heigth).min(HEIGHT as f64) as usize
+    {
+        let brightness = (angle_of_wall.cos() * 0.5 + 0.5).clamp(0.2, 1.0);
+        let color = 0x00ff00;
+        // 2. Extract channels
+        let a = (color >> 24) & 0xFF;
+        let r = (color >> 16) & 0xFF;
+        let g = (color >> 8) & 0xFF;
+        let b = color & 0xFF;
+
+        // 3. Scale each channel
+        let r = (r as f64 * brightness) as u32;
+        let g = (g as f64 * brightness) as u32;
+        let b = (b as f64 * brightness) as u32;
+
+        // 4. Repack
+
+        buffer[y * WIDTH + x] = (a << 24) | (r << 16) | (g << 8) | b;
+    }
+}
+
+//draw refernce points spaced 50 pixels apart for debugging
+fn draw_reference_points(buffer: &mut [u32]) -> Result<(), Box<dyn std::error::Error>> {
+    for x in 0..WIDTH {
+        for y in 0..HEIGHT {
+            if x % 50 == 0 && y % 50 == 0 {
+                buffer[y * WIDTH + x] = 0xff0000;
+            }
+        }
+    }
+    Ok(())
 }
 
 //save all points from the screen that are in the polygon of the map boarder and note that map is loaded now
@@ -41,18 +197,6 @@ pub fn draw(buffer: &mut [u32], game: &mut Game) {
 //     game.map.loaded_map=1;
 //     Ok(())
 // }
-
-//draw refernce points spaced 50 pixels apart for debugging
-fn draw_reference_points(buffer: &mut [u32]) -> Result<(), Box<dyn std::error::Error>> {
-    for x in 0..WIDTH {
-        for y in 0..HEIGHT {
-            if x % 50 == 0 && y % 50 == 0 {
-                buffer[y * WIDTH + x] = 0xff0000;
-            }
-        }
-    }
-    Ok(())
-}
 
 //draw the top down view of the map init
 // fn draw_map (buffer: &mut [u32], game: &Game) -> Result<(),Box<dyn  std::error::Error>>{
@@ -99,113 +243,8 @@ fn draw_reference_points(buffer: &mut [u32]) -> Result<(), Box<dyn std::error::E
 // }
 
 //
-fn draw_column(
-    buffer: &mut [u32],
-    game: &Game,
-    ray_angle_relative_to_player_angle: f64,
-) -> Result<(), String> {
-    // // let mut side1 : Side;
-    //     let shape_content: Shape = (*shape).clone()?; // TODO remove necessity for clone() maybe?
-    //     let mut intersects = false;
-    //     for side in shape_content.sides {
-    //         if intersect(point, 0.0, side).is_some() {
-    //             intersects=!intersects;
-    //         }
-    //     }
-    //     Some(intersects)
 
-    let mut rayhits: Vec<RayHit> = Vec::new();
-    let ray_angle = game.player.view_angle + ray_angle_relative_to_player_angle;
-    //collect intersects with map border edges
-    for w in game.map.walls.clone() {
-        for s in w.sides {
-            let intersection = intersect(
-                Point {
-                    x: game.player.position_x,
-                    y: game.player.position_y,
-                },
-                ray_angle,
-                s,
-            );
-            if let Some(intersect) = intersection {
-                rayhits.push(intersect);
-            }
-        }
-    }
-
-    //find closest intersect and save it
-    let mut distance_to_wall: f64 = 4000.0;
-    let mut angle_of_wall: f64 = 0.0;
-
-    let mut first_hit: RayHit;
-    if let Some(h) = rayhits.first() {
-        first_hit = h.clone();
-    }
-    for rh in rayhits {
-        if distance_to_wall > rh.distance {
-            distance_to_wall = rh.distance;
-            angle_of_wall = rh.side.angle_in_world; // TODO change this default value
-        }
-    }
-
-    //find the point the ray intersects the wall
-    let ray_dx = ray_angle.cos();
-    let ray_dy = ray_angle.sin();
-
-    let wall_point = Point {
-        x: game.player.position_x + ray_dx * distance_to_wall,
-        y: game.player.position_y + ray_dy * distance_to_wall,
-    };
-    //draw the line of this ray up to its intersect
-    //draw_line(buffer, game.player.position_x as usize, game.player.position_y as usize, wall_point.x as usize, wall_point.y as usize, 0xff0000);
-    draw_dimensional_cast(
-        buffer,
-        distance_to_wall,
-        ray_angle_relative_to_player_angle,
-        angle_of_wall,
-    );
-
-    return Ok(());
-}
-
-//draw the line for the ray that renders the the 2.5 view
-fn draw_dimensional_cast(
-    buffer: &mut [u32],
-    distance_to_wall: f64,
-    ray_angle_relative_to_player_angle: f64,
-    angle_of_wall: f64,
-) {
-    let normalized_distance_to_wall =
-        (distance_to_wall * ray_angle_relative_to_player_angle.cos())/ WALLSCALING; // cos for anti-fisheye effect
-
-    let wall_heigth =
-        (HEIGHT as f64 / normalized_distance_to_wall).clamp(1.0, HEIGHT as f64);
-    //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
-    let center_x = WIDTH as f64 * 0.5;
-    let proj_dist = center_x / (FOV * 0.5).tan();
-    let draw_srting_point = (HEIGHT as f64 - wall_heigth) / 2.0;
-    let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
-
-    //shading based on angle of the side
-    for y in draw_srting_point as usize..(draw_srting_point + wall_heigth).min(HEIGHT as f64) as usize {
-        let brightness = (angle_of_wall.cos() * 0.5 + 0.5).clamp(0.2, 1.0);
-        let color = 0x00ff00;
-        // 2. Extract channels
-        let a = (color >> 24) & 0xFF;
-        let r = (color >> 16) & 0xFF;
-        let g = (color >> 8) & 0xFF;
-        let b = color & 0xFF;
-
-        // 3. Scale each channel
-        let r = (r as f64 * brightness) as u32;
-        let g = (g as f64 * brightness) as u32;
-        let b = (b as f64 * brightness) as u32;
-
-        // 4. Repack
-
-        buffer[y * WIDTH + x] = (a << 24) | (r << 16) | (g << 8) | b;
-    }
-}
+//draw the vertical line for the ray that renders the the 2.5 view
 
 ////! this func is a random chatgbt function, rewrite if we want to use it in the final code
 fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, color: u32) {
