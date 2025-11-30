@@ -127,8 +127,8 @@ fn draw_column(
                 ray_angle,
                 s,
             );
-            if intersection.is_some() {
-                rayhits.push(intersection.unwrap());
+            if let Some(intersect) = intersection {
+                rayhits.push(intersect);
             }
         }
     }
