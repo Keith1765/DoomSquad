@@ -7,6 +7,7 @@ use crate::{HEIGHT, WIDTH};
 const FOV: f64 = PI / 2.09;
 const WALLSCALING: f64 = 23.0;
 const BACKGROUND_COLOR: u32 = 0x222222;
+const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.025;
 
 ////!unsafe just for testing, later remove unwrap
 pub fn draw(buffer: &mut [u32], game: &Game) {
@@ -25,9 +26,14 @@ pub fn draw(buffer: &mut [u32], game: &Game) {
 }
 
 fn draw_screen(buffer: &mut [u32], game: &Game) {
-    let mut angle_relative_to_player = -FOV / 2.0;
-    let step = FOV/WIDTH as f64;
+
+    let projection_plane_distance: f64 = (WIDTH as f64 / 2.0) / (FOV / 2.0).sin();
+
     for x in 0..WIDTH {
+
+        let pixel_distance_from_screen_middle: f64 = x as f64 - WIDTH as f64 / 2.0;
+        let angle_relative_to_player: f64 = (pixel_distance_from_screen_middle/projection_plane_distance as f64).atan();
+
         let column: [u32; HEIGHT] = get_drawing_column(
             game,
             angle_relative_to_player,
@@ -37,7 +43,6 @@ fn draw_screen(buffer: &mut [u32], game: &Game) {
         for y in 0..column.len() {
             buffer[y*WIDTH+x] = column[y];
         }
-        angle_relative_to_player += step;
     }
 }
 
@@ -101,7 +106,7 @@ fn get_drawing_column(
         for y in side_bottom_screen_y as usize
             ..(side_bottom_screen_y + wall_heigth).min(HEIGHT as f64) as usize
         {
-            let brightness = (closest_hit.side.angle_in_world.cos() * 0.5 + 0.5).clamp(0.2, 1.0);
+            let brightness = (closest_hit.side.angle_in_world.cos() * 0.5 / (closest_hit.distance*DISTANCE_DARKNESS_COEFFICIENT) + 0.5).clamp(0.2, 1.0);
             let color = 0x00ff00;
             // 2. Extract channels
             let a = (color >> 24) & 0xFF;
@@ -132,45 +137,45 @@ fn get_drawing_column(
     return column;
 }
 
-fn draw_dimensional_cast(
-    buffer: &mut [u32],
-    distance_to_wall: f64,
-    ray_angle_relative_to_player_angle: f64,
-    angle_of_wall: f64,
-) {
-    let normalized_distance_to_wall =
-        (distance_to_wall * ray_angle_relative_to_player_angle.cos()) / WALLSCALING; // cos for anti-fisheye effect
+// fn draw_dimensional_cast(
+//     buffer: &mut [u32],
+//     distance_to_wall: f64,
+//     ray_angle_relative_to_player_angle: f64,
+//     angle_of_wall: f64,
+// ) {
+//     let normalized_distance_to_wall =
+//         (distance_to_wall * ray_angle_relative_to_player_angle.cos()) / WALLSCALING; // cos for anti-fisheye effect
 
-    let wall_heigth = (HEIGHT as f64 / normalized_distance_to_wall).clamp(0.0, HEIGHT as f64);
-    //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
-    let center_x = WIDTH as f64 * 0.5;
-    let proj_dist = center_x / (FOV * 0.5).tan();
-    let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
+//     let wall_heigth = (HEIGHT as f64 / normalized_distance_to_wall).clamp(0.0, HEIGHT as f64);
+//     //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
+//     let center_x = WIDTH as f64 * 0.5;
+//     let proj_dist = center_x / (FOV * 0.5).tan();
+//     let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
 
-    let draw_srting_point = (HEIGHT as f64 - wall_heigth) / 2.0;
+//     let draw_srting_point = (HEIGHT as f64 - wall_heigth) / 2.0;
 
-    //draw the vertical line; shading based on angle of the side
-    for y in
-        draw_srting_point as usize..(draw_srting_point + wall_heigth).min(HEIGHT as f64) as usize
-    {
-        let brightness = (angle_of_wall.cos() * 0.5 + 0.5).clamp(0.2, 1.0);
-        let color = 0x00ff00;
-        // 2. Extract channels
-        let a = (color >> 24) & 0xFF;
-        let r = (color >> 16) & 0xFF;
-        let g = (color >> 8) & 0xFF;
-        let b = color & 0xFF;
+//     //draw the vertical line; shading based on angle of the side
+//     for y in
+//         draw_srting_point as usize..(draw_srting_point + wall_heigth).min(HEIGHT as f64) as usize
+//     {
+//         let brightness = (angle_of_wall.cos() * 0.5 + 0.5).clamp(0.2, 1.0);
+//         let color = 0x00ff00;
+//         // 2. Extract channels
+//         let a = (color >> 24) & 0xFF;
+//         let r = (color >> 16) & 0xFF;
+//         let g = (color >> 8) & 0xFF;
+//         let b = color & 0xFF;
 
-        // 3. Scale each channel
-        let r = (r as f64 * brightness) as u32;
-        let g = (g as f64 * brightness) as u32;
-        let b = (b as f64 * brightness) as u32;
+//         // 3. Scale each channel
+//         let r = (r as f64 * brightness) as u32;
+//         let g = (g as f64 * brightness) as u32;
+//         let b = (b as f64 * brightness) as u32;
 
-        // 4. Repack
+//         // 4. Repack
 
-        buffer[y * WIDTH + x] = (a << 24) | (r << 16) | (g << 8) | b;
-    }
-}
+//         buffer[y * WIDTH + x] = (a << 24) | (r << 16) | (g << 8) | b;
+//     }
+// }
 
 //draw refernce points spaced 50 pixels apart for debugging
 fn draw_reference_points(buffer: &mut [u32]) -> Result<(), Box<dyn std::error::Error>> {

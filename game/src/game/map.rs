@@ -41,6 +41,17 @@ pub struct Side {
     pub angle_in_world: f64,
 }
 
+impl Side {
+    pub fn new(point1: Point, point2: Point, side_type: SideType) -> Self {
+        return Side {
+            point1: point1,
+            point2: point2,
+            side_type: side_type,
+            angle_in_world: ((point1.x-point2.x)/(point1.y-point2.y)).atan(),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Shape {
     pub sides: Vec<Side>,
@@ -58,12 +69,11 @@ impl Shape {
         for i in 0..points.len() {
             point1 = point2;
             point2 = *points.get(i)?;
-            sides.push(Side {
-                point1: point1,
-                point2: point2,
-                side_type: shape_type,
-                angle_in_world: 0.0, // TODO actually calculate angle
-            });
+            sides.push(Side::new(
+                point1,
+                point2,
+                shape_type,
+            ));
         }
         Some(Shape {
             sides: sides,
