@@ -7,7 +7,7 @@ use minifb::{Key, MouseMode, Window, WindowOptions};
 
 use std::time::{Duration, Instant};
 
-const WIDTH: usize = 500;
+const WIDTH: usize = 800;
 const HEIGHT: usize = 500;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
