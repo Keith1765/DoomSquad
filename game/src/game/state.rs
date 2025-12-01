@@ -1,20 +1,21 @@
+use super::map::Map;
 use super::player::Player;
-use super::map::{Map,MAPX,MAPY};
 use minifb::Window;
 
-pub struct Game{
+pub struct Game {
     pub player: Player,
     pub map: Map,
 }
 
 impl Game {
     pub fn new() -> Self {
-        Self { player: Player::new(), 
-            map: Map::new(),
+        Self {
+            player: Player::new(),
+            map: Map::new().unwrap(), // TODO remove unwrap
         }
     }
 
-    pub fn update (&mut self, window: &Window) {
+    pub fn update(&mut self, window: &Window) {
         self.player.update(window, &self.map);
     }
 }
