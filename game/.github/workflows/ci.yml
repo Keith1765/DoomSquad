@@ -22,3 +22,7 @@ jobs:
       # Quality Gate 2: Clippy (no warnings allowed)
       - name: Cargo clippy
         run: cargo clippy -- -D warnings
+
+      # Run tests
+      - name: Run tests
+        run: cargo test --verbose
