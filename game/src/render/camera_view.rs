@@ -18,14 +18,14 @@ pub fn draw(buffer: &mut [u32], game: &Game) {
     //draw the top down map
     // draw_map(buffer, game).unwrap();
     //go through FOW in small steps, for each draw ray in top down view and corresponding line based on distance in 2.5 view
-    draw_screen(buffer, game);
+    draw_camera_view(buffer, game);
     //draw player with his looking angle
     // draw_player(buffer, game);
     //draw grid of reference points spaced each 50 pixels for debugging
     draw_reference_points(buffer).unwrap();
 }
 
-fn draw_screen(buffer: &mut [u32], game: &Game) {
+fn draw_camera_view(buffer: &mut [u32], game: &Game) {
 
     let projection_plane_distance: f64 = (WIDTH as f64 / 2.0) / (FOV / 2.0).sin();
 
@@ -34,7 +34,7 @@ fn draw_screen(buffer: &mut [u32], game: &Game) {
         let pixel_distance_from_screen_middle: f64 = x as f64 - WIDTH as f64 / 2.0;
         let angle_relative_to_player: f64 = (pixel_distance_from_screen_middle/projection_plane_distance as f64).atan();
 
-        let column: [u32; HEIGHT] = get_drawing_column(
+        let column: [u32; HEIGHT] = get_drawing_column( 
             game,
             angle_relative_to_player,
             game.player.view_angle,
@@ -50,7 +50,7 @@ fn get_drawing_column(
     game: &Game,
     angle_relative_to_player: f64,
     player_angle: f64,
-) -> [u32; HEIGHT] {
+) ->  [u32; HEIGHT] {
     // // let mut side1 : Side;
     //     let shape_content: Shape = (*shape).clone()?; // TODO remove necessity for clone() maybe?
     //     let mut intersects = false;

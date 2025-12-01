@@ -1,3 +1,3 @@
-pub mod draw;
+pub mod camera_view;
 
-pub use draw::draw;
+pub use camera_view::draw;
