@@ -3,13 +3,13 @@ use std::f64::consts::PI;
 
 use crate::game::Game;
 use crate::game::map::{Point, Shape, Side, SideType};
+use crate::render::raycast::{RayHit, intersect};
 use crate::{HEIGHT, WIDTH};
 const FOV: f64 = PI / 2.09;
 const WALLSCALING: f64 = 23.0;
 const BACKGROUND_COLOR: u32 = 0x222222;
 const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.025;
 
-////!unsafe just for testing, later remove unwrap
 pub fn draw(buffer: &mut [u32], game: &Game) {
     //write grey plane as background to overwrite past frames
     for px in buffer.iter_mut() {
@@ -17,12 +17,12 @@ pub fn draw(buffer: &mut [u32], game: &Game) {
     }
     //draw the top down map
     // draw_map(buffer, game).unwrap();
-    //go through FOW in small steps, for each draw ray in top down view and corresponding line based on distance in 2.5 view
+    //go through FOV in small steps, for each draw ray in top down view and corresponding line based on distance in 2.5 view
     draw_camera_view(buffer, game);
     //draw player with his looking angle
     // draw_player(buffer, game);
     //draw grid of reference points spaced each 50 pixels for debugging
-    draw_reference_points(buffer).unwrap();
+    draw_reference_points(buffer);
 }
 
 fn draw_camera_view(buffer: &mut [u32], game: &Game) {
@@ -34,7 +34,7 @@ fn draw_camera_view(buffer: &mut [u32], game: &Game) {
         let pixel_distance_from_screen_middle: f64 = x as f64 - WIDTH as f64 / 2.0;
         let angle_relative_to_player: f64 = (pixel_distance_from_screen_middle/projection_plane_distance as f64).atan();
 
-        let column: [u32; HEIGHT] = get_drawing_column( 
+        let column: [u32; HEIGHT] = draw_column( 
             game,
             angle_relative_to_player,
             game.player.view_angle,
@@ -46,7 +46,7 @@ fn draw_camera_view(buffer: &mut [u32], game: &Game) {
     }
 }
 
-fn get_drawing_column(
+fn draw_column(
     game: &Game,
     angle_relative_to_player: f64,
     player_angle: f64,
@@ -178,7 +178,7 @@ fn get_drawing_column(
 // }
 
 //draw refernce points spaced 50 pixels apart for debugging
-fn draw_reference_points(buffer: &mut [u32]) -> Result<(), Box<dyn std::error::Error>> {
+fn draw_reference_points(buffer: &mut [u32]) {
     for x in 0..WIDTH {
         for y in 0..HEIGHT {
             if x % 50 == 0 && y % 50 == 0 {
@@ -186,7 +186,6 @@ fn draw_reference_points(buffer: &mut [u32]) -> Result<(), Box<dyn std::error::E
             }
         }
     }
-    Ok(())
 }
 
 //save all points from the screen that are in the polygon of the map boarder and note that map is loaded now
@@ -288,67 +287,6 @@ fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, col
     }
 }
 
-#[derive(Clone)]
-struct RayHit {
-    position: Point,
-    distance: f64,
-    proportion_along_side: f64, // how far of the way from left to right we go along the side
-    side: Side,
-}
-
-//checks wether a ray intersect the line between two given points
-fn intersect(ray_origin: Point, ray_angle: f64, side: Side) -> Option<RayHit> {
-    let side_point1 = side.point1; // point is a copy type
-    let side_point2 = side.point2;
-
-    // effectively makes ray_point origin (=(0|0))
-    let side_point1_relative = side_point1 - ray_origin;
-    let side_point2_relative = side_point2 - ray_origin;
-    //rotates points so that the ray angle is 0
-    let side_point1_transformed = rotate_point_around_origin(side_point1_relative, -ray_angle);
-    let side_point2_transformed = rotate_point_around_origin(side_point2_relative, -ray_angle);
-
-    // checks if we are going past the side by checking if x axis intersects between 1.y and 2.y
-    if (side_point1_transformed.y > 0.0) == (side_point2_transformed.y > 0.0) {
-        return None;
-    }
-
-    let proportion =
-        -side_point1_transformed.y / (side_point2_transformed.y - side_point1_transformed.y); // gives us how far along the wall we are
-    let distance = (side_point2_transformed.x - side_point1_transformed.x) * proportion
-        + side_point1_transformed.x; // distance between player and intersect
-    if distance < 0.0 {
-        // if the side is behind us, no Rayhit
-        return None;
-    }
-    let position_in_trasformed_coords = Point {
-        x: distance,
-        y: 0.0,
-    };
-    let position =
-        rotate_point_around_origin(position_in_trasformed_coords, ray_angle) + ray_origin;
-
-    // let angle = (side_point2.y-side_point1.y).atan2(side_point2.x-side_point1.x);
-    return Some(RayHit {
-        position: position,
-        distance,
-        proportion_along_side: proportion,
-        side: side,
-    });
-}
-
-fn rotate_point_around_origin(point: Point, angle: f64) -> Point {
-    let sin_of_angle = angle.sin();
-    let cos_of_angle = angle.cos();
-
-    let transformed_x = point.x * cos_of_angle - point.y * sin_of_angle;
-    let transformed_y = point.x * sin_of_angle + point.y * cos_of_angle;
-
-    return Point {
-        x: transformed_x,
-        y: transformed_y,
-    };
-}
 
 // fn point_in_polygon (shape: &Option<Shape>, point: Point) -> Option<bool> {
 //     // let mut side1 : Side;

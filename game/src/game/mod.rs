@@ -1,6 +1,6 @@
 pub mod map;
 pub mod player;
-pub mod state;
+pub mod gamestate;
 
 pub use map::Map;
-pub use state::Game;
+pub use gamestate::Game;

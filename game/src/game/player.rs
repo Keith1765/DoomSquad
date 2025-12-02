@@ -16,9 +16,6 @@ pub struct Player {
     pub last_mouse_x: f32,
 }
 
-//TODO remove pdx and pdy
-//TODO long variable names
-
 impl Player {
     pub fn new() -> Self {
         let pa: f64 = -PI / 2.0;
