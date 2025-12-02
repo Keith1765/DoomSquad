@@ -47,8 +47,8 @@ impl Side {
             point1: point1,
             point2: point2,
             side_type: side_type,
-            angle_in_world: ((point1.x-point2.x)/(point1.y-point2.y)).atan(),
-        }
+            angle_in_world: ((point1.x - point2.x) / (point1.y - point2.y)).atan(),
+        };
     }
 }
 
@@ -69,11 +69,7 @@ impl Shape {
         for i in 0..points.len() {
             point1 = point2;
             point2 = *points.get(i)?;
-            sides.push(Side::new(
-                point1,
-                point2,
-                shape_type,
-            ));
+            sides.push(Side::new(point1, point2, shape_type));
         }
         Some(Shape {
             sides: sides,

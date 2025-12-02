@@ -1,7 +1,5 @@
 use crate::game::map::{Point, Side};
 
-
-
 #[derive(Clone)]
 pub struct RayHit {
     pub position: Point,

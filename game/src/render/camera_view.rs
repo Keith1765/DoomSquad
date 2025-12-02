@@ -26,31 +26,23 @@ pub fn draw(buffer: &mut [u32], game: &Game) {
 }
 
 fn draw_camera_view(buffer: &mut [u32], game: &Game) {
-
     let projection_plane_distance: f64 = (WIDTH as f64 / 2.0) / (FOV / 2.0).sin();
 
     for x in 0..WIDTH {
-
         let pixel_distance_from_screen_middle: f64 = x as f64 - WIDTH as f64 / 2.0;
-        let angle_relative_to_player: f64 = (pixel_distance_from_screen_middle/projection_plane_distance as f64).atan();
+        let angle_relative_to_player: f64 =
+            (pixel_distance_from_screen_middle / projection_plane_distance as f64).atan();
 
-        let column: [u32; HEIGHT] = draw_column( 
-            game,
-            angle_relative_to_player,
-            game.player.view_angle,
-        );
+        let column: [u32; HEIGHT] =
+            draw_column(game, angle_relative_to_player, game.player.view_angle);
         //draw column into buffer
         for y in 0..column.len() {
-            buffer[y*WIDTH+x] = column[y];
+            buffer[y * WIDTH + x] = column[y];
         }
     }
 }
 
-fn draw_column(
-    game: &Game,
-    angle_relative_to_player: f64,
-    player_angle: f64,
-) ->  [u32; HEIGHT] {
+fn draw_column(game: &Game, angle_relative_to_player: f64, player_angle: f64) -> [u32; HEIGHT] {
     // // let mut side1 : Side;
     //     let shape_content: Shape = (*shape).clone()?; // TODO remove necessity for clone() maybe?
     //     let mut intersects = false;
@@ -106,7 +98,10 @@ fn draw_column(
         for y in side_bottom_screen_y as usize
             ..(side_bottom_screen_y + wall_heigth).min(HEIGHT as f64) as usize
         {
-            let brightness = (closest_hit.side.angle_in_world.cos() * 0.5 / (closest_hit.distance*DISTANCE_DARKNESS_COEFFICIENT) + 0.5).clamp(0.2, 1.0);
+            let brightness = (closest_hit.side.angle_in_world.cos() * 0.5
+                / (closest_hit.distance * DISTANCE_DARKNESS_COEFFICIENT)
+                + 0.5)
+                .clamp(0.2, 1.0);
             let color = 0x00ff00;
             // 2. Extract channels
             let a = (color >> 24) & 0xFF;
@@ -286,7 +281,6 @@ fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, col
         }
     }
 }
-
 
 // fn point_in_polygon (shape: &Option<Shape>, point: Point) -> Option<bool> {
 //     // let mut side1 : Side;
