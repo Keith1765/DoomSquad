@@ -1,9 +1,10 @@
 use core::f64;
+use std::collections::BinaryHeap;
 use std::f64::consts::PI;
 
 use crate::game::Game;
 use crate::game::map::{Point, Shape, Side, SideType};
-use crate::render::raycast::{RayHit, intersect};
+use crate::render::raycast::{RayHit, RayHitOrderer, intersect};
 use crate::{HEIGHT, WIDTH};
 const FOV: f64 = PI / 2.09;
 const WALLSCALING: f64 = 23.0;
@@ -55,7 +56,7 @@ fn draw_column(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
     let mut column: [u32; HEIGHT] = [BACKGROUND_COLOR; HEIGHT]; // initialized with default value
 
     let ray_angle = player_angle + angle_relative_to_player;
-    let mut rayhits: Vec<RayHit> = Vec::new();
+    let mut rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
     //collect intersects with map border edges
     for w in game.map.walls.clone() {
         for s in w.sides {
@@ -67,55 +68,53 @@ fn draw_column(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
                 ray_angle,
                 s,
             );
-            if let Some(intersect) = intersection {
-                rayhits.push(intersect);
+            if let Some(intersection) = intersection {
+                rayhits_ordered.push(RayHitOrderer::new(intersection));
             }
         }
     }
-    if rayhits.is_empty() {
+    if rayhits_ordered.is_empty() {
         return [BACKGROUND_COLOR; HEIGHT]; // default return value: empty column
     }
-    //find closest rayhit and save it
-    let mut closest_hit: RayHit;
-    if let Some(h) = rayhits.first() {
-        closest_hit = h.clone();
-        for rh in rayhits {
-            if closest_hit.distance > rh.distance {
-                closest_hit = rh;
+
+    // draw the sides for each ray hit over one another
+    // TODO implement different heights for blocks
+    while !rayhits_ordered.is_empty() {
+        if let Some(rh_ordering) = rayhits_ordered.pop() {
+            let rh: RayHit = rh_ordering.rh;
+
+            let normalized_distance_to_wall =
+            (rh.distance * angle_relative_to_player.cos()) / WALLSCALING; // cos for anti-fisheye effect
+            let wall_heigth = (HEIGHT as f64 / normalized_distance_to_wall).clamp(0.0, HEIGHT as f64);
+            //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
+            //let center_x = WIDTH as f64 * 0.5;
+            //let proj_dist = center_x / (FOV * 0.5).tan();
+            //let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
+
+            // we draw wall bottom to top, with shading
+            let side_bottom_screen_y = (HEIGHT as f64 - wall_heigth) / 2.0;
+            for y in side_bottom_screen_y as usize
+                ..(side_bottom_screen_y + wall_heigth).min(HEIGHT as f64) as usize
+            {
+                let brightness = (rh.side.angle_in_world.cos() * 0.5
+                    / (rh.distance * DISTANCE_DARKNESS_COEFFICIENT)
+                    + 0.5)
+                    .clamp(0.2, 1.0);
+                let color = 0x00ff00;
+                // 2. Extract channels
+                let a = (color >> 24) & 0xFF;
+                let r = (color >> 16) & 0xFF;
+                let g = (color >> 8) & 0xFF;
+                let b = color & 0xFF;
+
+                // 3. Scale each channel
+                let r = (r as f64 * brightness) as u32;
+                let g = (g as f64 * brightness) as u32;
+                let b = (b as f64 * brightness) as u32;
+
+                // 4. Repack
+                column[y] = (a << 24) | (r << 16) | (g << 8) | b;
             }
-        }
-
-        let normalized_distance_to_wall =
-            (closest_hit.distance * angle_relative_to_player.cos()) / WALLSCALING; // cos for anti-fisheye effect
-        let wall_heigth = (HEIGHT as f64 / normalized_distance_to_wall).clamp(0.0, HEIGHT as f64);
-        //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
-        //let center_x = WIDTH as f64 * 0.5;
-        //let proj_dist = center_x / (FOV * 0.5).tan();
-        //let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
-
-        // we draw wall bottom to top, with shading
-        let side_bottom_screen_y = (HEIGHT as f64 - wall_heigth) / 2.0;
-        for y in side_bottom_screen_y as usize
-            ..(side_bottom_screen_y + wall_heigth).min(HEIGHT as f64) as usize
-        {
-            let brightness = (closest_hit.side.angle_in_world.cos() * 0.5
-                / (closest_hit.distance * DISTANCE_DARKNESS_COEFFICIENT)
-                + 0.5)
-                .clamp(0.2, 1.0);
-            let color = 0x00ff00;
-            // 2. Extract channels
-            let a = (color >> 24) & 0xFF;
-            let r = (color >> 16) & 0xFF;
-            let g = (color >> 8) & 0xFF;
-            let b = color & 0xFF;
-
-            // 3. Scale each channel
-            let r = (r as f64 * brightness) as u32;
-            let g = (g as f64 * brightness) as u32;
-            let b = (b as f64 * brightness) as u32;
-
-            // 4. Repack
-            column[y] = (a << 24) | (r << 16) | (g << 8) | b;
         }
     }
 

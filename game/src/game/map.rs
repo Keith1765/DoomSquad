@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Point {
     pub x: f64,
     pub y: f64,
@@ -27,13 +27,13 @@ impl Add for Point {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum SideType {
     Wall,
     Block,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Side {
     pub point1: Point,
     pub point2: Point,
