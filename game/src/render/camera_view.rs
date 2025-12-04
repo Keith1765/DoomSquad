@@ -136,12 +136,12 @@ fn draw_column(
             //let proj_dist = center_x / (FOV * 0.5).tan();
             //let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
 
-            // we draw wall top to bottom, with shading
+            // we draw wall bottom to top, with shading
             let side_bottom_onscreen = (SCREEN_HEIGHT as f64 - level_onscreen_height) / 2.0;
             for onscreen_y in side_bottom_onscreen as usize
                 ..(side_bottom_onscreen + side_onscreen_height) as usize
             {
-                if onscreen_y >= 500 {
+                if onscreen_y >= SCREEN_HEIGHT {
                     continue;
                 }
 
