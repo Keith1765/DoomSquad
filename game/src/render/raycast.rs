@@ -12,7 +12,7 @@ pub struct RayHit {
 
 // allows us to implement Ord based on distance of the rayhit without making rh1 == rh2 depend only on distance (i.e. it remains actual full equality)
 pub struct RayHitOrderer {
-    pub rh: RayHit
+    pub rh: RayHit,
 }
 
 impl PartialEq for RayHitOrderer {
@@ -47,7 +47,7 @@ impl Ord for RayHitOrderer {
     }
 }
 
-impl RayHitOrderer  {
+impl RayHitOrderer {
     pub fn new(rayhit: RayHit) -> Self {
         RayHitOrderer { rh: rayhit }
     }

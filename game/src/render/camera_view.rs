@@ -3,13 +3,14 @@ use std::collections::BinaryHeap;
 use std::f64::consts::PI;
 
 use crate::game::Game;
-use crate::game::map::{Point, Shape, Side, SideType};
+use crate::game::map::{LEVEL_HEIGHT, Point, Shape, ShapeType, Side};
 use crate::render::raycast::{RayHit, RayHitOrderer, intersect};
-use crate::{HEIGHT, WIDTH};
+use crate::{SCREEN_HEIGHT, SCREEN_WIDTH};
 const FOV: f64 = PI / 2.09;
-const WALLSCALING: f64 = 23.0;
 const BACKGROUND_COLOR: u32 = 0x222222;
 const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.025;
+const WALL_COLOR: u32 = 0x00ff00;
+const BLOCK_COLOR: u32 = 0x0000ff;
 
 pub fn draw(buffer: &mut [u32], game: &Game) {
     //write grey plane as background to overwrite past frames
@@ -27,23 +28,28 @@ pub fn draw(buffer: &mut [u32], game: &Game) {
 }
 
 fn draw_camera_view(buffer: &mut [u32], game: &Game) {
-    let projection_plane_distance: f64 = (WIDTH as f64 / 2.0) / (FOV / 2.0).sin();
+    let projection_plane_distance: f64 = (SCREEN_WIDTH as f64 / 2.0) / (FOV / 2.0).sin();
 
-    for x in 0..WIDTH {
-        let pixel_distance_from_screen_middle: f64 = x as f64 - WIDTH as f64 / 2.0;
+    for x in 0..SCREEN_WIDTH {
+        let pixel_distance_from_screen_middle: f64 = x as f64 - SCREEN_WIDTH as f64 / 2.0;
         let angle_relative_to_player: f64 =
             (pixel_distance_from_screen_middle / projection_plane_distance as f64).atan();
 
-        let column: [u32; HEIGHT] =
+        let column: [u32; SCREEN_HEIGHT] =
             draw_column(game, angle_relative_to_player, game.player.view_angle);
         //draw column into buffer
         for y in 0..column.len() {
-            buffer[y * WIDTH + x] = column[y];
+            // read columns in reverse vertical order; that way other functions can pretend y=0 is botto of screen
+            buffer[(SCREEN_HEIGHT - (y + 1)) * SCREEN_WIDTH + x] = column[y];
         }
     }
 }
 
-fn draw_column(game: &Game, angle_relative_to_player: f64, player_angle: f64) -> [u32; HEIGHT] {
+fn draw_column(
+    game: &Game,
+    angle_relative_to_player: f64,
+    player_angle: f64,
+) -> [u32; SCREEN_HEIGHT] {
     // // let mut side1 : Side;
     //     let shape_content: Shape = (*shape).clone()?; // TODO remove necessity for clone() maybe?
     //     let mut intersects = false;
@@ -53,54 +59,96 @@ fn draw_column(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
     //         }
     //     }
     //     Some(intersects)
-    let mut column: [u32; HEIGHT] = [BACKGROUND_COLOR; HEIGHT]; // initialized with default value
+    let mut column: [u32; SCREEN_HEIGHT] = [BACKGROUND_COLOR; SCREEN_HEIGHT]; // initialized with default value
 
     let ray_angle = player_angle + angle_relative_to_player;
-    let mut rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
-    //collect intersects with map border edges
-    for w in game.map.walls.clone() {
-        for s in w.sides {
+    //find closest wall
+    let mut closest_wall_hit: Option<RayHit> = None;
+    for w in &game.map.walls {
+        for s in &w.sides {
             let intersection = intersect(
                 Point {
                     x: game.player.position_x,
                     y: game.player.position_y,
                 },
                 ray_angle,
-                s,
+                s.clone(),
             );
             if let Some(intersection) = intersection {
-                rayhits_ordered.push(RayHitOrderer::new(intersection));
+                if let Some(wall_hit) = &closest_wall_hit
+                    && wall_hit.distance < intersection.distance
+                {
+                    continue;
+                }
+                closest_wall_hit = Some(intersection);
             }
         }
     }
+
+    let mut rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
+    for b in &game.map.blocks {
+        for s in &b.sides {
+            let intersection = intersect(
+                Point {
+                    x: game.player.position_x,
+                    y: game.player.position_y,
+                },
+                ray_angle,
+                s.clone(),
+            );
+            if let Some(intersection) = intersection {
+                if let Some(wall_hit) = &closest_wall_hit
+                    && wall_hit.distance < intersection.distance
+                {
+                    continue;
+                }
+                rayhits_ordered.push(RayHitOrderer { rh: intersection });
+            }
+        }
+    }
+    if let Some(wall_hit) = closest_wall_hit {
+        rayhits_ordered.push(RayHitOrderer { rh: wall_hit });
+    }
+
     if rayhits_ordered.is_empty() {
-        return [BACKGROUND_COLOR; HEIGHT]; // default return value: empty column
+        return [BACKGROUND_COLOR; SCREEN_HEIGHT]; // default return value: empty column
     }
 
     // draw the sides for each ray hit over one another
-    // TODO implement different heights for blocks
+    // TODO implement blocks actually standing on floor
     while !rayhits_ordered.is_empty() {
         if let Some(rh_ordering) = rayhits_ordered.pop() {
             let rh: RayHit = rh_ordering.rh;
 
-            let normalized_distance_to_wall =
-            (rh.distance * angle_relative_to_player.cos()) / WALLSCALING; // cos for anti-fisheye effect
-            let wall_heigth = (HEIGHT as f64 / normalized_distance_to_wall).clamp(0.0, HEIGHT as f64);
+            let color = match rh.side.side_type {
+                ShapeType::Wall => WALL_COLOR,
+                ShapeType::Block => BLOCK_COLOR,
+            };
+
+            let normalized_distance_to_side = rh.distance * angle_relative_to_player.cos(); // cos for anti-fisheye effect
+
+            let side_onscreen_height =
+                (rh.side.height / normalized_distance_to_side) * SCREEN_HEIGHT as f64;
+            let level_onscreen_height =
+                (LEVEL_HEIGHT / normalized_distance_to_side) * SCREEN_HEIGHT as f64;
             //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
             //let center_x = WIDTH as f64 * 0.5;
             //let proj_dist = center_x / (FOV * 0.5).tan();
             //let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
 
-            // we draw wall bottom to top, with shading
-            let side_bottom_screen_y = (HEIGHT as f64 - wall_heigth) / 2.0;
-            for y in side_bottom_screen_y as usize
-                ..(side_bottom_screen_y + wall_heigth).min(HEIGHT as f64) as usize
+            // we draw wall top to bottom, with shading
+            let side_bottom_onscreen = (SCREEN_HEIGHT as f64 - level_onscreen_height) / 2.0;
+            for onscreen_y in side_bottom_onscreen as usize
+                ..(side_bottom_onscreen + side_onscreen_height) as usize
             {
+                if onscreen_y >= 500 {
+                    continue;
+                }
+
                 let brightness = (rh.side.angle_in_world.cos() * 0.5
                     / (rh.distance * DISTANCE_DARKNESS_COEFFICIENT)
                     + 0.5)
                     .clamp(0.2, 1.0);
-                let color = 0x00ff00;
                 // 2. Extract channels
                 let a = (color >> 24) & 0xFF;
                 let r = (color >> 16) & 0xFF;
@@ -113,7 +161,7 @@ fn draw_column(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
                 let b = (b as f64 * brightness) as u32;
 
                 // 4. Repack
-                column[y] = (a << 24) | (r << 16) | (g << 8) | b;
+                column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
             }
         }
     }
@@ -173,10 +221,10 @@ fn draw_column(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
 
 //draw refernce points spaced 50 pixels apart for debugging
 fn draw_reference_points(buffer: &mut [u32]) {
-    for x in 0..WIDTH {
-        for y in 0..HEIGHT {
+    for x in 0..SCREEN_WIDTH {
+        for y in 0..SCREEN_HEIGHT {
             if x % 50 == 0 && y % 50 == 0 {
-                buffer[y * WIDTH + x] = 0xff0000;
+                buffer[y * SCREEN_WIDTH + x] = 0xff0000;
             }
         }
     }
@@ -260,8 +308,8 @@ fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, col
 
     loop {
         // Only draw inside the screen
-        if x0 >= 0 && x0 < WIDTH as isize && y0 >= 0 && y0 < HEIGHT as isize {
-            buffer[y0 as usize * WIDTH + x0 as usize] = color;
+        if x0 >= 0 && x0 < SCREEN_WIDTH as isize && y0 >= 0 && y0 < SCREEN_HEIGHT as isize {
+            buffer[y0 as usize * SCREEN_WIDTH + x0 as usize] = color;
         }
 
         if x0 == x1 && y0 == y1 {
@@ -309,8 +357,9 @@ mod test {
         let side = Side {
             point1: side_point1,
             point2: side_point2,
-            side_type: SideType::Wall,
+            side_type: ShapeType::Wall,
             angle_in_world: 0.0, // isnt used in intersect() anyways
+            height: LEVEL_HEIGHT,
         };
         let intersects1 = intersect(ray_origin1, PI, side.clone());
         let intersects2 = intersect(ray_origin2, PI, side.clone());

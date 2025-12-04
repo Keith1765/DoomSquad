@@ -1,5 +1,5 @@
 use super::map::Map;
-use crate::{HEIGHT, WIDTH};
+use crate::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use minifb::{Key, MouseMode, Window};
 use std::f64::consts::PI;
 
@@ -20,12 +20,12 @@ impl Player {
     pub fn new() -> Self {
         let pa: f64 = -PI / 2.0;
         Self {
-            position_x: 200.0,
-            position_y: 200.0,
+            position_x: 210.0,
+            position_y: 220.0,
             velocity_x: pa.cos() * ROTATIONSPEED,
             velocity_y: pa.sin() * ROTATIONSPEED,
             view_angle: pa,
-            last_mouse_x: WIDTH as f32 / 2.0,
+            last_mouse_x: SCREEN_WIDTH as f32 / 2.0,
         }
     }
 

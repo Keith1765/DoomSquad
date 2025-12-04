@@ -7,8 +7,10 @@ use minifb::{Key, MouseMode, Window, WindowOptions};
 
 use std::time::{Duration, Instant};
 
-const WIDTH: usize = 800;
-const HEIGHT: usize = 500;
+const SCREEN_WIDTH: usize = 800;
+const SCREEN_HEIGHT: usize = 500;
+
+const TARGET_FPS: usize = 60;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //for fps count
@@ -17,7 +19,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut fps_value = 0.0;
 
     //creates window Safely
-    let mut window = match Window::new("game", WIDTH, HEIGHT, WindowOptions::default()) {
+    let mut window = match Window::new(
+        "game",
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
+        WindowOptions::default(),
+    ) {
         Ok(w) => w,
         Err(e) => {
             eprint!("failed to create Window");
@@ -27,9 +34,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     window.set_cursor_visibility(false); // hide mouse 
 
     //to reduce CPU load by decreasing refresh rate oder so lol
-    window.set_target_fps(60);
+    window.set_target_fps(TARGET_FPS);
 
-    let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
+    let mut buffer: Vec<u32> = vec![0; SCREEN_WIDTH * SCREEN_HEIGHT];
 
     let mut game = game::Game::new();
 
@@ -50,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             window.set_title(&format!("My Window | FPS: {:.1}", fps_value));
         }
         //show buffer safely
-        if let Err(e) = window.update_with_buffer(&buffer, WIDTH, HEIGHT) {
+        if let Err(e) = window.update_with_buffer(&buffer, SCREEN_WIDTH, SCREEN_HEIGHT) {
             eprintln!("failed to update the window: {e}");
             return Err(Box::new(e));
         }
