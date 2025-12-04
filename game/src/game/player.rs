@@ -6,6 +6,11 @@ use std::f64::consts::PI;
 const ROTATIONSPEED: f64 = 2.0;
 const MOVESPEED: f64 = 2.0;
 
+trait Player {
+    
+}
+
+
 #[derive(Clone, Copy)]
 pub struct Player {
     pub position_x: f64,
@@ -14,10 +19,9 @@ pub struct Player {
     pub velocity_y: f64,
     pub view_angle: f64,
     pub last_mouse_x: f32,
+    pub player_health: f64,
 }
 
-//TODO remove pdx and pdy
-//TODO long variable names
 
 impl Player {
     pub fn new() -> Self {
@@ -41,6 +45,7 @@ impl Player {
             self.last_mouse_x = mx; // store for next frame
             self.update_dir();
         }
+        //Player Rotation
         if window.is_key_down(Key::Q) {
             self.check_angle();
             self.view_angle -= 0.1;
@@ -52,7 +57,7 @@ impl Player {
             self.view_angle += 0.1;
             self.update_dir();
         }
-
+        //Player movment
         if window.is_key_down(Key::W) {
             self.position_x += self.velocity_x * MOVESPEED;
             self.position_y += self.velocity_y * MOVESPEED;
