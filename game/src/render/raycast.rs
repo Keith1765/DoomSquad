@@ -1,11 +1,56 @@
+use std::cmp::Ordering;
+
 use crate::game::map::{Point, Side};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct RayHit {
     pub position: Point,
     pub distance: f64,
     pub proportion_along_side: f64, // how far of the way from left to right we go along the side
     pub side: Side,
+}
+
+// allows us to implement Ord based on distance of the rayhit without making rh1 == rh2 depend only on distance (i.e. it remains actual full equality)
+pub struct RayHitOrderer {
+    pub rh: RayHit,
+}
+
+impl PartialEq for RayHitOrderer {
+    fn eq(&self, other: &Self) -> bool {
+        self.rh.distance == other.rh.distance
+    }
+}
+
+impl Eq for RayHitOrderer {} // PartialEQ already handles functionality, but must be written out; do not remove
+
+impl PartialOrd for RayHitOrderer {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self.rh.distance > other.rh.distance {
+            Some(Ordering::Greater)
+        } else if self.rh.distance < other.rh.distance {
+            Some(Ordering::Less)
+        } else {
+            Some(Ordering::Equal)
+        }
+    }
+}
+
+impl Ord for RayHitOrderer {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self.rh.distance > other.rh.distance {
+            Ordering::Greater
+        } else if self.rh.distance < other.rh.distance {
+            Ordering::Less
+        } else {
+            Ordering::Equal
+        }
+    }
+}
+
+impl RayHitOrderer {
+    pub fn new(rayhit: RayHit) -> Self {
+        RayHitOrderer { rh: rayhit }
+    }
 }
 
 //checks wether a ray intersect the line between two given points

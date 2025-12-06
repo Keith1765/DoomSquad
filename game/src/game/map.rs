@@ -1,6 +1,8 @@
 use std::ops::{Add, Sub};
 
-#[derive(Clone, Copy)]
+pub const LEVEL_HEIGHT: f64 = 20.0; // TODO different for every map
+
+#[derive(Clone, Copy, PartialEq)]
 pub struct Point {
     pub x: f64,
     pub y: f64,
@@ -27,27 +29,29 @@ impl Add for Point {
     }
 }
 
-#[derive(Clone, Copy)]
-pub enum SideType {
+#[derive(Clone, Copy, PartialEq)]
+pub enum ShapeType {
     Wall,
     Block,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Side {
     pub point1: Point,
     pub point2: Point,
-    pub side_type: SideType,
+    pub side_type: ShapeType,
     pub angle_in_world: f64,
+    pub height: f64,
 }
 
 impl Side {
-    pub fn new(point1: Point, point2: Point, side_type: SideType) -> Self {
+    pub fn new(point1: Point, point2: Point, side_type: ShapeType, height: f64) -> Self {
         return Side {
             point1: point1,
             point2: point2,
             side_type: side_type,
             angle_in_world: ((point1.x - point2.x) / (point1.y - point2.y)).atan(),
+            height: height,
         };
     }
 }
@@ -55,11 +59,11 @@ impl Side {
 #[derive(Clone)]
 pub struct Shape {
     pub sides: Vec<Side>,
-    pub shape_type: SideType,
+    pub shape_type: ShapeType,
 }
 
 impl Shape {
-    pub fn from_points(points: Vec<Point>, shape_type: SideType) -> Option<Self> {
+    pub fn from_points(points: Vec<Point>, shape_type: ShapeType, height: f64) -> Option<Self> {
         if points.is_empty() {
             return None;
         }
@@ -69,7 +73,7 @@ impl Shape {
         for i in 0..points.len() {
             point1 = point2;
             point2 = *points.get(i)?;
-            sides.push(Side::new(point1, point2, shape_type));
+            sides.push(Side::new(point1, point2, shape_type, height)); // TODO make height passable to method
         }
         Some(Shape {
             sides: sides,
@@ -105,7 +109,8 @@ impl Map {
                     Point { x: 50.0, y: 200.0 },
                     Point { x: 150.0, y: 200.0 },
                 ],
-                SideType::Wall,
+                ShapeType::Wall,
+                LEVEL_HEIGHT,
             )?,
             walls: vec![Shape::from_points(
                 vec![
@@ -120,9 +125,18 @@ impl Map {
                     Point { x: 50.0, y: 200.0 },
                     Point { x: 150.0, y: 200.0 },
                 ],
-                SideType::Wall,
+                ShapeType::Wall,
+                LEVEL_HEIGHT,
             )?],
-            blocks: Vec::new(),
+            blocks: vec![Shape::from_points(
+                vec![
+                    Point { x: 200.0, y: 200.0 },
+                    Point { x: 175.0, y: 200.0 },
+                    Point { x: 175.0, y: 175.0 },
+                ],
+                ShapeType::Block,
+                7.0,
+            )?],
             //points_in_border: Vec::new(),
         })
     }
