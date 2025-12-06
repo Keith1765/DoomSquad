@@ -1,15 +1,17 @@
 use super::map::Map;
-use crate::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use crate::{SCREEN_HEIGHT, SCREEN_WIDTH, game::map::LEVEL_HEIGHT};
 use minifb::{Key, MouseMode, Window};
 use std::f64::consts::PI;
 
 const ROTATIONSPEED: f64 = 2.0;
-const MOVESPEED: f64 = 2.0;
+const MOVESPEED: f64 = 1.0;
+const FLYUPANDDOWNSPEED: f64 = 3.0;
 
 #[derive(Clone, Copy)]
 pub struct Player {
     pub position_x: f64,
     pub position_y: f64,
+    pub view_height: f64,
     pub velocity_x: f64,
     pub velocity_y: f64,
     pub view_angle: f64,
@@ -22,6 +24,7 @@ impl Player {
         Self {
             position_x: 210.0,
             position_y: 220.0,
+            view_height: 10.0,
             velocity_x: pa.cos() * ROTATIONSPEED,
             velocity_y: pa.sin() * ROTATIONSPEED,
             view_angle: pa,
@@ -67,6 +70,14 @@ impl Player {
         if window.is_key_down(Key::S) {
             self.position_x -= self.velocity_x * MOVESPEED;
             self.position_y -= self.velocity_y * MOVESPEED;
+        }
+
+        if window.is_key_down(Key::Space) {
+            self.view_height += FLYUPANDDOWNSPEED;
+        }
+
+        if window.is_key_down(Key::LeftShift) {
+            self.view_height -= FLYUPANDDOWNSPEED;
         }
     }
 

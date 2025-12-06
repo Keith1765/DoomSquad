@@ -135,7 +135,7 @@ impl Map {
                     Point { x: 175.0, y: 175.0 },
                 ],
                 ShapeType::Block,
-                LEVEL_HEIGHT / 4.0,
+                7.0,
             )?],
             //points_in_border: Vec::new(),
         })
