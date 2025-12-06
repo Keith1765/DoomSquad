@@ -1,0 +1,28 @@
+name: Rust CI (minimal)
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      # Quality Gate 1: Build
+      - name: Cargo build
+        run: cargo build --verbose
+
+      # Quality Gate 2: Clippy (no warnings allowed)
+      - name: Cargo clippy
+        run: cargo clippy -- -D warnings
+
+      # Run tests
+      - name: Run tests
+        run: cargo test --verbose
