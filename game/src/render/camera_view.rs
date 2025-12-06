@@ -115,7 +115,7 @@ fn draw_column(
     }
 
     // draw the sides for each ray hit over one another
-    // TODO fix vaertical-horizontal scaling?
+    // TODO ? fix vertical-horizontal scaling (currently they arre different units)
     // TODO remove need for type conversions
     while !rayhits_ordered.is_empty() {
         if let Some(rh_ordering) = rayhits_ordered.pop() {
