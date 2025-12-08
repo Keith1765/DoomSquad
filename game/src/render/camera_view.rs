@@ -6,9 +6,8 @@ use crate::game::Game;
 use crate::game::map::{LEVEL_HEIGHT, Point, Shape, ShapeType, Side};
 use crate::render::raycast::{RayHit, RayHitOrderer, intersect};
 use crate::{SCREEN_HEIGHT, SCREEN_WIDTH};
-const HORIZONTAL_FOV: f64 = PI / 1.5;
+const HORIZONTAL_FOV: f64 = PI / 2.0;
 const VERTICAL_FOV: f64 = HORIZONTAL_FOV * (SCREEN_HEIGHT as f64 / SCREEN_WIDTH as f64);
-const VERTICAL_SCALE_COEFFICIENT: f64 = SCREEN_WIDTH as f64 / HORIZONTAL_FOV;
 const BACKGROUND_COLOR: u32 = 0x222222;
 const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.025;
 const WALL_COLOR: u32 = 0x00ff00;
@@ -30,6 +29,7 @@ pub fn draw(buffer: &mut [u32], game: &Game) {
 }
 
 fn draw_camera_view(buffer: &mut [u32], game: &Game) {
+    // TODO move to something stati called renderer_data or sth
     let PROJECTION_PLANE_DISTANCE: f64 = (SCREEN_WIDTH as f64 / 2.0) / (HORIZONTAL_FOV / 2.0).tan();
 
     for x in 0..SCREEN_WIDTH {
@@ -64,6 +64,10 @@ fn draw_column(
     let mut column: [u32; SCREEN_HEIGHT] = [BACKGROUND_COLOR; SCREEN_HEIGHT]; // initialized with default value
 
     let ray_angle = player_angle + angle_relative_to_player;
+
+    // TODO move to something stati called renderer_data or sth
+    let VERTICAL_SCALE_COEFFICIENT: f64 = (SCREEN_WIDTH as f64 / 2.0) / (VERTICAL_FOV / 2.0).tan();
+
     //find closest wall
     let mut closest_wall_hit: Option<RayHit> = None;
     for w in &game.map.walls {
