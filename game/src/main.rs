@@ -7,8 +7,8 @@ use minifb::{Key, MouseMode, Window, WindowOptions};
 
 use std::time::{Duration, Instant};
 
-const SCREEN_WIDTH: usize = 800;
-const SCREEN_HEIGHT: usize = 800;
+const SCREEN_WIDTH: usize = 600;
+const SCREEN_HEIGHT: usize = 600;
 
 const TARGET_FPS: usize = 60;
 

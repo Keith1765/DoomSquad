@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub};
 
-pub const LEVEL_HEIGHT: f64 = 20.0; // TODO different for every map
+pub const LEVEL_HEIGHT: f64 = 25.0; // TODO different for every map
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Point {
@@ -135,7 +135,7 @@ impl Map {
                     Point { x: 175.0, y: 175.0 },
                 ],
                 ShapeType::Block,
-                7.0,
+                25.0,
             )?],
             //points_in_border: Vec::new(),
         })

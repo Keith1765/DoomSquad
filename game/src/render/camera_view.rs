@@ -6,7 +6,9 @@ use crate::game::Game;
 use crate::game::map::{LEVEL_HEIGHT, Point, Shape, ShapeType, Side};
 use crate::render::raycast::{RayHit, RayHitOrderer, intersect};
 use crate::{SCREEN_HEIGHT, SCREEN_WIDTH};
-const HORIZONTAL_FOV: f64 = PI / 2.09;
+const HORIZONTAL_FOV: f64 = PI / 1.5;
+const VERTICAL_FOV: f64 = HORIZONTAL_FOV * (SCREEN_HEIGHT as f64 / SCREEN_WIDTH as f64);
+const VERTICAL_SCALE_COEFFICIENT: f64 = SCREEN_WIDTH as f64 / HORIZONTAL_FOV;
 const BACKGROUND_COLOR: u32 = 0x222222;
 const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.025;
 const WALL_COLOR: u32 = 0x00ff00;
@@ -28,12 +30,12 @@ pub fn draw(buffer: &mut [u32], game: &Game) {
 }
 
 fn draw_camera_view(buffer: &mut [u32], game: &Game) {
-    let projection_plane_distance: f64 = (SCREEN_WIDTH as f64 / 2.0) / (HORIZONTAL_FOV / 2.0).sin();
+    let PROJECTION_PLANE_DISTANCE: f64 = (SCREEN_WIDTH as f64 / 2.0) / (HORIZONTAL_FOV / 2.0).tan();
 
     for x in 0..SCREEN_WIDTH {
         let pixel_distance_from_screen_middle: f64 = x as f64 - SCREEN_WIDTH as f64 / 2.0;
         let angle_relative_to_player: f64 =
-            (pixel_distance_from_screen_middle / projection_plane_distance as f64).atan();
+            (pixel_distance_from_screen_middle / PROJECTION_PLANE_DISTANCE as f64).atan();
 
         let column: [u32; SCREEN_HEIGHT] =
             draw_column(game, angle_relative_to_player, game.player.view_angle);
@@ -128,15 +130,14 @@ fn draw_column(
 
             let normalized_distance_to_side = rh.distance * angle_relative_to_player.cos(); // cos for anti-fisheye effect
 
-            let side_onscreen_height =
-                (rh.side.height / normalized_distance_to_side) * SCREEN_HEIGHT as f64;
+            let side_onscreen_height = (rh.side.height / normalized_distance_to_side) * VERTICAL_SCALE_COEFFICIENT;
             //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
             //let center_x = WIDTH as f64 * 0.5;
             //let proj_dist = center_x / (FOV * 0.5).tan();
-            //let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
+            //let x             let side_bottom_onscreen = (SCREEN_HEIGHT as f64 / 2.0)
+            let side_bottom_onscreen = (SCREEN_HEIGHT as f64 / 2.0) 
+                - (game.player.view_height / normalized_distance_to_side) * VERTICAL_SCALE_COEFFICIENT;
 
-            // we draw wall bottom to top, with shading
-            let side_bottom_onscreen = (SCREEN_HEIGHT as f64 / 2.0) - (game.player.view_height * SCREEN_HEIGHT as f64 / normalized_distance_to_side);
             for onscreen_y in side_bottom_onscreen as usize
                 ..(side_bottom_onscreen + side_onscreen_height) as usize
             {
