@@ -65,9 +65,9 @@ fn draw_column(
     let ray_angle = player_angle + angle_relative_to_player;
 
     // TODO move to something static called renderer_data or sth
-    let VERTICAL_FOV: f64 = ((SCREEN_HEIGHT as f64 / SCREEN_WIDTH as f64) * (HORIZONTAL_FOV / 2.0).tan()).atan() * 2.0;
-    let VERTICAL_SCALE_COEFFICIENT: f64 = (SCREEN_HEIGHT as f64 / 2.0)
-        / (VERTICAL_FOV / 2.0).tan();
+    let VERTICAL_FOV: f64 =
+        ((SCREEN_HEIGHT as f64 / SCREEN_WIDTH as f64) * (HORIZONTAL_FOV / 2.0).tan()).atan() * 2.0;
+    let VERTICAL_SCALE_COEFFICIENT: f64 = (SCREEN_HEIGHT as f64 / 2.0) / (VERTICAL_FOV / 2.0).tan();
 
     //find closest wall
     let mut closest_wall_hit: Option<RayHit> = None;
