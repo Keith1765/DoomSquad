@@ -4,8 +4,8 @@ use minifb::{Key, MouseMode, Window};
 use std::f64::consts::PI;
 
 const ROTATIONSPEED: f64 = 2.0;
-const MOVESPEED: f64 = 0.1;
-const FLYUPANDDOWNSPEED: f64 = 0.1;
+const MOVESPEED: f64 = 0.5;
+const FLYUPANDDOWNSPEED: f64 = 0.5;
 
 #[derive(Clone, Copy)]
 pub struct Player {
@@ -24,7 +24,7 @@ impl Player {
         Self {
             position_x: 187.5,
             position_y: 225.0,
-            view_height: 12.5,
+            view_height: 0.0,
             velocity_x: pa.cos() * ROTATIONSPEED,
             velocity_y: pa.sin() * ROTATIONSPEED,
             view_angle: pa,

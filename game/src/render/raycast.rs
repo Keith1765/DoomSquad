@@ -72,7 +72,7 @@ pub fn intersect(ray_origin: Point, ray_angle: f64, side: Side) -> Option<RayHit
 
     let proportion =
         -side_point1_transformed.y / (side_point2_transformed.y - side_point1_transformed.y); // gives us how far along the wall we are
-    let distance = (side_point2_transformed.x - side_point1_transformed.x) * proportion
+    let distance: f64 = (side_point2_transformed.x - side_point1_transformed.x) * proportion
         + side_point1_transformed.x; // distance between player and intersect
     if distance < 0.0 {
         // if the side is behind us, no Rayhit
@@ -88,7 +88,7 @@ pub fn intersect(ray_origin: Point, ray_angle: f64, side: Side) -> Option<RayHit
     // let angle = (side_point2.y-side_point1.y).atan2(side_point2.x-side_point1.x);
     return Some(RayHit {
         position: position,
-        distance,
+        distance: distance,
         proportion_along_side: proportion,
         side: side,
     });
