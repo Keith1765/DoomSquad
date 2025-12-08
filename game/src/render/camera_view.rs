@@ -7,7 +7,6 @@ use crate::game::map::{LEVEL_HEIGHT, Point, Shape, ShapeType, Side};
 use crate::render::raycast::{RayHit, RayHitOrderer, intersect};
 use crate::{SCREEN_HEIGHT, SCREEN_WIDTH};
 const HORIZONTAL_FOV: f64 = PI / 2.0;
-const VERTICAL_FOV: f64 = HORIZONTAL_FOV * (SCREEN_HEIGHT as f64 / SCREEN_WIDTH as f64);
 const BACKGROUND_COLOR: u32 = 0x222222;
 const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.025;
 const WALL_COLOR: u32 = 0x00ff00;
@@ -65,8 +64,10 @@ fn draw_column(
 
     let ray_angle = player_angle + angle_relative_to_player;
 
-    // TODO move to something stati called renderer_data or sth
-    let VERTICAL_SCALE_COEFFICIENT: f64 = (SCREEN_WIDTH as f64 / 2.0) / (VERTICAL_FOV / 2.0).tan();
+    // TODO move to something static called renderer_data or sth
+    let VERTICAL_FOV: f64 = ((SCREEN_HEIGHT as f64 / SCREEN_WIDTH as f64) * (HORIZONTAL_FOV / 2.0).tan()).atan() * 2.0;
+    let VERTICAL_SCALE_COEFFICIENT: f64 = (SCREEN_HEIGHT as f64 / 2.0)
+        / (VERTICAL_FOV / 2.0).tan();
 
     //find closest wall
     let mut closest_wall_hit: Option<RayHit> = None;
@@ -121,7 +122,6 @@ fn draw_column(
     }
 
     // draw the sides for each ray hit over one another
-    // TODO ? fix vertical-horizontal scaling (currently they arre different units)
     // TODO remove need for type conversions
     while !rayhits_ordered.is_empty() {
         if let Some(rh_ordering) = rayhits_ordered.pop() {
@@ -134,13 +134,15 @@ fn draw_column(
 
             let normalized_distance_to_side = rh.distance * angle_relative_to_player.cos(); // cos for anti-fisheye effect
 
-            let side_onscreen_height = (rh.side.height / normalized_distance_to_side) * VERTICAL_SCALE_COEFFICIENT;
+            let side_onscreen_height =
+                (rh.side.height / normalized_distance_to_side) * VERTICAL_SCALE_COEFFICIENT;
             //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
             //let center_x = WIDTH as f64 * 0.5;
             //let proj_dist = center_x / (FOV * 0.5).tan();
             //let x             let side_bottom_onscreen = (SCREEN_HEIGHT as f64 / 2.0)
-            let side_bottom_onscreen = (SCREEN_HEIGHT as f64 / 2.0) 
-                - (game.player.view_height / normalized_distance_to_side) * VERTICAL_SCALE_COEFFICIENT;
+            let side_bottom_onscreen = (SCREEN_HEIGHT as f64 / 2.0)
+                - (game.player.view_height / normalized_distance_to_side)
+                    * VERTICAL_SCALE_COEFFICIENT;
 
             for onscreen_y in side_bottom_onscreen as usize
                 ..(side_bottom_onscreen + side_onscreen_height) as usize
