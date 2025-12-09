@@ -1,34 +1,34 @@
 use super::map::Map;
-use crate::{HEIGHT, WIDTH};
+use crate::{SCREEN_HEIGHT, SCREEN_WIDTH, game::map::LEVEL_HEIGHT};
 use minifb::{Key, MouseMode, Window};
 use std::f64::consts::PI;
 
 const ROTATIONSPEED: f64 = 2.0;
-const MOVESPEED: f64 = 2.0;
+const MOVESPEED: f64 = 0.5;
+const FLYUPANDDOWNSPEED: f64 = 0.5;
 
 #[derive(Clone, Copy)]
 pub struct Player {
     pub position_x: f64,
     pub position_y: f64,
+    pub view_height: f64,
     pub velocity_x: f64,
     pub velocity_y: f64,
     pub view_angle: f64,
     pub last_mouse_x: f32,
 }
 
-//TODO remove pdx and pdy
-//TODO long variable names
-
 impl Player {
     pub fn new() -> Self {
         let pa: f64 = -PI / 2.0;
         Self {
-            position_x: 200.0,
-            position_y: 200.0,
+            position_x: 187.5,
+            position_y: 225.0,
+            view_height: 0.0,
             velocity_x: pa.cos() * ROTATIONSPEED,
             velocity_y: pa.sin() * ROTATIONSPEED,
             view_angle: pa,
-            last_mouse_x: WIDTH as f32 / 2.0,
+            last_mouse_x: SCREEN_WIDTH as f32 / 2.0,
         }
     }
 
@@ -70,6 +70,14 @@ impl Player {
         if window.is_key_down(Key::S) {
             self.position_x -= self.velocity_x * MOVESPEED;
             self.position_y -= self.velocity_y * MOVESPEED;
+        }
+
+        if window.is_key_down(Key::Space) {
+            self.view_height += FLYUPANDDOWNSPEED;
+        }
+
+        if window.is_key_down(Key::LeftShift) {
+            self.view_height -= FLYUPANDDOWNSPEED;
         }
     }
 
