@@ -66,48 +66,40 @@ fn draw_column(
     // TODO side masterlist: run through all in one, maintain not-behind-closest-wall functionality
     //find closest wall
     let mut closest_wall_hit: Option<RayHit> = None;
-    for w in &game.map.walls {
-        for s in &w.sides {
-            let intersection = intersect(
-                Point {
-                    x: game.player.position_x,
-                    y: game.player.position_y,
+    let mut rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
+    for s in &game.map.sides {
+        let intersection: Option<RayHit> = intersect(
+            Point {
+                x: game.player.position_x,
+                y: game.player.position_y,
+            },
+            ray_angle,
+            s.clone(),
+        );
+        if let Some(rayhit) = intersection { // didnt hit nothing
+            match s.shape.shape_type {
+                // if its a wall, discard if its not cloesest, otherwise overwrite closest
+                ShapeType::Wall => {
+                    if let Some(closest_wall_hit_value) = &closest_wall_hit
+                        && closest_wall_hit_value.distance < rayhit.distance
+                    {
+                        continue;
+                    }
+                    closest_wall_hit = Some(rayhit);
                 },
-                ray_angle,
-                s.clone(),
-            );
-            if let Some(intersection) = intersection {
-                if let Some(wall_hit) = &closest_wall_hit
-                    && wall_hit.distance < intersection.distance
-                {
-                    continue;
+                // if its a blok, add it to the list
+                ShapeType::Block => {
+                    if let Some(closest_wall_hit_value) = &closest_wall_hit
+                        && closest_wall_hit_value.distance < rayhit.distance
+                    {
+                        continue;
+                    }
+                    rayhits_ordered.push(RayHitOrderer { rh: rayhit });
                 }
-                closest_wall_hit = Some(intersection);
             }
         }
     }
 
-    let mut rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
-    for b in &game.map.blocks {
-        for s in &b.sides {
-            let intersection = intersect(
-                Point {
-                    x: game.player.position_x,
-                    y: game.player.position_y,
-                },
-                ray_angle,
-                s.clone(),
-            );
-            if let Some(intersection) = intersection {
-                if let Some(wall_hit) = &closest_wall_hit
-                    && wall_hit.distance < intersection.distance
-                {
-                    continue;
-                }
-                rayhits_ordered.push(RayHitOrderer { rh: intersection });
-            }
-        }
-    }
     if let Some(wall_hit) = closest_wall_hit {
         rayhits_ordered.push(RayHitOrderer { rh: wall_hit });
     }
@@ -129,7 +121,7 @@ fn draw_column(
 
             let normalized_distance_to_side = rh.distance * angle_relative_to_player.cos(); // cos for anti-fisheye effect
 
-            let side_onscreen_height = ((rh.side.height / normalized_distance_to_side)
+            let side_onscreen_height = ((rh.side.shape.height / normalized_distance_to_side)
                 * renderer_data.vertical_scale_coefficient)
                 as isize; // must be addable to bottom_onscreen
 
