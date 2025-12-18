@@ -61,55 +61,14 @@ fn draw_column(
     //     Some(intersects)
     let mut column: [u32; SCREEN_HEIGHT] = [renderer_data.background_color; SCREEN_HEIGHT]; // initialized with default value
 
-    let ray_angle = player_angle + angle_relative_to_player;
-
-    // TODO side masterlist: run through all in one, maintain not-behind-closest-wall functionality
-    //find closest wall
-    let mut closest_wall_hit: Option<RayHit> = None;
-    let mut rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
-    for s in &game.map.sides {
-        let intersection: Option<RayHit> = intersect(
-            Point {
-                x: game.player.position_x,
-                y: game.player.position_y,
-            },
-            ray_angle,
-            s.clone(),
-        );
-        if let Some(rayhit) = intersection { // didnt hit nothing
-            match s.shape.shape_type {
-                // if its a wall, discard if its not cloesest, otherwise overwrite closest
-                ShapeType::Wall => {
-                    if let Some(closest_wall_hit_value) = &closest_wall_hit
-                        && closest_wall_hit_value.distance < rayhit.distance
-                    {
-                        continue;
-                    }
-                    closest_wall_hit = Some(rayhit);
-                },
-                // if its a blok, add it to the list
-                ShapeType::Block => {
-                    if let Some(closest_wall_hit_value) = &closest_wall_hit
-                        && closest_wall_hit_value.distance < rayhit.distance
-                    {
-                        continue;
-                    }
-                    rayhits_ordered.push(RayHitOrderer { rh: rayhit });
-                }
-            }
-        }
-    }
-
-    if let Some(wall_hit) = closest_wall_hit {
-        rayhits_ordered.push(RayHitOrderer { rh: wall_hit });
-    }
-
+    let mut rayhits_ordered = raycast(game, angle_relative_to_player, player_angle);
     if rayhits_ordered.is_empty() {
         return [renderer_data.background_color; SCREEN_HEIGHT]; // default return value: empty column
     }
 
     // draw the sides for each ray hit over one another
     // TODO remove need for type conversions
+    // TODO move into own function?
     while !rayhits_ordered.is_empty() {
         if let Some(rh_ordering) = rayhits_ordered.pop() {
             let rh: RayHit = rh_ordering.rh;
@@ -175,6 +134,56 @@ fn draw_column(
     //draw the line of this ray up to its intersect
     //draw_line(buffer, game.player.position_x as usize, game.player.position_y as usize, wall_point.x as usize, wall_point.y as usize, 0xff0000);
     return column;
+}
+
+
+// cast a ray and return the ordered list of all hits, ending at the closest wall hit
+fn raycast(
+    game: &Game,
+    angle_relative_to_player: f64,
+    player_angle: f64,
+) -> BinaryHeap<RayHitOrderer> {
+    let ray_angle = player_angle + angle_relative_to_player;
+    let mut closest_wall_hit: Option<RayHit> = None;
+    let mut rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
+    for s in &game.map.sides {
+        let intersection: Option<RayHit> = intersect(
+            Point {
+                x: game.player.position_x,
+                y: game.player.position_y,
+            },
+            ray_angle,
+            s.clone(),
+        );
+        if let Some(rayhit) = intersection { // didnt hit nothing
+            match s.shape.shape_type {
+                // if its a wall, discard if its not cloesest, otherwise overwrite closest
+                ShapeType::Wall => {
+                    if let Some(closest_wall_hit_value) = &closest_wall_hit
+                        && closest_wall_hit_value.distance < rayhit.distance
+                    {
+                        continue;
+                    }
+                    closest_wall_hit = Some(rayhit);
+                },
+                // if its a blok, add it to the list
+                ShapeType::Block => {
+                    if let Some(closest_wall_hit_value) = &closest_wall_hit
+                        && closest_wall_hit_value.distance < rayhit.distance
+                    {
+                        continue;
+                    }
+                    rayhits_ordered.push(RayHitOrderer { rh: rayhit });
+                }
+            }
+        }
+    }
+
+    if let Some(wall_hit) = closest_wall_hit {
+        rayhits_ordered.push(RayHitOrderer { rh: wall_hit });
+    }
+
+    return rayhits_ordered;
 }
 
 // fn draw_dimensional_cast(
