@@ -1,6 +1,7 @@
 use super::map::Map;
 use super::player::Player;
-use minifb::Window;
+use pixels::{Pixels, SurfaceTexture};
+
 
 pub struct Game {
     pub player: Player,
@@ -15,7 +16,7 @@ impl Game {
         }
     }
 
-    pub fn update(&mut self, window: &Window) {
-        self.player.update(window, &self.map);
-    }
+    // pub fn update(&mut self, window: &Window) {
+    //     self.player.update(window, &self.map);
+    // }
 }

@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-minifb = "0.27"
 serde = { version = "1.0", features = ["derive"] }
 ron = "0.8"
+winit = "0.30.12"
+pixels = "0.15.0"

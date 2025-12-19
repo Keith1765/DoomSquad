@@ -1,7 +1,7 @@
 use super::map::Map;
 use crate::{SCREEN_HEIGHT, SCREEN_WIDTH, game::map::LEVEL_HEIGHT};
-use minifb::{Key, MouseMode, Window};
 use std::f64::consts::PI;
+use pixels::{Pixels, SurfaceTexture};
 
 const ROTATIONSPEED: f64 = 2.0;
 const MOVESPEED: f64 = 0.5;
@@ -32,54 +32,54 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, window: &Window, map: &Map) {
-        if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
-            self.check_angle();
-            let dx = mx - self.last_mouse_x; // mouse delta
-            self.view_angle += dx as f64 * 0.003; // sensitivity
+    // pub fn update(&mut self, window: &Window, map: &Map) {
+    //     if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
+    //         self.check_angle();
+    //         let dx = mx - self.last_mouse_x; // mouse delta
+    //         self.view_angle += dx as f64 * 0.003; // sensitivity
 
-            self.last_mouse_x = mx; // store for next frame
-            self.update_dir();
-        }
-        if window.is_key_down(Key::Q) {
-            self.check_angle();
-            self.view_angle -= 0.1;
-            self.update_dir();
-        }
+    //         self.last_mouse_x = mx; // store for next frame
+    //         self.update_dir();
+    //     }
+    //     if window.is_key_down(Key::Q) {
+    //         self.check_angle();
+    //         self.view_angle -= 0.1;
+    //         self.update_dir();
+    //     }
 
-        if window.is_key_down(Key::E) {
-            self.check_angle();
-            self.view_angle += 0.1;
-            self.update_dir();
-        }
+    //     if window.is_key_down(Key::E) {
+    //         self.check_angle();
+    //         self.view_angle += 0.1;
+    //         self.update_dir();
+    //     }
 
-        if window.is_key_down(Key::W) {
-            self.position_x += self.velocity_x * MOVESPEED;
-            self.position_y += self.velocity_y * MOVESPEED;
-        }
+    //     if window.is_key_down(Key::W) {
+    //         self.position_x += self.velocity_x * MOVESPEED;
+    //         self.position_y += self.velocity_y * MOVESPEED;
+    //     }
 
-        if window.is_key_down(Key::A) {
-            self.position_x += self.velocity_y * MOVESPEED;
-            self.position_y -= self.velocity_x * MOVESPEED;
-        }
-        if window.is_key_down(Key::D) {
-            self.position_x -= self.velocity_y * MOVESPEED;
-            self.position_y += self.velocity_x * MOVESPEED;
-        }
+    //     if window.is_key_down(Key::A) {
+    //         self.position_x += self.velocity_y * MOVESPEED;
+    //         self.position_y -= self.velocity_x * MOVESPEED;
+    //     }
+    //     if window.is_key_down(Key::D) {
+    //         self.position_x -= self.velocity_y * MOVESPEED;
+    //         self.position_y += self.velocity_x * MOVESPEED;
+    //     }
 
-        if window.is_key_down(Key::S) {
-            self.position_x -= self.velocity_x * MOVESPEED;
-            self.position_y -= self.velocity_y * MOVESPEED;
-        }
+    //     if window.is_key_down(Key::S) {
+    //         self.position_x -= self.velocity_x * MOVESPEED;
+    //         self.position_y -= self.velocity_y * MOVESPEED;
+    //     }
 
-        if window.is_key_down(Key::Space) {
-            self.view_height += FLYUPANDDOWNSPEED;
-        }
+    //     if window.is_key_down(Key::Space) {
+    //         self.view_height += FLYUPANDDOWNSPEED;
+    //     }
 
-        if window.is_key_down(Key::LeftShift) {
-            self.view_height -= FLYUPANDDOWNSPEED;
-        }
-    }
+    //     if window.is_key_down(Key::LeftShift) {
+    //         self.view_height -= FLYUPANDDOWNSPEED;
+    //     }
+    // }
 
     fn check_angle(&mut self) {
         if self.view_angle < 0.1 {
