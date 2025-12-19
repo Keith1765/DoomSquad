@@ -1,4 +1,7 @@
-use std::{ops::{Add, Sub}, rc::Rc};
+use std::{
+    ops::{Add, Sub},
+    rc::Rc,
+};
 
 pub const LEVEL_HEIGHT: f64 = 25.0; // TODO different for every map
 
@@ -34,7 +37,6 @@ pub enum Orientation {
     Top,
     Bottom,
 }
-
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum ShapeType {
@@ -72,7 +74,11 @@ pub struct Shape {
 impl Shape {
     // returns the sides in the shape and the shape itself as tuple
     // add side vector from tuple into side list and shape into shape list
-    pub fn from_points(points: Vec<Point>, shape_type: ShapeType, height: f64) -> Option<(Vec<Side>, Rc<Shape>)> {
+    pub fn from_points(
+        points: Vec<Point>,
+        shape_type: ShapeType,
+        height: f64,
+    ) -> Option<(Vec<Side>, Rc<Shape>)> {
         if points.is_empty() {
             return None;
         }
@@ -88,11 +94,7 @@ impl Shape {
             point2 = *points.get(i)?;
             sides.push(Side::new(point1, point2, shape_type, Rc::clone(&shape))); // TODO make height passable to method
         }
-        return Some ((
-                sides,
-                Rc::clone(&shape),
-            )
-        )
+        return Some((sides, Rc::clone(&shape)));
     }
 }
 
@@ -108,7 +110,6 @@ pub struct Map {
 
 impl Map {
     pub fn new() -> Option<Self> {
-
         let wall_points: Vec<Point> = vec![
             Point { x: 200.0, y: 100.0 },
             Point { x: 250.0, y: 200.0 },
@@ -121,19 +122,34 @@ impl Map {
             Point { x: 50.0, y: 200.0 },
             Point { x: 150.0, y: 200.0 },
         ];
-        let wall_return: (Vec<Side>, Rc<Shape>) = Shape::from_points(wall_points, ShapeType::Wall, LEVEL_HEIGHT)?;
+        let wall_return: (Vec<Side>, Rc<Shape>) =
+            Shape::from_points(wall_points, ShapeType::Wall, LEVEL_HEIGHT)?;
 
-        let block_points: Vec<Point> = vec![
+        let bottom_block_points: Vec<Point> = vec![
             Point { x: 200.0, y: 200.0 },
             Point { x: 175.0, y: 200.0 },
             Point { x: 175.0, y: 175.0 },
         ];
-        let block_return: (Vec<Side>, Rc<Shape>) = Shape::from_points(block_points, ShapeType::Block(Orientation::Bottom), 25.0)?;
+        let mut bottom_block_return: (Vec<Side>, Rc<Shape>) = Shape::from_points(
+            bottom_block_points,
+            ShapeType::Block(Orientation::Bottom),
+            10.0,
+        )?;
+
+        let top_block_points: Vec<Point> = vec![
+            Point { x: 300.0, y: 200.0 },
+            Point { x: 250.0, y: 200.0 },
+            Point { x: 250.0, y: 175.0 },
+        ];
+        let mut top_block_return: (Vec<Side>, Rc<Shape>) =
+            Shape::from_points(top_block_points, ShapeType::Block(Orientation::Top), 10.0)?;
 
         let wall_sides: Vec<Side> = wall_return.0;
         let wall_shapes: Vec<Rc<Shape>> = Vec::from([wall_return.1]);
-        let block_sides: Vec<Side> = block_return.0;
-        let block_shapes: Vec<Rc<Shape>> = Vec::from([block_return.1]);
+        let mut block_sides: Vec<Side> = Vec::new();
+        block_sides.append(&mut bottom_block_return.0);
+        block_sides.append(&mut top_block_return.0);
+        let block_shapes: Vec<Rc<Shape>> = Vec::from([bottom_block_return.1, top_block_return.1]);
 
         Some(Self {
             id: 0,

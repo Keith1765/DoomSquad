@@ -2,7 +2,7 @@ use core::f64;
 use std::collections::BinaryHeap;
 
 use crate::game::Game;
-use crate::game::map::{LEVEL_HEIGHT, Point, Shape, ShapeType, Side}; // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
+use crate::game::map::{LEVEL_HEIGHT, Orientation, Point, Shape, ShapeType, Side}; // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
 use crate::render::raycast::{RayHit, RayHitOrderer, intersect};
 use crate::render::renderer_init::RendererData;
 use crate::{SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
@@ -75,7 +75,8 @@ fn draw_column(
 
             let color = match rh.side.shape.shape_type {
                 ShapeType::Wall => renderer_data.wall_default_color,
-                ShapeType::Block(_) => renderer_data.block_default_color,
+                ShapeType::Block(Orientation::Bottom) => renderer_data.bottom_block_default_color,
+                ShapeType::Block(Orientation::Top) => renderer_data.bottom_block_default_color,
             };
 
             let normalized_distance_to_side = rh.distance * angle_relative_to_player.cos(); // cos for anti-fisheye effect
@@ -88,13 +89,22 @@ fn draw_column(
             //let center_x = WIDTH as f64 * 0.5;
             //let proj_dist = center_x / (FOV * 0.5).tan();
             //let x             let side_bottom_onscreen = (SCREEN_HEIGHT as f64 / 2.0)
-            let side_bottom_onscreen: isize = ((renderer_data.screen_height_as_f64 / 2.0)
-                - (game.player.view_height / normalized_distance_to_side)
-                    * renderer_data.vertical_scale_coefficient)
-                as isize; // must be able to be negative
+            let side_bottom_onscreen: isize = match rh.side.shape.shape_type {
+                ShapeType::Wall | ShapeType::Block(Orientation::Bottom) => {
+                    ((renderer_data.screen_height_as_f64 / 2.0)
+                        - (game.player.view_height / normalized_distance_to_side)
+                            * renderer_data.vertical_scale_coefficient) as isize
+                } // must be able to be negative
+                ShapeType::Block(Orientation::Top) => {
+                    ((((renderer_data.screen_height_as_f64 / 2.0)
+                        + (game.player.view_height / normalized_distance_to_side))
+                        * renderer_data.vertical_scale_coefficient)
+                        - side_onscreen_height as f64) as isize
+                } // must be able to be negative
+            };
 
-            for onscreen_y_isize in side_bottom_onscreen 
-                ..(side_bottom_onscreen + side_onscreen_height) 
+            for onscreen_y_isize in
+                side_bottom_onscreen..(side_bottom_onscreen + side_onscreen_height)
             {
                 let onscreen_y = onscreen_y_isize as usize;
 
@@ -136,7 +146,6 @@ fn draw_column(
     return column;
 }
 
-
 // cast a ray and return the ordered list of all hits, ending at the closest wall hit
 fn raycast(
     game: &Game,
@@ -157,7 +166,8 @@ fn raycast(
             ray_angle,
             w.clone(), // TODO remove need for this clone
         );
-        if let Some(rayhit) = intersection { // didnt hit nothing
+        if let Some(rayhit) = intersection {
+            // didnt hit nothing
             // if its a wall, discard if its not cloesest, otherwise overwrite closest
             if let Some(closest_wall_hit_value) = &closest_wall_hit
                 && closest_wall_hit_value.distance < rayhit.distance
@@ -178,7 +188,8 @@ fn raycast(
             ray_angle,
             b.clone(), // TODO remove need for this clone
         );
-        if let Some(rayhit) = intersection { // didnt hit nothing
+        if let Some(rayhit) = intersection {
+            // didnt hit nothing
             if let Some(closest_wall_hit_value) = &closest_wall_hit
                 && closest_wall_hit_value.distance < rayhit.distance
             {
