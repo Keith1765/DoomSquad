@@ -73,9 +73,9 @@ fn draw_column(
         if let Some(rh_ordering) = rayhits_ordered.pop() {
             let rh: RayHit = rh_ordering.rh;
 
-            let color = match rh.side.side_type {
+            let color = match rh.side.shape.shape_type {
                 ShapeType::Wall => renderer_data.wall_default_color,
-                ShapeType::Block => renderer_data.block_default_color,
+                ShapeType::Block(_) => renderer_data.block_default_color,
             };
 
             let normalized_distance_to_side = rh.distance * angle_relative_to_player.cos(); // cos for anti-fisheye effect
@@ -146,39 +146,49 @@ fn raycast(
     let ray_angle = player_angle + angle_relative_to_player;
     let mut closest_wall_hit: Option<RayHit> = None;
     let mut rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
-    for s in &game.map.sides {
+
+    // find closest wall
+    for w in &game.map.wall_sides {
         let intersection: Option<RayHit> = intersect(
             Point {
                 x: game.player.position_x,
                 y: game.player.position_y,
             },
             ray_angle,
-            s.clone(),
+            w.clone(), // TODO remove need for this clone
         );
         if let Some(rayhit) = intersection { // didnt hit nothing
-            match s.shape.shape_type {
-                // if its a wall, discard if its not cloesest, otherwise overwrite closest
-                ShapeType::Wall => {
-                    if let Some(closest_wall_hit_value) = &closest_wall_hit
-                        && closest_wall_hit_value.distance < rayhit.distance
-                    {
-                        continue;
-                    }
-                    closest_wall_hit = Some(rayhit);
-                },
-                // if its a blok, add it to the list
-                ShapeType::Block => {
-                    if let Some(closest_wall_hit_value) = &closest_wall_hit
-                        && closest_wall_hit_value.distance < rayhit.distance
-                    {
-                        continue;
-                    }
-                    rayhits_ordered.push(RayHitOrderer { rh: rayhit });
-                }
+            // if its a wall, discard if its not cloesest, otherwise overwrite closest
+            if let Some(closest_wall_hit_value) = &closest_wall_hit
+                && closest_wall_hit_value.distance < rayhit.distance
+            {
+                continue;
             }
+            closest_wall_hit = Some(rayhit);
         }
     }
 
+    // list all blocks closer than closest wall in order of distance
+    for b in &game.map.block_sides {
+        let intersection: Option<RayHit> = intersect(
+            Point {
+                x: game.player.position_x,
+                y: game.player.position_y,
+            },
+            ray_angle,
+            b.clone(), // TODO remove need for this clone
+        );
+        if let Some(rayhit) = intersection { // didnt hit nothing
+            if let Some(closest_wall_hit_value) = &closest_wall_hit
+                && closest_wall_hit_value.distance < rayhit.distance
+            {
+                continue;
+            }
+            rayhits_ordered.push(RayHitOrderer { rh: rayhit });
+        }
+    }
+
+    // TODO separate wall_hit, bottom_block_hits_ top_block hits
     if let Some(wall_hit) = closest_wall_hit {
         rayhits_ordered.push(RayHitOrderer { rh: wall_hit });
     }

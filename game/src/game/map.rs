@@ -30,16 +30,22 @@ impl Add for Point {
 }
 
 #[derive(Clone, Copy, PartialEq)]
+pub enum Orientation {
+    Top,
+    Bottom,
+}
+
+
+#[derive(Clone, Copy, PartialEq)]
 pub enum ShapeType {
     Wall,
-    Block,
+    Block(Orientation),
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Side {
     pub point1: Point,
     pub point2: Point,
-    pub side_type: ShapeType,
     pub angle_in_world: f64,
     pub shape: Rc<Shape>,
 }
@@ -49,12 +55,13 @@ impl Side {
         return Side {
             point1: point1,
             point2: point2,
-            side_type: side_type,
             angle_in_world: ((point1.x - point2.x) / (point1.y - point2.y)).atan(),
             shape: shape,
         };
     }
 }
+
+// TODO remove necessety for type; justdistinguish by which list it's in
 
 #[derive(Clone, PartialEq)]
 pub struct Shape {
@@ -89,13 +96,13 @@ impl Shape {
     }
 }
 
-// TODO master shape and side list
-
 pub struct Map {
     pub id: usize,
     //pub border: Shape, // mainly for topdown renderer (maybe change to rectangle?)
-    pub sides: Vec<Side>,
-    pub shapes: Vec<Rc<Shape>>,
+    pub wall_sides: Vec<Side>,
+    pub wall_shapes: Vec<Rc<Shape>>,
+    pub block_sides: Vec<Side>,
+    pub block_shapes: Vec<Rc<Shape>>,
     //pub points_in_border: Vec<Point>,
 }
 
@@ -114,27 +121,26 @@ impl Map {
             Point { x: 50.0, y: 200.0 },
             Point { x: 150.0, y: 200.0 },
         ];
-        let mut wall_return: (Vec<Side>, Rc<Shape>) = Shape::from_points(wall_points, ShapeType::Wall, LEVEL_HEIGHT)?;
+        let wall_return: (Vec<Side>, Rc<Shape>) = Shape::from_points(wall_points, ShapeType::Wall, LEVEL_HEIGHT)?;
 
         let block_points: Vec<Point> = vec![
             Point { x: 200.0, y: 200.0 },
             Point { x: 175.0, y: 200.0 },
             Point { x: 175.0, y: 175.0 },
         ];
-        let mut block_return: (Vec<Side>, Rc<Shape>) = Shape::from_points(block_points, ShapeType::Block, 25.0)?;
+        let block_return: (Vec<Side>, Rc<Shape>) = Shape::from_points(block_points, ShapeType::Block(Orientation::Bottom), 25.0)?;
 
-        let mut sides: Vec<Side> = Vec::new();
-        sides.append(&mut wall_return.0);
-        sides.append(&mut block_return.0);
-        let mut shapes: Vec<Rc<Shape>> = Vec::new();
-        shapes.push(wall_return.1);
-        shapes.push(block_return.1);
-
+        let wall_sides: Vec<Side> = wall_return.0;
+        let wall_shapes: Vec<Rc<Shape>> = Vec::from([wall_return.1]);
+        let block_sides: Vec<Side> = block_return.0;
+        let block_shapes: Vec<Rc<Shape>> = Vec::from([block_return.1]);
 
         Some(Self {
             id: 0,
-            sides: sides,
-            shapes: shapes,
+            wall_sides: wall_sides,
+            wall_shapes: wall_shapes,
+            block_sides: block_sides,
+            block_shapes: block_shapes,
             //points_in_border: Vec::new(),
         })
     }
