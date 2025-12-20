@@ -137,9 +137,12 @@ impl Map {
         )?;
 
         let top_block_points: Vec<Point> = vec![
-            Point { x: 300.0, y: 200.0 },
-            Point { x: 250.0, y: 200.0 },
-            Point { x: 250.0, y: 175.0 },
+            // Point { x: 300.0, y: 225.0 },
+            // Point { x: 250.0, y: 225.0 },
+            // Point { x: 250.0, y: 200.0 },
+            Point { x: 205.0, y: 205.0 },
+            Point { x: 180.0, y: 205.0 },
+            Point { x: 180.0, y: 178.0 },
         ];
         let mut top_block_return: (Vec<Side>, Rc<Shape>) =
             Shape::from_points(top_block_points, ShapeType::Block(Orientation::Top), 10.0)?;

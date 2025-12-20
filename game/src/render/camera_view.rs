@@ -76,7 +76,7 @@ fn draw_column(
             let color = match rh.side.shape.shape_type {
                 ShapeType::Wall => renderer_data.wall_default_color,
                 ShapeType::Block(Orientation::Bottom) => renderer_data.bottom_block_default_color,
-                ShapeType::Block(Orientation::Top) => renderer_data.bottom_block_default_color,
+                ShapeType::Block(Orientation::Top) => renderer_data.top_block_default_color,
             };
 
             let normalized_distance_to_side = rh.distance * angle_relative_to_player.cos(); // cos for anti-fisheye effect
@@ -85,21 +85,18 @@ fn draw_column(
                 * renderer_data.vertical_scale_coefficient)
                 as isize; // must be addable to bottom_onscreen
 
-            //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
-            //let center_x = WIDTH as f64 * 0.5;
-            //let proj_dist = center_x / (FOV * 0.5).tan();
-            //let x             let side_bottom_onscreen = (SCREEN_HEIGHT as f64 / 2.0)
             let side_bottom_onscreen: isize = match rh.side.shape.shape_type {
                 ShapeType::Wall | ShapeType::Block(Orientation::Bottom) => {
-                    ((renderer_data.screen_height_as_f64 / 2.0)
-                        - (game.player.view_height / normalized_distance_to_side)
-                            * renderer_data.vertical_scale_coefficient) as isize
+                    ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
+                        - (game.player.view_height / normalized_distance_to_side) // adjust for view hieght
+                            * renderer_data.vertical_scale_coefficient) as isize // scale correctly
                 } // must be able to be negative
                 ShapeType::Block(Orientation::Top) => {
-                    ((((renderer_data.screen_height_as_f64 / 2.0)
-                        + (game.player.view_height / normalized_distance_to_side))
-                        * renderer_data.vertical_scale_coefficient)
-                        - side_onscreen_height as f64) as isize
+                    ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
+                        + ((LEVEL_HEIGHT - game.player.view_height) // adjust for view height (from top this time)
+                            / normalized_distance_to_side)
+                            * renderer_data.vertical_scale_coefficient) as isize // scale
+                            - side_onscreen_height // move so top flush with level top
                 } // must be able to be negative
             };
 
