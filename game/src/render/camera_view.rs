@@ -3,7 +3,7 @@ use std::collections::BinaryHeap;
 
 use crate::game::Game;
 use crate::game::map::{LEVEL_HEIGHT, Orientation, Point, Shape, ShapeType, Side}; // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
-use crate::render::raycast::{RayHit, RayHitOrderer, intersect};
+use crate::render::raycast::{self, RayHit, RayHitOrderer, intersect, raycast};
 use crate::render::renderer_init::RendererData;
 use crate::{SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
 
@@ -143,66 +143,7 @@ fn draw_column(
     return column;
 }
 
-// cast a ray and return the ordered list of all hits, ending at the closest wall hit
-fn raycast(
-    game: &Game,
-    angle_relative_to_player: f64,
-    player_angle: f64,
-) -> BinaryHeap<RayHitOrderer> {
-    let ray_angle = player_angle + angle_relative_to_player;
-    let mut closest_wall_hit: Option<RayHit> = None;
-    let mut rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
 
-    // find closest wall
-    for w in &game.map.wall_sides {
-        let intersection: Option<RayHit> = intersect(
-            Point {
-                x: game.player.position_x,
-                y: game.player.position_y,
-            },
-            ray_angle,
-            w.clone(), // TODO remove need for this clone
-        );
-        if let Some(rayhit) = intersection {
-            // didnt hit nothing
-            // if its a wall, discard if its not cloesest, otherwise overwrite closest
-            if let Some(closest_wall_hit_value) = &closest_wall_hit
-                && closest_wall_hit_value.distance < rayhit.distance
-            {
-                continue;
-            }
-            closest_wall_hit = Some(rayhit);
-        }
-    }
-
-    // list all blocks closer than closest wall in order of distance
-    for b in &game.map.block_sides {
-        let intersection: Option<RayHit> = intersect(
-            Point {
-                x: game.player.position_x,
-                y: game.player.position_y,
-            },
-            ray_angle,
-            b.clone(), // TODO remove need for this clone
-        );
-        if let Some(rayhit) = intersection {
-            // didnt hit nothing
-            if let Some(closest_wall_hit_value) = &closest_wall_hit
-                && closest_wall_hit_value.distance < rayhit.distance
-            {
-                continue;
-            }
-            rayhits_ordered.push(RayHitOrderer { rh: rayhit });
-        }
-    }
-
-    // TODO separate wall_hit, bottom_block_hits_ top_block hits
-    if let Some(wall_hit) = closest_wall_hit {
-        rayhits_ordered.push(RayHitOrderer { rh: wall_hit });
-    }
-
-    return rayhits_ordered;
-}
 
 // fn draw_dimensional_cast(
 //     buffer: &mut [u32],

@@ -1,6 +1,6 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, collections::BinaryHeap};
 
-use crate::game::map::{Point, Side};
+use crate::game::{Game, map::{Point, Side}};
 
 #[derive(Clone, PartialEq)]
 pub struct RayHit {
@@ -51,6 +51,67 @@ impl RayHitOrderer {
     pub fn new(rayhit: RayHit) -> Self {
         RayHitOrderer { rh: rayhit }
     }
+}
+
+// cast a ray and return the ordered list of all hits, ending at the closest wall hit
+pub fn raycast(
+    game: &Game,
+    angle_relative_to_player: f64,
+    player_angle: f64,
+) -> BinaryHeap<RayHitOrderer> {
+    let ray_angle = player_angle + angle_relative_to_player;
+    let mut closest_wall_hit: Option<RayHit> = None;
+    let mut rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
+
+    // find closest wall
+    for w in &game.map.wall_sides {
+        let intersection: Option<RayHit> = intersect(
+            Point {
+                x: game.player.position_x,
+                y: game.player.position_y,
+            },
+            ray_angle,
+            w.clone(), // TODO remove need for this clone
+        );
+        if let Some(rayhit) = intersection {
+            // didnt hit nothing
+            // if its a wall, discard if its not cloesest, otherwise overwrite closest
+            if let Some(closest_wall_hit_value) = &closest_wall_hit
+                && closest_wall_hit_value.distance < rayhit.distance
+            {
+                continue;
+            }
+            closest_wall_hit = Some(rayhit);
+        }
+    }
+
+    // list all blocks closer than closest wall in order of distance
+    for b in &game.map.block_sides {
+        let intersection: Option<RayHit> = intersect(
+            Point {
+                x: game.player.position_x,
+                y: game.player.position_y,
+            },
+            ray_angle,
+            b.clone(), // TODO remove need for this clone
+        );
+        if let Some(rayhit) = intersection {
+            // didnt hit nothing
+            if let Some(closest_wall_hit_value) = &closest_wall_hit
+                && closest_wall_hit_value.distance < rayhit.distance
+            {
+                continue;
+            }
+            rayhits_ordered.push(RayHitOrderer { rh: rayhit });
+        }
+    }
+
+    // TODO separate wall_hit, bottom_block_hits_ top_block hits
+    if let Some(wall_hit) = closest_wall_hit {
+        rayhits_ordered.push(RayHitOrderer { rh: wall_hit });
+    }
+
+    return rayhits_ordered;
 }
 
 //checks wether a ray intersect the line between two given points
