@@ -1,6 +1,6 @@
-use std::{cmp::Ordering, collections::BinaryHeap};
+use std::{cmp::Ordering, collections::{BinaryHeap, HashSet}, rc::Rc};
 
-use crate::game::{Game, map::{Point, Side}};
+use crate::game::{Game, map::{Orientation, Point, Shape, ShapeType, Side}};
 
 #[derive(Clone, PartialEq)]
 pub struct RayHit {
@@ -53,17 +53,36 @@ impl RayHitOrderer {
     }
 }
 
+// the 'slice' a ray makes through one block
+#[derive(Clone, PartialEq)]
+struct BlockSlice {
+    entry_side_hit: RayHit,
+    exit_side_hit: RayHit,
+}
+
+// struct BlockSliceOrderer {
+//     bs: BlockSlice // does not stand for bullshit
+// }
+
+// a slice of the map: the wall at the back, the bottom blocks and the top blocks
+#[derive(Clone, PartialEq)]
+struct MapSlice {
+    wall_hit: RayHit,
+    bottom_block_slices: Vec<BlockSlice>,
+    top_block_slices: Vec<BlockSlice>,
+}
+
 // cast a ray and return the ordered list of all hits, ending at the closest wall hit
 pub fn raycast(
     game: &Game,
     angle_relative_to_player: f64,
     player_angle: f64,
 ) -> BinaryHeap<RayHitOrderer> {
-    let ray_angle = player_angle + angle_relative_to_player;
-    let mut closest_wall_hit: Option<RayHit> = None;
-    let mut rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
 
+    let ray_angle = player_angle + angle_relative_to_player;
+    
     // find closest wall
+    let mut closest_wall_hit: Option<RayHit> = None;
     for w in &game.map.wall_sides {
         let intersection: Option<RayHit> = intersect(
             Point {
@@ -86,6 +105,7 @@ pub fn raycast(
     }
 
     // list all blocks closer than closest wall in order of distance
+        let mut block_rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
     for b in &game.map.block_sides {
         let intersection: Option<RayHit> = intersect(
             Point {
@@ -102,16 +122,44 @@ pub fn raycast(
             {
                 continue;
             }
-            rayhits_ordered.push(RayHitOrderer { rh: rayhit });
+            block_rayhits_ordered.push(RayHitOrderer { rh: rayhit });
         }
     }
 
     // TODO separate wall_hit, bottom_block_hits_ top_block hits
     if let Some(wall_hit) = closest_wall_hit {
-        rayhits_ordered.push(RayHitOrderer { rh: wall_hit });
+        block_rayhits_ordered.push(RayHitOrderer { rh: wall_hit });
     }
 
-    return rayhits_ordered;
+    // we go through the rayhits back to front and remember which block (shape) it belonged to
+    // when we find another rayhit for that shape, we've exited the shape and can 
+
+    let mut bottom_block_slices: Vec<BlockSlice> = Vec::new();
+    let mut top_block_slices: Vec<BlockSlice> = Vec::new();
+
+    let mut bottom_blocks_currently_inside: HashSet<Rc<Shape>> = HashSet::new();
+    let mut top_blocks_currently_inside: HashSet<Rc<Shape>> = HashSet::new();
+
+    // TODO actually write this
+    // while !block_rayhits_ordered.is_empty() {
+    //     if let Some(rh_ordering) = block_rayhits_ordered.pop() {
+    //         let rh = rh_ordering.rh;
+
+    //         match rh.side.shape.shape_type {
+    //             ShapeType::Wall => {}, // TODO update when closest_wall_hit no longer in rayhits_ordered
+    //             ShapeType::Block(Orientation::Bottom) => {
+    //                 if bottom_blocks_currently_inside.contains(rh.side.shape) {
+
+    //                 }
+    //             },
+    //             ShapeType::Block(Orientation::Top) => {
+
+    //             },
+    //         }
+    //     } 
+    // }
+
+    return block_rayhits_ordered;
 }
 
 //checks wether a ray intersect the line between two given points
