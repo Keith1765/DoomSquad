@@ -249,7 +249,7 @@ fn draw_reference_points(buffer: &mut [u32]) {
     for x in 0..SCREEN_WIDTH {
         for y in 0..SCREEN_HEIGHT {
             if x % 50 == 0 && y % 50 == 0 {
-                buffer[y * SCREEN_WIDTH + x] = 0xff0000;
+                buffer[y * SCREEN_WIDTH + x] = 0xffffff;
             }
         }
     }
