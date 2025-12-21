@@ -19,6 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         eprintln!("Error: {e}");
     }
 
+
     ////!I commented game init to test parser first
     // //for fps count
     // let mut last_time = Instant::now();
