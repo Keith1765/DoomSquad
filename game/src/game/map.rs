@@ -1,6 +1,5 @@
 use std::{
-    ops::{Add, Sub},
-    rc::Rc,
+    hash::{Hash, Hasher}, ops::{Add, Sub}, rc::Rc
 };
 
 pub const LEVEL_HEIGHT: f64 = 25.0; // TODO different for every map
@@ -67,11 +66,23 @@ impl Side {
 
 // TODO remove necessety for type; justdistinguish by which list it's in
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub struct Shape {
     pub id: usize,
     pub shape_type: ShapeType,
     pub height: f64,
+}
+
+impl PartialEq for Shape {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+impl Eq for Shape {}
+impl Hash for Shape {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
 }
 
 pub struct Map {

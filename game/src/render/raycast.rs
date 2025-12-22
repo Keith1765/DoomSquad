@@ -141,23 +141,23 @@ pub fn raycast(
     let mut top_blocks_currently_inside: HashSet<Rc<Shape>> = HashSet::new();
 
     // TODO actually write this
-    // while !block_rayhits_ordered.is_empty() {
-    //     if let Some(rh_ordering) = block_rayhits_ordered.pop() {
-    //         let rh = rh_ordering.rh;
+    while !block_rayhits_ordered.is_empty() {
+        if let Some(rh_ordering) = block_rayhits_ordered.pop() {
+            let rh = rh_ordering.rh;
 
-    //         match rh.side.shape.shape_type {
-    //             ShapeType::Wall => {}, // TODO update when closest_wall_hit no longer in rayhits_ordered
-    //             ShapeType::Block(Orientation::Bottom) => {
-    //                 if bottom_blocks_currently_inside.contains(rh.side.shape) {
+            match rh.side.shape.shape_type {
+                ShapeType::Wall => {}, // TODO update when closest_wall_hit no longer in rayhits_ordered
+                ShapeType::Block(Orientation::Bottom) => {
+                    if bottom_blocks_currently_inside.contains(&rh.side.shape) {
 
-    //                 }
-    //             },
-    //             ShapeType::Block(Orientation::Top) => {
+                    }
+                },
+                ShapeType::Block(Orientation::Top) => {
 
-    //             },
-    //         }
-    //     } 
-    // }
+                },
+            }
+        } 
+    }
 
     return block_rayhits_ordered;
 }
