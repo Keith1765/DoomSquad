@@ -46,6 +46,7 @@ pub enum ShapeType {
 
 #[derive(Clone, PartialEq)]
 pub struct Side {
+    pub id: usize,
     pub point1: Point,
     pub point2: Point,
     pub angle_in_world: f64,
@@ -53,8 +54,9 @@ pub struct Side {
 }
 
 impl Side {
-    pub fn new(point1: Point, point2: Point, side_type: ShapeType, shape: Rc<Shape>) -> Self {
+    pub fn new(id: usize, point1: Point, point2: Point, shape: Rc<Shape>) -> Self {
         return Side {
+            id: id,
             point1: point1,
             point2: point2,
             angle_in_world: ((point1.x - point2.x) / (point1.y - point2.y)).atan(),
@@ -67,35 +69,9 @@ impl Side {
 
 #[derive(Clone, PartialEq)]
 pub struct Shape {
+    pub id: usize,
     pub shape_type: ShapeType,
     pub height: f64,
-}
-
-impl Shape {
-    // returns the sides in the shape and the shape itself as tuple
-    // add side vector from tuple into side list and shape into shape list
-    pub fn from_points(
-        points: Vec<Point>,
-        shape_type: ShapeType,
-        height: f64,
-    ) -> Option<(Vec<Side>, Rc<Shape>)> {
-        if points.is_empty() {
-            return None;
-        }
-        let shape = Rc::new(Shape {
-            shape_type: shape_type,
-            height: height,
-        });
-        let mut sides: Vec<Side> = Vec::new();
-        let mut point1: Point;
-        let mut point2: Point = *points.last()?;
-        for i in 0..points.len() {
-            point1 = point2;
-            point2 = *points.get(i)?;
-            sides.push(Side::new(point1, point2, shape_type, Rc::clone(&shape))); // TODO make height passable to method
-        }
-        return Some((sides, Rc::clone(&shape)));
-    }
 }
 
 pub struct Map {
@@ -104,12 +80,24 @@ pub struct Map {
     pub wall_sides: Vec<Side>,
     pub wall_shapes: Vec<Rc<Shape>>,
     pub block_sides: Vec<Side>,
-    pub block_shapes: Vec<Rc<Shape>>,
-    //pub points_in_border: Vec<Point>,
+    pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed?
+    side_count: usize,
+    shape_count: usize,
 }
 
 impl Map {
     pub fn new() -> Option<Self> {
+
+        let mut map = Self {
+            id: 0,
+            wall_sides: Vec::new(),
+            wall_shapes: Vec::new(),
+            block_sides: Vec::new(),
+            block_shapes: Vec::new(),
+            side_count: 0,
+            shape_count: 0,
+            //points_in_border: Vec::new(),
+        };
         let wall_points: Vec<Point> = vec![
             Point { x: 200.0, y: 100.0 },
             Point { x: 250.0, y: 200.0 },
@@ -122,15 +110,14 @@ impl Map {
             Point { x: 50.0, y: 200.0 },
             Point { x: 150.0, y: 200.0 },
         ];
-        let wall_return: (Vec<Side>, Rc<Shape>) =
-            Shape::from_points(wall_points, ShapeType::Wall, LEVEL_HEIGHT)?;
+        map.add_shape_from_points(wall_points, ShapeType::Wall, LEVEL_HEIGHT)?;
 
         let bottom_block_points: Vec<Point> = vec![
             Point { x: 200.0, y: 200.0 },
             Point { x: 175.0, y: 200.0 },
             Point { x: 175.0, y: 175.0 },
         ];
-        let mut bottom_block_return: (Vec<Side>, Rc<Shape>) = Shape::from_points(
+        map.add_shape_from_points(
             bottom_block_points,
             ShapeType::Block(Orientation::Bottom),
             10.0,
@@ -144,23 +131,48 @@ impl Map {
             Point { x: 180.0, y: 205.0 },
             Point { x: 180.0, y: 178.0 },
         ];
-        let mut top_block_return: (Vec<Side>, Rc<Shape>) =
-            Shape::from_points(top_block_points, ShapeType::Block(Orientation::Top), 10.0)?;
+        map.add_shape_from_points(top_block_points, ShapeType::Block(Orientation::Top), 10.0)?;
 
-        let wall_sides: Vec<Side> = wall_return.0;
-        let wall_shapes: Vec<Rc<Shape>> = Vec::from([wall_return.1]);
-        let mut block_sides: Vec<Side> = Vec::new();
-        block_sides.append(&mut bottom_block_return.0);
-        block_sides.append(&mut top_block_return.0);
-        let block_shapes: Vec<Rc<Shape>> = Vec::from([bottom_block_return.1, top_block_return.1]);
+        Some(map)
+    }
 
-        Some(Self {
-            id: 0,
-            wall_sides: wall_sides,
-            wall_shapes: wall_shapes,
-            block_sides: block_sides,
-            block_shapes: block_shapes,
-            //points_in_border: Vec::new(),
-        })
+    // returns the sides in the shape and the shape itself as tuple
+    // add side vector from tuple into side list and shape into shape list
+    pub fn add_shape_from_points(
+        &mut self,
+        points: Vec<Point>,
+        shape_type: ShapeType,
+        height: f64,
+    ) -> Option<()> {
+        if points.is_empty() {
+            return None;
+        }
+        let shape = Rc::new(Shape {
+            id: self.shape_count,
+            shape_type: shape_type,
+            height: height,
+        });
+
+        // references to push to the corect list
+        let sides: &mut Vec<Side> = match shape_type {
+            ShapeType::Wall => &mut self.wall_sides,
+            ShapeType::Block(_) => &mut self.block_sides
+        };
+        let shapes: &mut Vec<Rc<Shape>> = match shape_type {
+            ShapeType::Wall => &mut self.wall_shapes,
+            ShapeType::Block(_) => &mut self.block_shapes
+        };
+
+        let mut point1: Point;
+        let mut point2: Point = *points.last()?;
+        for i in 0..points.len() {
+            point1 = point2;
+            point2 = *points.get(i)?;
+            sides.push(Side::new(self.side_count, point1, point2, Rc::clone(&shape)));
+            self.side_count+=1;
+        }
+        shapes.push(shape);
+        self.shape_count+=1;
+        return Some(());
     }
 }

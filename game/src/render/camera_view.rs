@@ -2,7 +2,7 @@ use core::f64;
 use std::collections::BinaryHeap;
 
 use crate::game::Game;
-use crate::game::map::{LEVEL_HEIGHT, Orientation, Point, Shape, ShapeType, Side}; // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
+use crate::game::map::{LEVEL_HEIGHT, Orientation, Point, ShapeType, Side}; // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
 use crate::render::raycast::{self, RayHit, RayHitOrderer, intersect, raycast};
 use crate::render::renderer_init::RendererData;
 use crate::{SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
