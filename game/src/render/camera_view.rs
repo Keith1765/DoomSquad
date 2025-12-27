@@ -81,11 +81,11 @@ fn draw_column(
 
             let normalized_distance_to_side = rh.distance * angle_relative_to_player.cos(); // cos for anti-fisheye effect
 
-            let side_onscreen_height = ((rh.side.shape.height / normalized_distance_to_side)
+            let side_height_onscreen = ((rh.side.shape.height / normalized_distance_to_side)
                 * renderer_data.vertical_scale_coefficient)
                 as isize; // must be addable to bottom_onscreen
 
-            let side_bottom_onscreen: isize = match rh.side.shape.shape_type {
+            let mut side_bottom_onscreen: isize = match rh.side.shape.shape_type {
                 ShapeType::Wall | ShapeType::Block(Orientation::Bottom) => {
                     ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
                         - (game.player.view_height / normalized_distance_to_side) // adjust for view hieght
@@ -96,12 +96,15 @@ fn draw_column(
                         + ((LEVEL_HEIGHT - game.player.view_height) // adjust for view height (from top this time)
                             / normalized_distance_to_side)
                             * renderer_data.vertical_scale_coefficient) as isize // scale
-                            - side_onscreen_height // move so top flush with level top
+                            - side_height_onscreen // move so top flush with level top
                 } // must be able to be negative
             };
 
+            let side_top_onscreen = (side_bottom_onscreen + side_height_onscreen).min(SCREEN_HEIGHT as isize);
+            side_bottom_onscreen = side_bottom_onscreen.max(0);
+
             for onscreen_y_isize in
-                side_bottom_onscreen..(side_bottom_onscreen + side_onscreen_height)
+                side_bottom_onscreen..side_top_onscreen
             {
                 let onscreen_y = onscreen_y_isize as usize;
 
