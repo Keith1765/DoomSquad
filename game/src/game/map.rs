@@ -1,8 +1,13 @@
 use std::{
-    hash::{Hash, Hasher}, ops::{Add, Sub}, rc::Rc
+    hash::{Hash, Hasher},
+    ops::{Add, Sub},
+    rc::Rc,
 };
 
 pub const LEVEL_HEIGHT: f64 = 25.0; // TODO different for every map
+
+pub type ShapeID = usize;
+type SideID = usize;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Point {
@@ -45,7 +50,7 @@ pub enum ShapeType {
 
 #[derive(Clone, PartialEq)]
 pub struct Side {
-    pub id: usize,
+    pub id: SideID,
     pub point1: Point,
     pub point2: Point,
     pub angle_in_world: f64,
@@ -64,11 +69,10 @@ impl Side {
     }
 }
 
-// TODO remove necessety for type; justdistinguish by which list it's in
-
+// TODO remove necessety for type; justdistinguish by which list it's in (or not?)
 #[derive(Clone)]
 pub struct Shape {
-    pub id: usize,
+    pub id: ShapeID,
     pub shape_type: ShapeType,
     pub height: f64,
 }
@@ -98,7 +102,6 @@ pub struct Map {
 
 impl Map {
     pub fn new() -> Option<Self> {
-
         let mut map = Self {
             id: 0,
             wall_sides: Vec::new(),
@@ -167,11 +170,11 @@ impl Map {
         // references to push to the corect list
         let sides: &mut Vec<Side> = match shape_type {
             ShapeType::Wall => &mut self.wall_sides,
-            ShapeType::Block(_) => &mut self.block_sides
+            ShapeType::Block(_) => &mut self.block_sides,
         };
         let shapes: &mut Vec<Rc<Shape>> = match shape_type {
             ShapeType::Wall => &mut self.wall_shapes,
-            ShapeType::Block(_) => &mut self.block_shapes
+            ShapeType::Block(_) => &mut self.block_shapes,
         };
 
         let mut point1: Point;
@@ -179,11 +182,16 @@ impl Map {
         for i in 0..points.len() {
             point1 = point2;
             point2 = *points.get(i)?;
-            sides.push(Side::new(self.side_count, point1, point2, Rc::clone(&shape)));
-            self.side_count+=1;
+            sides.push(Side::new(
+                self.side_count,
+                point1,
+                point2,
+                Rc::clone(&shape),
+            ));
+            self.side_count += 1;
         }
         shapes.push(shape);
-        self.shape_count+=1;
+        self.shape_count += 1;
         return Some(());
     }
 }

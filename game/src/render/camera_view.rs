@@ -3,7 +3,9 @@ use std::collections::BinaryHeap;
 
 use crate::game::Game;
 use crate::game::map::{LEVEL_HEIGHT, Orientation, Point, ShapeType, Side}; // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
-use crate::render::raycast::{self, RayHit, RayHitOrderer, intersect, raycast};
+use crate::render::raycast::{
+    self, BlockSlice, MapSlice, RayHit, RayHitOrderer, intersect, raycast,
+};
 use crate::render::renderer_init::RendererData;
 use crate::{SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
 
@@ -61,77 +63,78 @@ fn draw_column(
     //     Some(intersects)
     let mut column: [u32; SCREEN_HEIGHT] = [renderer_data.background_color; SCREEN_HEIGHT]; // initialized with default value
 
-    let mut rayhits_ordered = raycast(game, angle_relative_to_player, player_angle);
-    if rayhits_ordered.is_empty() {
-        return [renderer_data.background_color; SCREEN_HEIGHT]; // default return value: empty column
+    let mut map_slice: MapSlice = raycast(game, angle_relative_to_player, player_angle);
+
+    if let Some(wall_hit) = map_slice.wall_hit {
+        draw_wall(
+            wall_hit,
+            angle_relative_to_player,
+            renderer_data,
+            game,
+            &mut column,
+        ); // default return value: empty column
     }
 
-    // draw the sides for each ray hit over one another
-    // TODO remove need for type conversions
-    // TODO move into own function?
-    while !rayhits_ordered.is_empty() {
-        if let Some(rh_ordering) = rayhits_ordered.pop() {
-            let rh: RayHit = rh_ordering.rh;
-
-            let color = match rh.side.shape.shape_type {
-                ShapeType::Wall => renderer_data.wall_default_color,
-                ShapeType::Block(Orientation::Bottom) => renderer_data.bottom_block_default_color,
-                ShapeType::Block(Orientation::Top) => renderer_data.top_block_default_color,
-            };
-
-            let normalized_distance_to_side = rh.distance * angle_relative_to_player.cos(); // cos for anti-fisheye effect
-
-            let side_height_onscreen = ((rh.side.shape.height / normalized_distance_to_side)
-                * renderer_data.vertical_scale_coefficient)
-                as isize; // must be addable to bottom_onscreen
-
-            let mut side_bottom_onscreen: isize = match rh.side.shape.shape_type {
-                ShapeType::Wall | ShapeType::Block(Orientation::Bottom) => {
-                    ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
-                        - (game.player.view_height / normalized_distance_to_side) // adjust for view hieght
-                            * renderer_data.vertical_scale_coefficient) as isize // scale correctly
-                } // must be able to be negative
-                ShapeType::Block(Orientation::Top) => {
-                    ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
-                        + ((LEVEL_HEIGHT - game.player.view_height) // adjust for view height (from top this time)
-                            / normalized_distance_to_side)
-                            * renderer_data.vertical_scale_coefficient) as isize // scale
-                            - side_height_onscreen // move so top flush with level top
-                } // must be able to be negative
-            };
-
-            let side_top_onscreen = (side_bottom_onscreen + side_height_onscreen).min(SCREEN_HEIGHT as isize);
-            side_bottom_onscreen = side_bottom_onscreen.max(0);
-
-            for onscreen_y_isize in
-                side_bottom_onscreen..side_top_onscreen
-            {
-                let onscreen_y = onscreen_y_isize as usize;
-
-                if onscreen_y >= SCREEN_HEIGHT {
-                    continue;
-                }
-
-                let brightness = (rh.side.angle_in_world.cos() * 0.5
-                    / (rh.distance as f64 * renderer_data.distance_darkness_coefficient)
-                    + 0.5)
-                    .clamp(0.2, 1.0);
-                // 2. Extract channels
-                let a = (color >> 24) & 0xFF;
-                let r = (color >> 16) & 0xFF;
-                let g = (color >> 8) & 0xFF;
-                let b = color & 0xFF;
-
-                // 3. Scale each channel
-                let r = (r as f64 * brightness) as u32;
-                let g = (g as f64 * brightness) as u32;
-                let b = (b as f64 * brightness) as u32;
-
-                // 4. Repack
-                column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
-            }
-        }
+    for slice in map_slice.bottom_block_slices {
+        draw_block_slice(
+            slice,
+            angle_relative_to_player,
+            renderer_data,
+            game,
+            &mut column,
+        );
     }
+
+    for slice in map_slice.top_block_slices {
+        draw_block_slice(
+            slice,
+            angle_relative_to_player,
+            renderer_data,
+            game,
+            &mut column,
+        );
+    }
+
+    // // draw the sides for each ray hit over one another
+    // // TODO remove need for type conversions
+    // // TODO move into own function?
+    // while !map_slice.is_empty() {
+    //     if let Some(rh_ordering) = map_slice.pop() {
+    //         let rh: RayHit = rh_ordering.rh;
+
+    //         let color = match rh.side.shape.shape_type {
+    //             ShapeType::Wall => renderer_data.wall_default_color,
+    //             ShapeType::Block(Orientation::Bottom) => renderer_data.bottom_block_default_color,
+    //             ShapeType::Block(Orientation::Top) => renderer_data.top_block_default_color,
+    //         };
+
+    //         for onscreen_y_isize in side_bottom_onscreen..side_top_onscreen {
+    //             let onscreen_y = onscreen_y_isize as usize;
+
+    //             if onscreen_y >= SCREEN_HEIGHT {
+    //                 continue;
+    //             }
+
+    //             let brightness = (rh.side.angle_in_world.cos() * 0.5
+    //                 / (rh.distance as f64 * renderer_data.distance_darkness_coefficient)
+    //                 + 0.5)
+    //                 .clamp(0.2, 1.0);
+    //             // 2. Extract channels
+    //             let a = (color >> 24) & 0xFF;
+    //             let r = (color >> 16) & 0xFF;
+    //             let g = (color >> 8) & 0xFF;
+    //             let b = color & 0xFF;
+
+    //             // 3. Scale each channel
+    //             let r = (r as f64 * brightness) as u32;
+    //             let g = (g as f64 * brightness) as u32;
+    //             let b = (b as f64 * brightness) as u32;
+
+    //             // 4. Repack
+    //             column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
+    //         }
+    //     }
+    // }
 
     //find the point the ray intersects the wall
     // let ray_dx = ray_angle.cos();
@@ -146,7 +149,157 @@ fn draw_column(
     return column;
 }
 
+fn draw_wall(
+    wall_hit: RayHit,
+    angle_relative_to_player: f64,
+    renderer_data: &RendererData,
+    game: &Game,
+    column: &mut [u32; SCREEN_HEIGHT],
+) {
+    if wall_hit.side.shape.shape_type != ShapeType::Wall {
+        return;
+    }
 
+    let (wall_bottom_onscreen, wall_top_onscreen) =
+        calculate_side_bottom_top(&wall_hit, angle_relative_to_player, renderer_data, game);
+
+    let color = match &wall_hit.side.shape.shape_type {
+        ShapeType::Wall => renderer_data.wall_default_color,
+        ShapeType::Block(Orientation::Bottom) => renderer_data.bottom_block_default_color,
+        ShapeType::Block(Orientation::Top) => renderer_data.top_block_default_color,
+    };
+
+    for onscreen_y_isize in wall_bottom_onscreen..wall_top_onscreen {
+        let onscreen_y = onscreen_y_isize as usize;
+
+        if onscreen_y >= SCREEN_HEIGHT {
+            continue;
+        }
+
+        let brightness = (wall_hit.side.angle_in_world.cos() * 0.5
+            / (wall_hit.distance as f64 * renderer_data.distance_darkness_coefficient)
+            + 0.5)
+            .clamp(0.2, 1.0);
+        // 2. Extract channels
+        let a = (color >> 24) & 0xFF;
+        let r = (color >> 16) & 0xFF;
+        let g = (color >> 8) & 0xFF;
+        let b = color & 0xFF;
+
+        // 3. Scale each channel
+        let r = (r as f64 * brightness) as u32;
+        let g = (g as f64 * brightness) as u32;
+        let b = (b as f64 * brightness) as u32;
+
+        // 4. Repack
+        column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
+    }
+}
+
+// TODO make ceiling of top slice not cut into side of bottom_slice (possibly major refactoring necessary)
+fn draw_block_slice(
+    slice: BlockSlice,
+    angle_relative_to_player: f64,
+    renderer_data: &RendererData,
+    game: &Game,
+    column: &mut [u32; SCREEN_HEIGHT],
+) {
+    let (entry_bottom_onscreen, entry_top_onscreen) = calculate_side_bottom_top(
+        &slice.entry_hit,
+        angle_relative_to_player,
+        renderer_data,
+        game,
+    );
+
+    let side_color = match &slice.entry_hit.side.shape.shape_type {
+        ShapeType::Wall => renderer_data.wall_default_color,
+        ShapeType::Block(Orientation::Bottom) => renderer_data.bottom_block_default_color,
+        ShapeType::Block(Orientation::Top) => renderer_data.top_block_default_color,
+    };
+
+    // draw the enty hit (the front of the slice)
+    for onscreen_y_isize in entry_bottom_onscreen..entry_top_onscreen {
+        let onscreen_y = onscreen_y_isize as usize;
+
+        if onscreen_y >= SCREEN_HEIGHT {
+            continue;
+        }
+
+        let brightness = (slice.entry_hit.side.angle_in_world.cos() * 0.5
+            / (slice.entry_hit.distance as f64 * renderer_data.distance_darkness_coefficient)
+            + 0.5)
+            .clamp(0.2, 1.0);
+        // 2. Extract channels
+        let a = (side_color >> 24) & 0xFF;
+        let r = (side_color >> 16) & 0xFF;
+        let g = (side_color >> 8) & 0xFF;
+        let b = side_color & 0xFF;
+
+        // 3. Scale each channel
+        let r = (r as f64 * brightness) as u32;
+        let g = (g as f64 * brightness) as u32;
+        let b = (b as f64 * brightness) as u32;
+
+        // 4. Repack
+        column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    let (exit_bottom_onscreen, exit_top_onscreen) = calculate_side_bottom_top(
+        &slice.exit_hit,
+        angle_relative_to_player,
+        renderer_data,
+        game,
+    );
+
+    let (surface_onscreen_bottom, surface_onscreen_top): (isize, isize) =
+        match slice.entry_hit.side.shape.shape_type {
+            ShapeType::Block(Orientation::Bottom) => (entry_top_onscreen, exit_top_onscreen),
+            ShapeType::Block(Orientation::Top) => (exit_bottom_onscreen, entry_bottom_onscreen),
+            ShapeType::Wall => (0, 0), // null value, shoud never happen
+        };
+
+    // draw floor/ceiling (=surface)
+    for surface_onscreen_y_isize in surface_onscreen_bottom..surface_onscreen_top {
+        let surface_onscreen_y = surface_onscreen_y_isize as usize;
+        if surface_onscreen_y >= SCREEN_HEIGHT {
+            continue;
+        }
+        column[surface_onscreen_y] = renderer_data.surface_default_color;
+    }
+}
+
+fn calculate_side_bottom_top(
+    rh: &RayHit,
+    angle_relative_to_player: f64,
+    renderer_data: &RendererData,
+    game: &Game,
+) -> (isize, isize) {
+    let normalized_distance_to_side = rh.distance * angle_relative_to_player.cos(); // cos for anti-fisheye effect
+
+    let side_height_onscreen = ((rh.side.shape.height / normalized_distance_to_side)
+        * renderer_data.vertical_scale_coefficient) as isize; // must be addable to bottom_onscreen
+
+    let mut side_bottom_onscreen: isize = match rh.side.shape.shape_type {
+        ShapeType::Wall | ShapeType::Block(Orientation::Bottom) => {
+            ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
+                - (game.player.view_height / normalized_distance_to_side) // adjust for view hieght
+                    * renderer_data.vertical_scale_coefficient) as isize // scale correctly
+        } // must be able to be negative
+        ShapeType::Block(Orientation::Top) => {
+            ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
+                + ((LEVEL_HEIGHT - game.player.view_height) // adjust for view height (from top this time)
+                    / normalized_distance_to_side)
+                    * renderer_data.vertical_scale_coefficient) as isize // scale
+                    - side_height_onscreen // move so top flush with level top
+        } // must be able to be negative
+    };
+
+    let side_top_onscreen =
+        (side_bottom_onscreen + side_height_onscreen).min(SCREEN_HEIGHT as isize);
+    side_bottom_onscreen = side_bottom_onscreen.max(0);
+
+    (side_bottom_onscreen, side_top_onscreen)
+}
 
 // fn draw_dimensional_cast(
 //     buffer: &mut [u32],
