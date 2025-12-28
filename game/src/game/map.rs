@@ -137,6 +137,17 @@ impl Map {
             10.0,
         )?;
 
+        let bottom_block_points_2: Vec<Point> = vec![
+            Point { x: 200.0, y: 215.0 },
+            Point { x: 175.0, y: 215.0 },
+            Point { x: 175.0, y: 190.0 },
+        ];
+        map.add_shape_from_points(
+            bottom_block_points_2,
+            ShapeType::Block(Orientation::Bottom),
+            5.0,
+        )?;
+
         let top_block_points: Vec<Point> = vec![
             // Point { x: 300.0, y: 225.0 },
             // Point { x: 250.0, y: 225.0 },
