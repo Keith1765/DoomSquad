@@ -1,4 +1,5 @@
 use core::f64;
+use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use crate::game::Game;
@@ -7,7 +8,86 @@ use crate::render::raycast::{
     self, BlockSlice, MapSlice, RayHit, RayHitOrderer, intersect, raycast,
 };
 use crate::render::renderer_init::RendererData;
-use crate::{SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
+use crate::{BACKGROUND_COLOR, SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
+
+type VerticalDisctance = f64;
+
+#[derive(Clone, Copy, PartialEq)]
+enum RenderTaskType {
+    Side,
+    Floor(VerticalDisctance),
+    Ceiling(VerticalDisctance),
+}
+struct RenderTask {
+    color: u32, // TODO replace with texture
+    brightness: f64,
+    onscreen_bottom: isize,
+    onscreen_top: isize,
+}
+
+struct RenderTaskOrderer {
+    pub task: RenderTask,
+    task_type: RenderTaskType,
+    distance: f64,
+}
+
+impl PartialEq for RenderTaskOrderer {
+    fn eq(&self, other: &Self) -> bool {
+        self.distance == other.distance
+    }
+}
+
+impl Eq for RenderTaskOrderer {} // PartialEQ already handles functionality, but must be written out; do not remove
+
+impl PartialOrd for RenderTaskOrderer {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self.distance > other.distance {
+            Some(Ordering::Greater)
+        } else if self.distance < other.distance {
+            Some(Ordering::Less)
+        } else {
+            Some(Ordering::Equal)
+        }
+    }
+}
+
+impl Ord for RenderTaskOrderer {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self.task_type, other.task_type) {
+            // if both are floors/ceilings, we order by vertical distance
+            (RenderTaskType::Ceiling(self_vert_dist), RenderTaskType::Ceiling(other_vert_dist))
+            | (RenderTaskType::Floor(self_vert_dist), RenderTaskType::Floor(other_vert_dist)) => {
+                if self_vert_dist > other_vert_dist {
+                    Ordering::Greater
+                } else if self_vert_dist < other_vert_dist {
+                    Ordering::Less
+                } else {
+                    Ordering::Equal
+                }
+            }
+            // otherwise, we order by horizontal distance (further back gets drawn first)
+            (_, _) => {
+                if self.distance > other.distance {
+                    Ordering::Greater
+                } else if self.distance < other.distance {
+                    Ordering::Less
+                } else {
+                    Ordering::Equal
+                }
+            }
+        }
+    }
+}
+
+impl RenderTaskOrderer {
+    pub fn new(task: RenderTask, distance: f64, task_type: RenderTaskType) -> Self {
+        RenderTaskOrderer {
+            task,
+            distance,
+            task_type,
+        }
+    }
+}
 
 pub fn draw(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
     //write grey plane as background to overwrite past frames
@@ -31,12 +111,14 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
             / renderer_data.projection_plane_distance as f64)
             .atan();
 
-        let column: [u32; SCREEN_HEIGHT] = draw_column(
+        let mut column_tasks: BinaryHeap<RenderTaskOrderer> = task_column(
             game,
             renderer_data,
             angle_relative_to_player,
             game.player.view_angle,
         );
+
+        let column = draw_render_tasks(&mut column_tasks, renderer_data);
 
         //draw column into buffer
         for y in 0..column.len() {
@@ -46,164 +128,122 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     }
 }
 
-fn draw_column(
+fn draw_render_tasks(
+    tasks: &mut BinaryHeap<RenderTaskOrderer>,
+    renderer_data: &RendererData,
+) -> [u32; SCREEN_HEIGHT] {
+    let mut column: [u32; SCREEN_HEIGHT] = [renderer_data.background_color; SCREEN_HEIGHT]; // initialize with default value
+
+    while let Some(task_ord) = tasks.pop() {
+        let task = task_ord.task;
+
+        for onscreen_y_isize in task.onscreen_bottom..task.onscreen_top {
+            let onscreen_y = onscreen_y_isize as usize; // TODO remove need for this type conversion?
+
+            if onscreen_y >= SCREEN_HEIGHT {
+                continue;
+            }
+            // 2. Extract channels
+            let a = (task.color >> 24) & 0xFF;
+            let r = (task.color >> 16) & 0xFF;
+            let g = (task.color >> 8) & 0xFF;
+            let b = task.color & 0xFF;
+
+            // 3. Scale each channel
+            let r = (r as f64 * task.brightness) as u32;
+            let g = (g as f64 * task.brightness) as u32;
+            let b = (b as f64 * task.brightness) as u32;
+
+            // 4. Repack
+            column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
+        }
+    }
+
+    return column;
+}
+
+fn task_column(
     game: &Game,
     renderer_data: &RendererData,
     angle_relative_to_player: f64,
     player_angle: f64,
-) -> [u32; SCREEN_HEIGHT] {
-    // // let mut side1 : Side;
-    //     let shape_content: Shape = (*shape).clone()?; // TODO remove necessity for clone() maybe?
-    //     let mut intersects = false;
-    //     for side in shape_content.sides {
-    //         if intersect(point, 0.0, side).is_some() {
-    //             intersects=!intersects;
-    //         }
-    //     }
-    //     Some(intersects)
-    let mut column: [u32; SCREEN_HEIGHT] = [renderer_data.background_color; SCREEN_HEIGHT]; // initialized with default value
+) -> BinaryHeap<RenderTaskOrderer> {
+    let mut tasks: BinaryHeap<RenderTaskOrderer> = BinaryHeap::new();
 
-    let mut map_slice: MapSlice = raycast(game, angle_relative_to_player, player_angle);
+    let map_slice: MapSlice = raycast(game, angle_relative_to_player, player_angle);
 
     if let Some(wall_hit) = map_slice.wall_hit {
-        draw_wall(
-            wall_hit,
+        tasks.push(task_side(
+            &wall_hit,
             angle_relative_to_player,
             renderer_data,
             game,
-            &mut column,
-        ); // default return value: empty column
+        )); // default return value: empty column
     }
 
     for slice in map_slice.bottom_block_slices {
-        draw_block_slice(
+        tasks.append(&mut task_block_slice(
             slice,
             angle_relative_to_player,
             renderer_data,
             game,
-            &mut column,
-        );
+        ));
     }
 
     for slice in map_slice.top_block_slices {
-        draw_block_slice(
+        tasks.append(&mut task_block_slice(
             slice,
             angle_relative_to_player,
             renderer_data,
             game,
-            &mut column,
-        );
+        ));
     }
 
-    // // draw the sides for each ray hit over one another
-    // // TODO remove need for type conversions
-    // // TODO move into own function?
-    // while !map_slice.is_empty() {
-    //     if let Some(rh_ordering) = map_slice.pop() {
-    //         let rh: RayHit = rh_ordering.rh;
-
-    //         let color = match rh.side.shape.shape_type {
-    //             ShapeType::Wall => renderer_data.wall_default_color,
-    //             ShapeType::Block(Orientation::Bottom) => renderer_data.bottom_block_default_color,
-    //             ShapeType::Block(Orientation::Top) => renderer_data.top_block_default_color,
-    //         };
-
-    //         for onscreen_y_isize in side_bottom_onscreen..side_top_onscreen {
-    //             let onscreen_y = onscreen_y_isize as usize;
-
-    //             if onscreen_y >= SCREEN_HEIGHT {
-    //                 continue;
-    //             }
-
-    //             let brightness = (rh.side.angle_in_world.cos() * 0.5
-    //                 / (rh.distance as f64 * renderer_data.distance_darkness_coefficient)
-    //                 + 0.5)
-    //                 .clamp(0.2, 1.0);
-    //             // 2. Extract channels
-    //             let a = (color >> 24) & 0xFF;
-    //             let r = (color >> 16) & 0xFF;
-    //             let g = (color >> 8) & 0xFF;
-    //             let b = color & 0xFF;
-
-    //             // 3. Scale each channel
-    //             let r = (r as f64 * brightness) as u32;
-    //             let g = (g as f64 * brightness) as u32;
-    //             let b = (b as f64 * brightness) as u32;
-
-    //             // 4. Repack
-    //             column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
-    //         }
-    //     }
-    // }
-
-    //find the point the ray intersects the wall
-    // let ray_dx = ray_angle.cos();
-    // let ray_dy = ray_angle.sin();
-
-    // let wall_point = Point {
-    //     x: game.player.position_x + ray_dx * distance_to_wall,
-    //     y: game.player.position_y + ray_dy * distance_to_wall,
-    // };
-    //draw the line of this ray up to its intersect
-    //draw_line(buffer, game.player.position_x as usize, game.player.position_y as usize, wall_point.x as usize, wall_point.y as usize, 0xff0000);
-    return column;
+    return tasks;
 }
 
-fn draw_wall(
-    wall_hit: RayHit,
+fn task_side(
+    side_hit: &RayHit,
     angle_relative_to_player: f64,
     renderer_data: &RendererData,
     game: &Game,
-    column: &mut [u32; SCREEN_HEIGHT],
-) {
-    if wall_hit.side.shape.shape_type != ShapeType::Wall {
-        return;
-    }
+) -> RenderTaskOrderer {
+    let (side_bottom_onscreen, side_top_onscreen) =
+        calculate_side_bottom_top(&side_hit, angle_relative_to_player, renderer_data, game);
 
-    let (wall_bottom_onscreen, wall_top_onscreen) =
-        calculate_side_bottom_top(&wall_hit, angle_relative_to_player, renderer_data, game);
-
-    let color = match &wall_hit.side.shape.shape_type {
+    let color = match &side_hit.side.shape.shape_type {
         ShapeType::Wall => renderer_data.wall_default_color,
         ShapeType::Block(Orientation::Bottom) => renderer_data.bottom_block_default_color,
         ShapeType::Block(Orientation::Top) => renderer_data.top_block_default_color,
     };
 
-    for onscreen_y_isize in wall_bottom_onscreen..wall_top_onscreen {
-        let onscreen_y = onscreen_y_isize as usize;
+    let brightness = (side_hit.side.angle_in_world.cos() * 0.5
+        / (side_hit.distance as f64 * renderer_data.distance_darkness_coefficient)
+        + 0.5)
+        .clamp(0.2, 1.0);
 
-        if onscreen_y >= SCREEN_HEIGHT {
-            continue;
-        }
+    let task = RenderTask {
+        color,
+        brightness,
+        onscreen_bottom: side_bottom_onscreen,
+        onscreen_top: side_top_onscreen,
+    };
 
-        let brightness = (wall_hit.side.angle_in_world.cos() * 0.5
-            / (wall_hit.distance as f64 * renderer_data.distance_darkness_coefficient)
-            + 0.5)
-            .clamp(0.2, 1.0);
-        // 2. Extract channels
-        let a = (color >> 24) & 0xFF;
-        let r = (color >> 16) & 0xFF;
-        let g = (color >> 8) & 0xFF;
-        let b = color & 0xFF;
-
-        // 3. Scale each channel
-        let r = (r as f64 * brightness) as u32;
-        let g = (g as f64 * brightness) as u32;
-        let b = (b as f64 * brightness) as u32;
-
-        // 4. Repack
-        column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
-    }
+    return RenderTaskOrderer::new(task, side_hit.distance, RenderTaskType::Side);
 }
 
-// TODO make ceiling of top slice not cut into side of bottom_slice (possibly major refactoring necessary)
-fn draw_block_slice(
+fn task_surface(
     slice: BlockSlice,
     angle_relative_to_player: f64,
     renderer_data: &RendererData,
     game: &Game,
-    column: &mut [u32; SCREEN_HEIGHT],
-) {
+) -> RenderTaskOrderer {
+    let (exit_bottom_onscreen, exit_top_onscreen) = calculate_side_bottom_top(
+        &slice.exit_hit,
+        angle_relative_to_player,
+        renderer_data,
+        game,
+    );
     let (entry_bottom_onscreen, entry_top_onscreen) = calculate_side_bottom_top(
         &slice.entry_hit,
         angle_relative_to_player,
@@ -211,61 +251,65 @@ fn draw_block_slice(
         game,
     );
 
-    let side_color = match &slice.entry_hit.side.shape.shape_type {
-        ShapeType::Wall => renderer_data.wall_default_color,
-        ShapeType::Block(Orientation::Bottom) => renderer_data.bottom_block_default_color,
-        ShapeType::Block(Orientation::Top) => renderer_data.top_block_default_color,
-    };
-
-    // draw the enty hit (the front of the slice)
-    for onscreen_y_isize in entry_bottom_onscreen..entry_top_onscreen {
-        let onscreen_y = onscreen_y_isize as usize;
-
-        if onscreen_y >= SCREEN_HEIGHT {
-            continue;
-        }
-
-        let brightness = (slice.entry_hit.side.angle_in_world.cos() * 0.5
-            / (slice.entry_hit.distance as f64 * renderer_data.distance_darkness_coefficient)
-            + 0.5)
-            .clamp(0.2, 1.0);
-        // 2. Extract channels
-        let a = (side_color >> 24) & 0xFF;
-        let r = (side_color >> 16) & 0xFF;
-        let g = (side_color >> 8) & 0xFF;
-        let b = side_color & 0xFF;
-
-        // 3. Scale each channel
-        let r = (r as f64 * brightness) as u32;
-        let g = (g as f64 * brightness) as u32;
-        let b = (b as f64 * brightness) as u32;
-
-        // 4. Repack
-        column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
-    }
-
-    let (exit_bottom_onscreen, exit_top_onscreen) = calculate_side_bottom_top(
-        &slice.exit_hit,
-        angle_relative_to_player,
-        renderer_data,
-        game,
-    );
-
     let (surface_onscreen_bottom, surface_onscreen_top): (isize, isize) =
-        match slice.entry_hit.side.shape.shape_type {
+        match &slice.entry_hit.side.shape.shape_type {
             ShapeType::Block(Orientation::Bottom) => (entry_top_onscreen, exit_top_onscreen),
             ShapeType::Block(Orientation::Top) => (exit_bottom_onscreen, entry_bottom_onscreen),
             ShapeType::Wall => (0, 0), // null value, shoud never happen
         };
 
-    // draw floor/ceiling (=surface)
-    for surface_onscreen_y_isize in surface_onscreen_bottom..surface_onscreen_top {
-        let surface_onscreen_y = surface_onscreen_y_isize as usize;
-        if surface_onscreen_y >= SCREEN_HEIGHT {
-            continue;
+    let vertical_distance: VerticalDisctance = match &slice.entry_hit.side.shape.shape_type {
+        ShapeType::Block(Orientation::Bottom) => {
+            game.player.view_height - &slice.entry_hit.side.shape.height
         }
-        column[surface_onscreen_y] = renderer_data.surface_default_color;
-    }
+        ShapeType::Block(Orientation::Top) => {
+            (LEVEL_HEIGHT - &slice.entry_hit.side.shape.height) - game.player.view_height
+        }
+        ShapeType::Wall => 0.0, // null value, shoud never happen
+    };
+
+    // varies between 0.5 and 1.0 depending on height in level; temporary
+    let brightness = 0.5 + (&slice.entry_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
+
+    let task = RenderTask {
+        color: renderer_data.surface_default_color,
+        brightness,
+        onscreen_bottom: surface_onscreen_bottom,
+        onscreen_top: surface_onscreen_top,
+    };
+
+    let task_type = match &slice.entry_hit.side.shape.shape_type {
+        ShapeType::Block(Orientation::Bottom) => RenderTaskType::Floor(vertical_distance),
+        ShapeType::Block(Orientation::Top) => RenderTaskType::Ceiling(vertical_distance),
+        ShapeType::Wall => RenderTaskType::Floor(0.0), // null value, shoud never happen
+    };
+
+    return RenderTaskOrderer::new(task, slice.exit_hit.distance, task_type);
+}
+
+fn task_block_slice(
+    slice: BlockSlice,
+    angle_relative_to_player: f64,
+    renderer_data: &RendererData,
+    game: &Game,
+) -> BinaryHeap<RenderTaskOrderer> {
+    let mut tasks = BinaryHeap::new();
+
+    tasks.push(task_side(
+        &slice.entry_hit,
+        angle_relative_to_player,
+        renderer_data,
+        game,
+    ));
+
+    tasks.push(task_surface(
+        slice,
+        angle_relative_to_player,
+        renderer_data,
+        game,
+    ));
+
+    tasks
 }
 
 fn calculate_side_bottom_top(
@@ -300,6 +344,66 @@ fn calculate_side_bottom_top(
 
     (side_bottom_onscreen, side_top_onscreen)
 }
+
+//draw refernce points spaced 50 pixels apart for debugging
+fn draw_reference_points(buffer: &mut [u32]) {
+    for x in 0..SCREEN_WIDTH {
+        for y in 0..SCREEN_HEIGHT {
+            if x % 50 == 0 && y % 50 == 0 {
+                buffer[y * SCREEN_WIDTH + x] = 0xffffff;
+            }
+        }
+    }
+}
+
+////! this func is a random chatgbt function, rewrite if we want to use it in the final code
+fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, color: u32) {
+    // Convert to signed for math (avoids underflow)
+    let mut x0 = x0 as isize;
+    let mut y0 = y0 as isize;
+    let x1 = x1 as isize;
+    let y1 = y1 as isize;
+
+    let dx = (x1 - x0).abs();
+    let sx = if x0 < x1 { 1 } else { -1 };
+    let dy = -(y1 - y0).abs();
+    let sy = if y0 < y1 { 1 } else { -1 };
+    let mut err = dx + dy;
+
+    loop {
+        // Only draw inside the screen
+        if x0 >= 0 && x0 < SCREEN_WIDTH as isize && y0 >= 0 && y0 < SCREEN_HEIGHT as isize {
+            buffer[y0 as usize * SCREEN_WIDTH + x0 as usize] = color;
+        }
+
+        if x0 == x1 && y0 == y1 {
+            break;
+        }
+
+        let e2 = 2 * err;
+
+        if e2 >= dy {
+            err += dy;
+            x0 += sx;
+        }
+        if e2 <= dx {
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
+
+// fn point_in_polygon (shape: &Option<Shape>, point: Point) -> Option<bool> {
+//     // let mut side1 : Side;
+//     let shape_content: Shape = (*shape).clone()?; // TODO remove necessity for clone() maybe?
+//     let mut intersects = false;
+//     for side in shape_content.sides {
+//         if intersect(point, 0.0, side).is_some() {
+//             intersects=!intersects;
+//         }
+//     }
+//     Some(intersects)
+// }
 
 // fn draw_dimensional_cast(
 //     buffer: &mut [u32],
@@ -340,17 +444,6 @@ fn calculate_side_bottom_top(
 //         buffer[y * WIDTH + x] = (a << 24) | (r << 16) | (g << 8) | b;
 //     }
 // }
-
-//draw refernce points spaced 50 pixels apart for debugging
-fn draw_reference_points(buffer: &mut [u32]) {
-    for x in 0..SCREEN_WIDTH {
-        for y in 0..SCREEN_HEIGHT {
-            if x % 50 == 0 && y % 50 == 0 {
-                buffer[y * SCREEN_WIDTH + x] = 0xffffff;
-            }
-        }
-    }
-}
 
 //save all points from the screen that are in the polygon of the map boarder and note that map is loaded now
 ////! right now load map is working not as intended in the game, because right now it loads the init of map, so right now it just means that we init the map, later however it will indicate what map was loaded into the map boarder
@@ -413,55 +506,6 @@ fn draw_reference_points(buffer: &mut [u32]) {
 //
 
 //draw the vertical line for the ray that renders the the 2.5 view
-
-////! this func is a random chatgbt function, rewrite if we want to use it in the final code
-fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, color: u32) {
-    // Convert to signed for math (avoids underflow)
-    let mut x0 = x0 as isize;
-    let mut y0 = y0 as isize;
-    let x1 = x1 as isize;
-    let y1 = y1 as isize;
-
-    let dx = (x1 - x0).abs();
-    let sx = if x0 < x1 { 1 } else { -1 };
-    let dy = -(y1 - y0).abs();
-    let sy = if y0 < y1 { 1 } else { -1 };
-    let mut err = dx + dy;
-
-    loop {
-        // Only draw inside the screen
-        if x0 >= 0 && x0 < SCREEN_WIDTH as isize && y0 >= 0 && y0 < SCREEN_HEIGHT as isize {
-            buffer[y0 as usize * SCREEN_WIDTH + x0 as usize] = color;
-        }
-
-        if x0 == x1 && y0 == y1 {
-            break;
-        }
-
-        let e2 = 2 * err;
-
-        if e2 >= dy {
-            err += dy;
-            x0 += sx;
-        }
-        if e2 <= dx {
-            err += dx;
-            y0 += sy;
-        }
-    }
-}
-
-// fn point_in_polygon (shape: &Option<Shape>, point: Point) -> Option<bool> {
-//     // let mut side1 : Side;
-//     let shape_content: Shape = (*shape).clone()?; // TODO remove necessity for clone() maybe?
-//     let mut intersects = false;
-//     for side in shape_content.sides {
-//         if intersect(point, 0.0, side).is_some() {
-//             intersects=!intersects;
-//         }
-//     }
-//     Some(intersects)
-// }
 
 #[cfg(test)]
 mod test {

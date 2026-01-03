@@ -70,6 +70,8 @@ impl Side {
 }
 
 // TODO remove necessety for type; justdistinguish by which list it's in (or not?)
+// TODO make blocks free not top or bottom anymore
+// TODO make walls arbitrary height
 #[derive(Clone)]
 pub struct Shape {
     pub id: ShapeID,
@@ -140,7 +142,7 @@ impl Map {
         let bottom_block_points_2: Vec<Point> = vec![
             Point { x: 200.0, y: 215.0 },
             Point { x: 175.0, y: 215.0 },
-            Point { x: 175.0, y: 190.0 },
+            Point { x: 175.0, y: 200.0 },
         ];
         map.add_shape_from_points(
             bottom_block_points_2,
