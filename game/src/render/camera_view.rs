@@ -343,7 +343,7 @@ fn task_block_slice(
 
     if let Some(task_surface_value) =
         task_surface(slice, angle_relative_to_player, renderer_data, game)
-    {   
+    {
         tasks.push(task_surface_value);
     }
 
