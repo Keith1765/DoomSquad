@@ -6,7 +6,7 @@ use std::{
 
 use crate::game::{
     Game,
-    map::{Orientation, Point, Shape, ShapeID, ShapeType, Side},
+    map::{Point, Shape, ShapeID, ShapeType, Side},
 };
 
 #[derive(Clone, PartialEq)]
@@ -75,8 +75,7 @@ pub struct BlockSlice {
 #[derive(Clone, PartialEq)]
 pub struct MapSlice {
     pub wall_hit: Option<RayHit>,
-    pub bottom_block_slices: Vec<BlockSlice>,
-    pub top_block_slices: Vec<BlockSlice>,
+    pub block_slices: Vec<BlockSlice>,
 }
 
 // TODO separate into multiple functions
@@ -133,52 +132,30 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
     // we go through the rayhits back to front and remember which block (shape) it belonged to
     // when we find another rayhit for that shape, we've exited the shape and can
 
-    let mut bottom_block_slices: Vec<BlockSlice> = Vec::new();
-    let mut top_block_slices: Vec<BlockSlice> = Vec::new();
+    let mut block_slices: Vec<BlockSlice> = Vec::new();
 
-    let mut bottom_blocks_currently_inside: HashMap<ShapeID, RayHit> = HashMap::new();
-    let mut top_blocks_currently_inside: HashMap<ShapeID, RayHit> = HashMap::new();
+    let mut blocks_currently_inside: HashMap<ShapeID, RayHit> = HashMap::new();
 
     while !block_rayhits_ordered.is_empty() {
         if let Some(rh_ordering) = block_rayhits_ordered.pop() {
             let rh = rh_ordering.rh;
 
-            match &rh.side.shape.shape_type {
-                ShapeType::Wall => {} // TODO update when closest_wall_hit no longer in rayhits_ordered
-                ShapeType::Block(Orientation::Bottom) => {
-                    if let Some(shape_exit_hit) =
-                        bottom_blocks_currently_inside.remove(&rh.side.shape.id)
-                    // if true, we just exited a block we were inside
-                    {
-                        bottom_block_slices.push(BlockSlice {
-                            entry_hit: rh,
-                            exit_hit: shape_exit_hit,
-                        }); // build the slice of the block
-                    } else {
-                        bottom_blocks_currently_inside.insert(rh.side.shape.id, rh); // if we werent in that shape already, were inside it now
-                    }
-                }
-                ShapeType::Block(Orientation::Top) => {
-                    if let Some(shape_exit_hit) =
-                        top_blocks_currently_inside.remove(&rh.side.shape.id)
-                    // if true, we just exited a block we were inside
-                    {
-                        top_block_slices.push(BlockSlice {
-                            entry_hit: rh,
-                            exit_hit: shape_exit_hit,
-                        }); // build the slice of the block
-                    } else {
-                        top_blocks_currently_inside.insert(rh.side.shape.id, rh); // if we werent in that shape already, were inside it now
-                    }
-                }
+            if let Some(shape_exit_hit) = blocks_currently_inside.remove(&rh.side.shape.id)
+            // if true, we just exited a block we were inside
+            {
+                block_slices.push(BlockSlice {
+                    entry_hit: rh,
+                    exit_hit: shape_exit_hit,
+                }); // build the slice of the block
+            } else {
+                blocks_currently_inside.insert(rh.side.shape.id, rh); // if we werent in that shape already, were inside it now
             }
         }
     }
 
     return MapSlice {
         wall_hit: closest_wall_hit,
-        bottom_block_slices,
-        top_block_slices,
+        block_slices: block_slices,
     };
 }
 

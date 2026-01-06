@@ -15,8 +15,7 @@ const HORIZONTAL_FOV: f64 = PI / 2.0;
 const BACKGROUND_COLOR: u32 = 0x222222;
 const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.025;
 const WALL_DEFAULT_COLOR: u32 = 0x00ff00;
-const BOTTOM_BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
-const TOP_BLOCK_DEFAULT_COLOR: u32 = 0xff0000;
+const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xFFFF00;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -54,8 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         BACKGROUND_COLOR,
         DISTANCE_DARKNESS_COEFFICIENT,
         WALL_DEFAULT_COLOR,
-        BOTTOM_BLOCK_DEFAULT_COLOR,
-        TOP_BLOCK_DEFAULT_COLOR,
+        BLOCK_DEFAULT_COLOR,
         SURFACE_DEFAULT_COLOR,
     );
 

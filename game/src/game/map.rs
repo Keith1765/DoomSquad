@@ -37,15 +37,9 @@ impl Add for Point {
 }
 
 #[derive(Clone, Copy, PartialEq)]
-pub enum Orientation {
-    Top,
-    Bottom,
-}
-
-#[derive(Clone, Copy, PartialEq)]
 pub enum ShapeType {
-    Wall,
-    Block(Orientation),
+    Wall,  // walls are ray-terminating
+    Block, // blocks are not
 }
 
 #[derive(Clone, PartialEq)]
@@ -76,6 +70,7 @@ impl Side {
 pub struct Shape {
     pub id: ShapeID,
     pub shape_type: ShapeType,
+    pub bottom: f64,
     pub height: f64,
 }
 
@@ -126,29 +121,22 @@ impl Map {
             Point { x: 50.0, y: 200.0 },
             Point { x: 150.0, y: 200.0 },
         ];
-        map.add_shape_from_points(wall_points, ShapeType::Wall, LEVEL_HEIGHT)?;
+        map.add_shape_from_points(wall_points, ShapeType::Wall, 0.0, LEVEL_HEIGHT)?;
 
         let bottom_block_points: Vec<Point> = vec![
             Point { x: 200.0, y: 200.0 },
             Point { x: 175.0, y: 200.0 },
             Point { x: 175.0, y: 175.0 },
         ];
-        map.add_shape_from_points(
-            bottom_block_points,
-            ShapeType::Block(Orientation::Bottom),
-            10.0,
-        )?;
+        map.add_shape_from_points(bottom_block_points, ShapeType::Block, 0.0, 10.0)?;
 
         let bottom_block_points_2: Vec<Point> = vec![
             Point { x: 200.0, y: 215.0 },
             Point { x: 175.0, y: 215.0 },
             Point { x: 175.0, y: 200.0 },
+            Point { x: 185.0, y: 200.0 },
         ];
-        map.add_shape_from_points(
-            bottom_block_points_2,
-            ShapeType::Block(Orientation::Bottom),
-            5.0,
-        )?;
+        map.add_shape_from_points(bottom_block_points_2, ShapeType::Block, 0.0, 5.0)?;
 
         let top_block_points: Vec<Point> = vec![
             // Point { x: 300.0, y: 225.0 },
@@ -158,7 +146,17 @@ impl Map {
             Point { x: 180.0, y: 205.0 },
             Point { x: 180.0, y: 178.0 },
         ];
-        map.add_shape_from_points(top_block_points, ShapeType::Block(Orientation::Top), 10.0)?;
+        map.add_shape_from_points(top_block_points, ShapeType::Block, 15.0, 10.0)?;
+
+        let top_block_points: Vec<Point> = vec![
+            // Point { x: 300.0, y: 225.0 },
+            // Point { x: 250.0, y: 225.0 },
+            // Point { x: 250.0, y: 200.0 },
+            Point { x: 195.0, y: 195.0 },
+            Point { x: 185.0, y: 185.0 },
+            Point { x: 185.0, y: 195.0 },
+        ];
+        map.add_shape_from_points(top_block_points, ShapeType::Block, 10.0, 5.0)?;
 
         Some(map)
     }
@@ -169,6 +167,7 @@ impl Map {
         &mut self,
         points: Vec<Point>,
         shape_type: ShapeType,
+        bottom: f64,
         height: f64,
     ) -> Option<()> {
         if points.is_empty() {
@@ -177,17 +176,18 @@ impl Map {
         let shape = Rc::new(Shape {
             id: self.shape_count,
             shape_type: shape_type,
+            bottom: bottom,
             height: height,
         });
 
         // references to push to the corect list
         let sides: &mut Vec<Side> = match shape_type {
             ShapeType::Wall => &mut self.wall_sides,
-            ShapeType::Block(_) => &mut self.block_sides,
+            ShapeType::Block => &mut self.block_sides,
         };
         let shapes: &mut Vec<Rc<Shape>> = match shape_type {
             ShapeType::Wall => &mut self.wall_shapes,
-            ShapeType::Block(_) => &mut self.block_shapes,
+            ShapeType::Block => &mut self.block_shapes,
         };
 
         let mut point1: Point;

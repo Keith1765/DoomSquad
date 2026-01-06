@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use crate::game::Game;
-use crate::game::map::{LEVEL_HEIGHT, Orientation, Point, ShapeType, Side}; // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
+use crate::game::map::{LEVEL_HEIGHT, Point, ShapeType, Side}; // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
 use crate::render::raycast::{
     self, BlockSlice, MapSlice, RayHit, RayHitOrderer, intersect, raycast,
 };
@@ -18,6 +18,7 @@ enum RenderTaskType {
     Floor(VerticalDisctance),
     Ceiling(VerticalDisctance),
 }
+
 struct RenderTask {
     color: u32, // TODO replace with texture
     brightness: f64,
@@ -41,12 +42,24 @@ impl Eq for RenderTaskOrderer {} // PartialEQ already handles functionality, but
 
 impl PartialOrd for RenderTaskOrderer {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.distance > other.distance {
-            Some(Ordering::Greater)
-        } else if self.distance < other.distance {
-            Some(Ordering::Less)
-        } else {
-            Some(Ordering::Equal)
+        match (self.task_type, other.task_type) {
+            // if both are floors/ceilings, we order by vertical distance
+            (RenderTaskType::Ceiling(self_vert_dist), RenderTaskType::Ceiling(other_vert_dist))
+            | (RenderTaskType::Floor(self_vert_dist), RenderTaskType::Floor(other_vert_dist)) => {
+                if self_vert_dist > other_vert_dist {
+                    Some(Ordering::Greater)
+                } else {
+                    Some(Ordering::Less)
+                }
+            }
+            // otherwise, we order by horizontal distance (further back gets drawn first)
+            (_, _) => {
+                if self.distance > other.distance {
+                    Some(Ordering::Greater)
+                } else {
+                    Some(Ordering::Less)
+                } // TODO fix flickering, probably due to floating point impercision
+            }
         }
     }
 }
@@ -59,21 +72,17 @@ impl Ord for RenderTaskOrderer {
             | (RenderTaskType::Floor(self_vert_dist), RenderTaskType::Floor(other_vert_dist)) => {
                 if self_vert_dist > other_vert_dist {
                     Ordering::Greater
-                } else if self_vert_dist < other_vert_dist {
-                    Ordering::Less
                 } else {
-                    Ordering::Equal
+                    Ordering::Less
                 }
             }
             // otherwise, we order by horizontal distance (further back gets drawn first)
             (_, _) => {
                 if self.distance > other.distance {
                     Ordering::Greater
-                } else if self.distance < other.distance {
-                    Ordering::Less
                 } else {
-                    Ordering::Equal
-                }
+                    Ordering::Less
+                } // TODO fix flickering, probably due to floating point impercision
             }
         }
     }
@@ -181,16 +190,7 @@ fn task_column(
         )); // default return value: empty column
     }
 
-    for slice in map_slice.bottom_block_slices {
-        tasks.append(&mut task_block_slice(
-            slice,
-            angle_relative_to_player,
-            renderer_data,
-            game,
-        ));
-    }
-
-    for slice in map_slice.top_block_slices {
+    for slice in map_slice.block_slices {
         tasks.append(&mut task_block_slice(
             slice,
             angle_relative_to_player,
@@ -213,8 +213,7 @@ fn task_side(
 
     let color = match &side_hit.side.shape.shape_type {
         ShapeType::Wall => renderer_data.wall_default_color,
-        ShapeType::Block(Orientation::Bottom) => renderer_data.bottom_block_default_color,
-        ShapeType::Block(Orientation::Top) => renderer_data.top_block_default_color,
+        ShapeType::Block => renderer_data.block_default_color,
     };
 
     let brightness = (side_hit.side.angle_in_world.cos() * 0.5
@@ -237,7 +236,7 @@ fn task_surface(
     angle_relative_to_player: f64,
     renderer_data: &RendererData,
     game: &Game,
-) -> RenderTaskOrderer {
+) -> Option<RenderTaskOrderer> {
     let (exit_bottom_onscreen, exit_top_onscreen) = calculate_side_bottom_top(
         &slice.exit_hit,
         angle_relative_to_player,
@@ -251,40 +250,80 @@ fn task_surface(
         game,
     );
 
-    let (surface_onscreen_bottom, surface_onscreen_top): (isize, isize) =
-        match &slice.entry_hit.side.shape.shape_type {
-            ShapeType::Block(Orientation::Bottom) => (entry_top_onscreen, exit_top_onscreen),
-            ShapeType::Block(Orientation::Top) => (exit_bottom_onscreen, entry_bottom_onscreen),
-            ShapeType::Wall => (0, 0), // null value, shoud never happen
-        };
+    let onscreen_dimensions: Option<(isize, isize)> = match &slice.entry_hit.side.shape.shape_type {
+        ShapeType::Block => {
+            if &slice.entry_hit.side.shape.bottom > &game.player.view_height {
+                Some((exit_bottom_onscreen, entry_bottom_onscreen))
+            } else if (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height)
+                < game.player.view_height
+            {
+                Some((entry_top_onscreen, exit_top_onscreen))
+            } else {
+                None
+            }
+        }
+        ShapeType::Wall => None, // null value, shoud never happen
+    };
 
-    let vertical_distance: VerticalDisctance = match &slice.entry_hit.side.shape.shape_type {
-        ShapeType::Block(Orientation::Bottom) => {
-            game.player.view_height - &slice.entry_hit.side.shape.height
+    let vertical_distance: Option<VerticalDisctance> = match &slice.entry_hit.side.shape.shape_type
+    {
+        ShapeType::Block => {
+            if &slice.entry_hit.side.shape.bottom > &game.player.view_height {
+                Some(&slice.entry_hit.side.shape.bottom - &game.player.view_height)
+            } else if (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height)
+                < game.player.view_height
+            {
+                Some(
+                    game.player.view_height
+                        - (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height),
+                )
+            } else {
+                None
+            }
         }
-        ShapeType::Block(Orientation::Top) => {
-            (LEVEL_HEIGHT - &slice.entry_hit.side.shape.height) - game.player.view_height
-        }
-        ShapeType::Wall => 0.0, // null value, shoud never happen
+        ShapeType::Wall => None, // null value, shoud never happen
     };
 
     // varies between 0.5 and 1.0 depending on height in level; temporary
     let brightness = 0.5 + (&slice.entry_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
 
-    let task = RenderTask {
-        color: renderer_data.surface_default_color,
-        brightness,
-        onscreen_bottom: surface_onscreen_bottom,
-        onscreen_top: surface_onscreen_top,
-    };
+    if let Some((onscreen_bottom, onscreen_top)) = onscreen_dimensions
+        && let Some(vertical_distance_value) = vertical_distance
+    {
+        let task: RenderTask = RenderTask {
+            color: renderer_data.surface_default_color,
+            brightness,
+            onscreen_bottom: onscreen_bottom,
+            onscreen_top: onscreen_top,
+        };
 
-    let task_type = match &slice.entry_hit.side.shape.shape_type {
-        ShapeType::Block(Orientation::Bottom) => RenderTaskType::Floor(vertical_distance),
-        ShapeType::Block(Orientation::Top) => RenderTaskType::Ceiling(vertical_distance),
-        ShapeType::Wall => RenderTaskType::Floor(0.0), // null value, shoud never happen
-    };
+        //println!("{}|{}", task.onscreen_bottom, task.onscreen_top);
 
-    return RenderTaskOrderer::new(task, slice.exit_hit.distance, task_type);
+        let task_type: RenderTaskType = match &slice.entry_hit.side.shape.shape_type {
+            ShapeType::Block => {
+                if &slice.entry_hit.side.shape.bottom > &game.player.view_height {
+                    RenderTaskType::Ceiling(vertical_distance_value)
+                } else if (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height)
+                    < game.player.view_height
+                {
+                    RenderTaskType::Floor(vertical_distance_value)
+                } else {
+                    return None;
+                }
+            }
+            ShapeType::Wall => {
+                return None;
+            }
+        };
+
+        return Some(RenderTaskOrderer::new(
+            task,
+            slice.exit_hit.distance,
+            task_type,
+        ));
+    } else {
+        return None;
+    }
 }
 
 fn task_block_slice(
@@ -302,12 +341,11 @@ fn task_block_slice(
         game,
     ));
 
-    tasks.push(task_surface(
-        slice,
-        angle_relative_to_player,
-        renderer_data,
-        game,
-    ));
+    if let Some(task_surface_value) =
+        task_surface(slice, angle_relative_to_player, renderer_data, game)
+    {   
+        tasks.push(task_surface_value);
+    }
 
     tasks
 }
@@ -323,20 +361,11 @@ fn calculate_side_bottom_top(
     let side_height_onscreen = ((rh.side.shape.height / normalized_distance_to_side)
         * renderer_data.vertical_scale_coefficient) as isize; // must be addable to bottom_onscreen
 
-    let mut side_bottom_onscreen: isize = match rh.side.shape.shape_type {
-        ShapeType::Wall | ShapeType::Block(Orientation::Bottom) => {
-            ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
-                - (game.player.view_height / normalized_distance_to_side) // adjust for view hieght
-                    * renderer_data.vertical_scale_coefficient) as isize // scale correctly
-        } // must be able to be negative
-        ShapeType::Block(Orientation::Top) => {
-            ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
-                + ((LEVEL_HEIGHT - game.player.view_height) // adjust for view height (from top this time)
-                    / normalized_distance_to_side)
-                    * renderer_data.vertical_scale_coefficient) as isize // scale
-                    - side_height_onscreen // move so top flush with level top
-        } // must be able to be negative
-    };
+    let mut side_bottom_onscreen: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
+        + ((rh.side.shape.bottom / normalized_distance_to_side) 
+        - (game.player.view_height / normalized_distance_to_side)) // adjust for view hieght
+        * renderer_data.vertical_scale_coefficient) // scale correctly
+        as isize;
 
     let side_top_onscreen =
         (side_bottom_onscreen + side_height_onscreen).min(SCREEN_HEIGHT as isize);
