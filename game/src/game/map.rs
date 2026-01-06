@@ -148,7 +148,7 @@ impl Map {
         ];
         map.add_shape_from_points(top_block_points, ShapeType::Block, 15.0, 10.0)?;
 
-        let top_block_points: Vec<Point> = vec![
+        let small_block_points: Vec<Point> = vec![
             // Point { x: 300.0, y: 225.0 },
             // Point { x: 250.0, y: 225.0 },
             // Point { x: 250.0, y: 200.0 },
@@ -156,7 +156,7 @@ impl Map {
             Point { x: 185.0, y: 185.0 },
             Point { x: 185.0, y: 195.0 },
         ];
-        map.add_shape_from_points(top_block_points, ShapeType::Block, 10.0, 5.0)?;
+        map.add_shape_from_points(small_block_points, ShapeType::Block, 10.0, 5.0)?;
 
         Some(map)
     }
