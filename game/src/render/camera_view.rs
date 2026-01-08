@@ -42,49 +42,21 @@ impl Eq for RenderTaskOrderer {} // PartialEQ already handles functionality, but
 
 impl PartialOrd for RenderTaskOrderer {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self.task_type, other.task_type) {
-            // if both are floors/ceilings, we order by vertical distance
-            (RenderTaskType::Ceiling(self_vert_dist), RenderTaskType::Ceiling(other_vert_dist))
-            | (RenderTaskType::Floor(self_vert_dist), RenderTaskType::Floor(other_vert_dist)) => {
-                if self_vert_dist > other_vert_dist {
-                    Some(Ordering::Greater)
-                } else {
-                    Some(Ordering::Less)
-                }
-            }
-            // otherwise, we order by horizontal distance (further back gets drawn first)
-            (_, _) => {
-                if self.distance > other.distance {
-                    Some(Ordering::Greater)
-                } else {
-                    Some(Ordering::Less)
-                } // TODO fix flickering, probably due to floating point impercision
-            }
-        }
+        if self.distance > other.distance {
+            Some(Ordering::Greater)
+        } else {
+            Some(Ordering::Less)
+        } // TODO fix flickering, probably due to floating point impercision
     }
 }
 
 impl Ord for RenderTaskOrderer {
     fn cmp(&self, other: &Self) -> Ordering {
-        match (self.task_type, other.task_type) {
-            // if both are floors/ceilings, we order by vertical distance
-            (RenderTaskType::Ceiling(self_vert_dist), RenderTaskType::Ceiling(other_vert_dist))
-            | (RenderTaskType::Floor(self_vert_dist), RenderTaskType::Floor(other_vert_dist)) => {
-                if self_vert_dist > other_vert_dist {
-                    Ordering::Greater
-                } else {
-                    Ordering::Less
-                }
-            }
-            // otherwise, we order by horizontal distance (further back gets drawn first)
-            (_, _) => {
-                if self.distance > other.distance {
-                    Ordering::Greater
-                } else {
-                    Ordering::Less
-                } // TODO fix flickering, probably due to floating point impercision
-            }
-        }
+        if self.distance > other.distance {
+            Ordering::Greater
+        } else {
+            Ordering::Less
+        } // TODO fix flickering, probably due to floating point impercision
     }
 }
 
@@ -211,10 +183,11 @@ fn task_side(
     let (side_bottom_onscreen, side_top_onscreen) =
         calculate_side_bottom_top(&side_hit, angle_relative_to_player, renderer_data, game);
 
-    let color = match &side_hit.side.shape.shape_type {
-        ShapeType::Wall => renderer_data.wall_default_color,
-        ShapeType::Block => renderer_data.block_default_color,
-    };
+    let color = side_hit.side.shape.color;
+    // match &side_hit.side.shape.shape_type {
+    //     ShapeType::Wall => renderer_data.wall_default_color,
+    //     ShapeType::Block => renderer_data.block_default_color,
+    // };
 
     let brightness = (side_hit.side.angle_in_world.cos() * 0.5
         / (side_hit.distance as f64 * renderer_data.distance_darkness_coefficient)
@@ -362,7 +335,7 @@ fn calculate_side_bottom_top(
         * renderer_data.vertical_scale_coefficient) as isize; // must be addable to bottom_onscreen
 
     let mut side_bottom_onscreen: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
-        + ((rh.side.shape.bottom / normalized_distance_to_side) 
+        + ((rh.side.shape.bottom / normalized_distance_to_side)
         - (game.player.view_height / normalized_distance_to_side)) // adjust for view hieght
         * renderer_data.vertical_scale_coefficient) // scale correctly
         as isize;

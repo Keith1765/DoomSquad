@@ -72,6 +72,7 @@ pub struct Shape {
     pub shape_type: ShapeType,
     pub bottom: f64,
     pub height: f64,
+    pub color: u32,
 }
 
 impl PartialEq for Shape {
@@ -121,14 +122,14 @@ impl Map {
             Point { x: 50.0, y: 200.0 },
             Point { x: 150.0, y: 200.0 },
         ];
-        map.add_shape_from_points(wall_points, ShapeType::Wall, 0.0, LEVEL_HEIGHT)?;
+        map.add_shape_from_points(wall_points, ShapeType::Wall, 0.0, LEVEL_HEIGHT, 0x00ff00)?;
 
         let bottom_block_points: Vec<Point> = vec![
             Point { x: 200.0, y: 200.0 },
             Point { x: 175.0, y: 200.0 },
             Point { x: 175.0, y: 175.0 },
         ];
-        map.add_shape_from_points(bottom_block_points, ShapeType::Block, 0.0, 10.0)?;
+        map.add_shape_from_points(bottom_block_points, ShapeType::Block, 0.0, 10.0, 0x0000ff)?;
 
         let bottom_block_points_2: Vec<Point> = vec![
             Point { x: 200.0, y: 215.0 },
@@ -136,7 +137,7 @@ impl Map {
             Point { x: 175.0, y: 200.0 },
             Point { x: 185.0, y: 200.0 },
         ];
-        map.add_shape_from_points(bottom_block_points_2, ShapeType::Block, 0.0, 5.0)?;
+        map.add_shape_from_points(bottom_block_points_2, ShapeType::Block, 0.0, 5.0, 0x0000ff)?;
 
         let top_block_points: Vec<Point> = vec![
             // Point { x: 300.0, y: 225.0 },
@@ -146,17 +147,17 @@ impl Map {
             Point { x: 180.0, y: 205.0 },
             Point { x: 180.0, y: 178.0 },
         ];
-        map.add_shape_from_points(top_block_points, ShapeType::Block, 15.0, 10.0)?;
+        map.add_shape_from_points(top_block_points, ShapeType::Block, 15.0, 10.0, 0xff0000)?;
 
         let small_block_points: Vec<Point> = vec![
             // Point { x: 300.0, y: 225.0 },
             // Point { x: 250.0, y: 225.0 },
             // Point { x: 250.0, y: 200.0 },
-            Point { x: 195.0, y: 187.0 },
-            Point { x: 185.0, y: 177.0 },
-            Point { x: 185.0, y: 187.0 },
+            Point { x: 197.0, y: 192.0 },
+            Point { x: 187.0, y: 182.0 },
+            Point { x: 187.0, y: 192.0 },
         ];
-        map.add_shape_from_points(small_block_points, ShapeType::Block, 10.0, 5.0)?;
+        map.add_shape_from_points(small_block_points, ShapeType::Block, 10.0, 1.0, 0xffffff)?;
 
         Some(map)
     }
@@ -169,6 +170,7 @@ impl Map {
         shape_type: ShapeType,
         bottom: f64,
         height: f64,
+        color: u32,
     ) -> Option<()> {
         if points.is_empty() {
             return None;
@@ -178,6 +180,7 @@ impl Map {
             shape_type: shape_type,
             bottom: bottom,
             height: height,
+            color: color,
         });
 
         // references to push to the corect list
