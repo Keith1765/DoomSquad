@@ -42,21 +42,41 @@ impl Eq for RenderTaskOrderer {} // PartialEQ already handles functionality, but
 
 impl PartialOrd for RenderTaskOrderer {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.distance > other.distance {
-            Some(Ordering::Greater)
+        // surfaces should be rendered above sides when they are of equal (within floating point error) distance, to prevent flickering between the two
+        if (self.distance - other.distance).abs() < 0.01 {
+            match (self.task_type, other.task_type) {
+                // if both are surfaces (ceilings or floors), order as normal
+                (RenderTaskType::Ceiling(_), RenderTaskType::Ceiling(_))
+                | (RenderTaskType::Ceiling(_), RenderTaskType::Floor(_))
+                | (RenderTaskType::Floor(_), RenderTaskType::Ceiling(_))
+                | (RenderTaskType::Floor(_), RenderTaskType::Floor(_)) => {
+                    return self.distance.partial_cmp(&other.distance);
+                }
+                // if self is a surface but not other, render self above other
+                (RenderTaskType::Floor(_), _) | (RenderTaskType::Ceiling(_), _) => {
+                    return Some(Ordering::Less);
+                }
+                // if other is a surface but not self, render other above self
+                (_, RenderTaskType::Floor(_)) | (_, RenderTaskType::Ceiling(_)) => {
+                    return Some(Ordering::Greater);
+                }
+                // in all other cases (if neither are surfaces), render in normal ordering
+                (_, _) => return self.distance.partial_cmp(&other.distance),
+            }
         } else {
-            Some(Ordering::Less)
-        } // TODO fix flickering, probably due to floating point impercision
+            // if not very close, order as one would expect, accorfding to distance
+            return self.distance.partial_cmp(&other.distance);
+        }
     }
 }
 
 impl Ord for RenderTaskOrderer {
     fn cmp(&self, other: &Self) -> Ordering {
-        if self.distance > other.distance {
-            Ordering::Greater
+        if let Some(ordering) = self.distance.partial_cmp(&other.distance) {
+            ordering
         } else {
-            Ordering::Less
-        } // TODO fix flickering, probably due to floating point impercision
+            Ordering::Equal // as default, should never actually happen
+        }
     }
 }
 
