@@ -45,11 +45,14 @@ impl PartialOrd for RenderTaskOrderer {
         // surfaces should be rendered above sides when they are of equal (within floating point error) distance, to prevent flickering between the two
         if (self.distance - other.distance).abs() < 0.01 {
             match (self.task_type, other.task_type) {
-                // if both are surfaces (ceilings or floors), order as normal
-                (RenderTaskType::Ceiling(_), RenderTaskType::Ceiling(_))
-                | (RenderTaskType::Ceiling(_), RenderTaskType::Floor(_))
-                | (RenderTaskType::Floor(_), RenderTaskType::Ceiling(_))
-                | (RenderTaskType::Floor(_), RenderTaskType::Floor(_)) => {
+                // if both are ciling or both are floor, render the one that is vertically closer above further one (prevents flickering between surface of equal distance)
+                (RenderTaskType::Ceiling(s_vert_dist), RenderTaskType::Ceiling(o_vert_dist))
+                | (RenderTaskType::Floor(s_vert_dist), RenderTaskType::Floor(o_vert_dist)) => {
+                    return s_vert_dist.partial_cmp(&o_vert_dist);
+                }
+                // if both are surfaces (ceilings or floors), but not of same type, order as normal
+                (RenderTaskType::Ceiling(_), RenderTaskType::Floor(_))
+                | (RenderTaskType::Floor(_), RenderTaskType::Ceiling(_)) => {
                     return self.distance.partial_cmp(&other.distance);
                 }
                 // if self is a surface but not other, render self above other
@@ -329,6 +332,7 @@ fn task_surface(
     }
 }
 
+// TODO optimize?
 fn task_partial_surface(
     exit_hit: RayHit,
     angle_relative_to_player: f64,
