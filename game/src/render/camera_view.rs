@@ -332,7 +332,7 @@ fn task_surface(
     }
 }
 
-// TODO optimize?
+// TODO optimize? kinda laggy for some reason rn i think
 fn task_partial_surface(
     exit_hit: RayHit,
     angle_relative_to_player: f64,
