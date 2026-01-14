@@ -1,6 +1,6 @@
 use std::{
     cmp::Ordering,
-    collections::{BinaryHeap, HashMap, HashSet},
+    collections::{BinaryHeap, HashMap, HashSet, btree_map::IntoValues},
     rc::Rc,
 };
 
@@ -76,6 +76,7 @@ pub struct BlockSlice {
 pub struct MapSlice {
     pub wall_hit: Option<RayHit>,
     pub block_slices: Vec<BlockSlice>,
+    pub hits_blocks_currently_inside: Vec<RayHit>,
 }
 
 // TODO separate into multiple functions
@@ -89,8 +90,8 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
     for w in &game.map.wall_sides {
         let intersection: Option<RayHit> = intersect(
             Point {
-                x: game.player.position_x,
-                y: game.player.position_y,
+                x: game.player.position.x,
+                y: game.player.position.y,
             },
             ray_angle,
             w.clone(), // TODO remove need for this clone
@@ -112,8 +113,8 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
     for b in &game.map.block_sides {
         let intersection: Option<RayHit> = intersect(
             Point {
-                x: game.player.position_x,
-                y: game.player.position_y,
+                x: game.player.position.x,
+                y: game.player.position.y,
             },
             ray_angle,
             b.clone(), // TODO remove need for this clone
@@ -131,16 +132,13 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
 
     // we go through the rayhits back to front and remember which block (shape) it belonged to
     // when we find another rayhit for that shape, we've exited the shape and can
-
     let mut block_slices: Vec<BlockSlice> = Vec::new();
-
-    let mut blocks_currently_inside: HashMap<ShapeID, RayHit> = HashMap::new();
-
+    let mut blocks_currently_over: HashMap<ShapeID, RayHit> = HashMap::new(); // block which the raycast if currentyl passing over or under
     while !block_rayhits_ordered.is_empty() {
         if let Some(rh_ordering) = block_rayhits_ordered.pop() {
             let rh = rh_ordering.rh;
 
-            if let Some(shape_exit_hit) = blocks_currently_inside.remove(&rh.side.shape.id)
+            if let Some(shape_exit_hit) = blocks_currently_over.remove(&rh.side.shape.id)
             // if true, we just exited a block we were inside
             {
                 block_slices.push(BlockSlice {
@@ -148,7 +146,7 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
                     exit_hit: shape_exit_hit,
                 }); // build the slice of the block
             } else {
-                blocks_currently_inside.insert(rh.side.shape.id, rh); // if we werent in that shape already, were inside it now
+                blocks_currently_over.insert(rh.side.shape.id, rh); // if we werent in that shape already, were inside it now
             }
         }
     }
@@ -156,6 +154,7 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
     return MapSlice {
         wall_hit: closest_wall_hit,
         block_slices: block_slices,
+        hits_blocks_currently_inside: blocks_currently_over.into_values().collect(),
     };
 }
 

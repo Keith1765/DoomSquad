@@ -191,6 +191,14 @@ fn task_column(
         ));
     }
 
+    for exit_hit in map_slice.hits_blocks_currently_inside {
+        if let Some(task_ord) =
+            task_partial_surface(exit_hit, angle_relative_to_player, renderer_data, game)
+        {
+            tasks.push(task_ord);
+        }
+    }
+
     return tasks;
 }
 
@@ -261,8 +269,10 @@ fn task_surface(
     let vertical_distance: Option<VerticalDisctance> = match &slice.entry_hit.side.shape.shape_type
     {
         ShapeType::Block => {
+            // case ceiling
             if &slice.entry_hit.side.shape.bottom > &game.player.view_height {
                 Some(&slice.entry_hit.side.shape.bottom - &game.player.view_height)
+            //case floor
             } else if (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height)
                 < game.player.view_height
             {
@@ -274,7 +284,7 @@ fn task_surface(
                 None
             }
         }
-        ShapeType::Wall => None, // null value, shoud never happen
+        ShapeType::Wall => None, // null value, should never happen
     };
 
     // varies between 0.5 and 1.0 depending on height in level; temporary
@@ -316,6 +326,56 @@ fn task_surface(
         ));
     } else {
         return None;
+    }
+}
+
+fn task_partial_surface(
+    exit_hit: RayHit,
+    angle_relative_to_player: f64,
+    renderer_data: &RendererData,
+    game: &Game,
+) -> Option<RenderTaskOrderer> {
+    // if we are inside the block (no just horizontalll, but also vertically)
+    if exit_hit.side.shape.bottom < game.player.view_height
+        && exit_hit.side.shape.bottom + exit_hit.side.shape.height > game.player.view_height
+    {
+        return None;
+    }
+
+    let (exit_bottom_onscreen, exit_top_onscreen) =
+        calculate_side_bottom_top(&exit_hit, angle_relative_to_player, renderer_data, game);
+
+    let brightness = 0.5 + (&exit_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
+
+    // if we are above the block
+    if exit_hit.side.shape.bottom + exit_hit.side.shape.height < game.player.view_height {
+        let vert_dist =
+            game.player.view_height - exit_hit.side.shape.bottom + exit_hit.side.shape.height;
+        let task: RenderTask = RenderTask {
+            color: renderer_data.surface_default_color,
+            brightness: brightness,
+            onscreen_bottom: 0,
+            onscreen_top: exit_top_onscreen,
+        };
+        return Some(RenderTaskOrderer {
+            task: task,
+            task_type: RenderTaskType::Floor(vert_dist),
+            distance: exit_hit.distance,
+        });
+    } else {
+        // otherwise we are below the block
+        let vert_dist = exit_hit.side.shape.bottom - game.player.view_height;
+        let task: RenderTask = RenderTask {
+            color: renderer_data.surface_default_color,
+            brightness: brightness,
+            onscreen_bottom: exit_bottom_onscreen,
+            onscreen_top: SCREEN_HEIGHT as isize,
+        };
+        return Some(RenderTaskOrderer {
+            task: task,
+            task_type: RenderTaskType::Floor(vert_dist),
+            distance: exit_hit.distance,
+        });
     }
 }
 

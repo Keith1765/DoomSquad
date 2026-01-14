@@ -1,5 +1,8 @@
 use super::map::Map;
-use crate::{SCREEN_HEIGHT, SCREEN_WIDTH, game::map::LEVEL_HEIGHT};
+use crate::{
+    SCREEN_HEIGHT, SCREEN_WIDTH,
+    game::map::{LEVEL_HEIGHT, Point},
+};
 use minifb::{Key, MouseMode, Window};
 use std::f64::consts::PI;
 
@@ -9,8 +12,7 @@ const FLYUPANDDOWNSPEED: f64 = 0.5;
 
 #[derive(Clone, Copy)]
 pub struct Player {
-    pub position_x: f64,
-    pub position_y: f64,
+    pub position: Point,
     pub view_height: f64,
     pub velocity_x: f64,
     pub velocity_y: f64,
@@ -22,8 +24,7 @@ impl Player {
     pub fn new() -> Self {
         let pa: f64 = -PI / 2.0;
         Self {
-            position_x: 187.5,
-            position_y: 225.0,
+            position: Point { x: 187.5, y: 225.0 },
             view_height: 0.0,
             velocity_x: pa.cos() * ROTATIONSPEED,
             velocity_y: pa.sin() * ROTATIONSPEED,
@@ -54,22 +55,22 @@ impl Player {
         }
 
         if window.is_key_down(Key::W) {
-            self.position_x += self.velocity_x * MOVESPEED;
-            self.position_y += self.velocity_y * MOVESPEED;
+            self.position.x += self.velocity_x * MOVESPEED;
+            self.position.y += self.velocity_y * MOVESPEED;
         }
 
         if window.is_key_down(Key::A) {
-            self.position_x += self.velocity_y * MOVESPEED;
-            self.position_y -= self.velocity_x * MOVESPEED;
+            self.position.x += self.velocity_y * MOVESPEED;
+            self.position.y -= self.velocity_x * MOVESPEED;
         }
         if window.is_key_down(Key::D) {
-            self.position_x -= self.velocity_y * MOVESPEED;
-            self.position_y += self.velocity_x * MOVESPEED;
+            self.position.x -= self.velocity_y * MOVESPEED;
+            self.position.y += self.velocity_x * MOVESPEED;
         }
 
         if window.is_key_down(Key::S) {
-            self.position_x -= self.velocity_x * MOVESPEED;
-            self.position_y -= self.velocity_y * MOVESPEED;
+            self.position.x -= self.velocity_x * MOVESPEED;
+            self.position.y -= self.velocity_y * MOVESPEED;
         }
 
         if window.is_key_down(Key::Space) {
