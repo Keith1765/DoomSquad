@@ -297,7 +297,7 @@ fn task_surface(
         && let Some(vertical_distance_value) = vertical_distance
     {
         let task: RenderTask = RenderTask {
-            color: renderer_data.surface_default_color,
+            color: slice.entry_hit.side.shape.surface_color,
             brightness,
             onscreen_bottom: onscreen_bottom,
             onscreen_top: onscreen_top,
@@ -332,7 +332,8 @@ fn task_surface(
     }
 }
 
-// TODO optimize? kinda laggy for some reason rn i think
+// TODO optimize? kinda laggy for some reason rn; 
+// TODO i know its this function lagging because if i comment out the invocation in task_column al lot less lag spikes happen
 fn task_partial_surface(
     exit_hit: RayHit,
     angle_relative_to_player: f64,
@@ -356,7 +357,7 @@ fn task_partial_surface(
         let vert_dist =
             game.player.view_height - exit_hit.side.shape.bottom + exit_hit.side.shape.height;
         let task: RenderTask = RenderTask {
-            color: renderer_data.surface_default_color,
+            color: exit_hit.side.shape.surface_color,
             brightness: brightness,
             onscreen_bottom: 0,
             onscreen_top: exit_top_onscreen,
@@ -370,7 +371,7 @@ fn task_partial_surface(
         // otherwise we are below the block
         let vert_dist = exit_hit.side.shape.bottom - game.player.view_height;
         let task: RenderTask = RenderTask {
-            color: renderer_data.surface_default_color,
+            color: exit_hit.side.shape.surface_color,
             brightness: brightness,
             onscreen_bottom: exit_bottom_onscreen,
             onscreen_top: SCREEN_HEIGHT as isize,
