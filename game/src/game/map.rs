@@ -15,6 +15,15 @@ pub struct Point {
     pub y: f64,
 }
 
+impl Point {
+    pub fn distance_to(self, other: &Self) -> f64 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+
+        (dx.powf(2.0) + dy.powf(2.0)).sqrt()
+    }
+}
+
 impl Sub for Point {
     type Output = Self;
 
@@ -123,14 +132,28 @@ impl Map {
             Point { x: 50.0, y: 200.0 },
             Point { x: 150.0, y: 200.0 },
         ];
-        map.add_shape_from_points(wall_points, ShapeType::Wall, 0.0, LEVEL_HEIGHT, 0x00ff00, 0xffff00)?;
+        map.add_shape_from_points(
+            wall_points,
+            ShapeType::Wall,
+            0.0,
+            LEVEL_HEIGHT,
+            0x00ff00,
+            0xffff00,
+        )?;
 
         let bottom_block_points: Vec<Point> = vec![
             Point { x: 200.0, y: 200.0 },
             Point { x: 175.0, y: 200.0 },
             Point { x: 175.0, y: 175.0 },
         ];
-        map.add_shape_from_points(bottom_block_points, ShapeType::Block, 0.0, 10.0, 0x0000ff, 0xffff00)?;
+        map.add_shape_from_points(
+            bottom_block_points,
+            ShapeType::Block,
+            0.0,
+            10.0,
+            0x0000ff,
+            0xffff00,
+        )?;
 
         let bottom_block_points_2: Vec<Point> = vec![
             Point { x: 200.0, y: 215.0 },
@@ -138,7 +161,14 @@ impl Map {
             Point { x: 175.0, y: 200.0 },
             Point { x: 185.0, y: 200.0 },
         ];
-        map.add_shape_from_points(bottom_block_points_2, ShapeType::Block, 0.0, 5.0, 0x0000ff, 0xffff00)?;
+        map.add_shape_from_points(
+            bottom_block_points_2,
+            ShapeType::Block,
+            0.0,
+            5.0,
+            0x0000ff,
+            0xffff00,
+        )?;
 
         let top_block_points: Vec<Point> = vec![
             // Point { x: 300.0, y: 225.0 },
@@ -148,14 +178,28 @@ impl Map {
             Point { x: 180.0, y: 205.0 },
             Point { x: 180.0, y: 178.0 },
         ];
-        map.add_shape_from_points(top_block_points, ShapeType::Block, 15.0, 10.0, 0xff0000, 0xffff00)?;
+        map.add_shape_from_points(
+            top_block_points,
+            ShapeType::Block,
+            15.0,
+            10.0,
+            0xff0000,
+            0xffff00,
+        )?;
 
         let small_block_points: Vec<Point> = vec![
             Point { x: 200.0, y: 200.0 },
             Point { x: 190.0, y: 200.0 },
             Point { x: 190.0, y: 190.0 },
         ];
-        map.add_shape_from_points(small_block_points, ShapeType::Block, 10.0, 1.0, 0xffffff, 0xff00ff)?;
+        map.add_shape_from_points(
+            small_block_points,
+            ShapeType::Block,
+            10.0,
+            1.0,
+            0xffffff,
+            0xff00ff,
+        )?;
 
         Some(map)
     }
@@ -180,7 +224,7 @@ impl Map {
             bottom: bottom,
             height: height,
             color: color,
-            surface_color
+            surface_color,
         });
 
         // references to push to the corect list

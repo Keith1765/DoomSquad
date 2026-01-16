@@ -109,30 +109,52 @@ pub fn draw(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
 }
 
 fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
+    // for every column of the screen, create a slice of the map
+    let mut map_slices_and_angles: [Option<(MapSlice, f64)>; SCREEN_WIDTH] =
+        [const { None }; SCREEN_WIDTH];
     for x in 0..SCREEN_WIDTH {
         let pixel_distance_from_screen_middle: f64 = x as f64 - SCREEN_WIDTH as f64 / 2.0;
         let angle_relative_to_player: f64 = (pixel_distance_from_screen_middle
             / renderer_data.projection_plane_distance as f64)
             .atan();
 
-        let mut column_tasks: BinaryHeap<RenderTaskOrderer> = task_column(
-            game,
-            renderer_data,
+        map_slices_and_angles[x] = Some((
+            raycast(game, angle_relative_to_player, game.player.view_angle),
             angle_relative_to_player,
-            game.player.view_angle,
-        );
+        ));
+    }
 
-        let column = draw_render_tasks(&mut column_tasks, renderer_data);
+    // TODO insert sprites here
 
-        //draw column into buffer
-        for y in 0..column.len() {
-            // read columns in reverse vertical order; that way other functions can pretend y=0 is botto of screen
-            buffer[(SCREEN_HEIGHT - (y + 1)) * SCREEN_WIDTH + x] = column[y];
+    // convert every mapslice into taskings
+    let mut columns_tasked: [Option<BinaryHeap<RenderTaskOrderer>>; SCREEN_WIDTH] =
+        [const { None }; SCREEN_WIDTH];
+    for x in 0..SCREEN_WIDTH {
+        if let Some((map_slice, angle_relative_to_player)) = &map_slices_and_angles[x] {
+            columns_tasked[x] = Some(task_column(
+                game,
+                renderer_data,
+                map_slice,
+                *angle_relative_to_player,
+            ));
+        }
+    }
+
+    // draw all the tasks into the buffer
+    for x in 0..SCREEN_WIDTH {
+        if let Some(column_tasks) = &mut columns_tasked[x] {
+            let column = draw_tasks(column_tasks, renderer_data);
+
+            //draw column into buffer
+            for y in 0..column.len() {
+                // read columns in reverse vertical order; that way other functions can pretend y=0 is botto of screen
+                buffer[(SCREEN_HEIGHT - (y + 1)) * SCREEN_WIDTH + x] = column[y];
+            }
         }
     }
 }
 
-fn draw_render_tasks(
+fn draw_tasks(
     tasks: &mut BinaryHeap<RenderTaskOrderer>,
     renderer_data: &RendererData,
 ) -> [u32; SCREEN_HEIGHT] {
@@ -169,14 +191,12 @@ fn draw_render_tasks(
 fn task_column(
     game: &Game,
     renderer_data: &RendererData,
+    map_slice: &MapSlice,
     angle_relative_to_player: f64,
-    player_angle: f64,
 ) -> BinaryHeap<RenderTaskOrderer> {
     let mut tasks: BinaryHeap<RenderTaskOrderer> = BinaryHeap::new();
 
-    let map_slice: MapSlice = raycast(game, angle_relative_to_player, player_angle);
-
-    if let Some(wall_hit) = map_slice.wall_hit {
+    if let Some(wall_hit) = &map_slice.wall_hit {
         tasks.push(task_side(
             &wall_hit,
             angle_relative_to_player,
@@ -185,7 +205,7 @@ fn task_column(
         )); // default return value: empty column
     }
 
-    for slice in map_slice.block_slices {
+    for slice in &map_slice.block_slices {
         tasks.append(&mut task_block_slice(
             slice,
             angle_relative_to_player,
@@ -194,7 +214,7 @@ fn task_column(
         ));
     }
 
-    for exit_hit in map_slice.hits_blocks_currently_inside {
+    for exit_hit in &map_slice.hits_blocks_currently_inside {
         if let Some(task_ord) =
             task_partial_surface(exit_hit, angle_relative_to_player, renderer_data, game)
         {
@@ -236,7 +256,7 @@ fn task_side(
 }
 
 fn task_surface(
-    slice: BlockSlice,
+    slice: &BlockSlice,
     angle_relative_to_player: f64,
     renderer_data: &RendererData,
     game: &Game,
@@ -332,10 +352,10 @@ fn task_surface(
     }
 }
 
-// TODO optimize? kinda laggy for some reason rn; 
+// TODO optimize? kinda laggy for some reason rn;
 // TODO i know its this function lagging because if i comment out the invocation in task_column al lot less lag spikes happen
 fn task_partial_surface(
-    exit_hit: RayHit,
+    exit_hit: &RayHit,
     angle_relative_to_player: f64,
     renderer_data: &RendererData,
     game: &Game,
@@ -385,7 +405,7 @@ fn task_partial_surface(
 }
 
 fn task_block_slice(
-    slice: BlockSlice,
+    slice: &BlockSlice,
     angle_relative_to_player: f64,
     renderer_data: &RendererData,
     game: &Game,

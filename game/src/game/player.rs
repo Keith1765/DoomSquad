@@ -10,6 +10,7 @@ const ROTATIONSPEED: f64 = 2.0;
 const MOVESPEED: f64 = 0.5;
 const FLYUPANDDOWNSPEED: f64 = 0.5;
 
+// TODO refactor to use entites?
 #[derive(Clone, Copy)]
 pub struct Player {
     pub position: Point,
