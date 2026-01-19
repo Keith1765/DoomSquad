@@ -4,6 +4,9 @@ use std::{
     rc::Rc,
 };
 
+use crate::game::entities::Entity;
+use crate::render::sprites::Sprite;
+
 pub const LEVEL_HEIGHT: f64 = 25.0; // TODO different for every map
 
 pub type ShapeID = usize;
@@ -21,6 +24,13 @@ impl Point {
         let dy = self.y - other.y;
 
         (dx.powf(2.0) + dy.powf(2.0)).sqrt()
+    }
+
+    pub fn angle_to(self, other: &Self) -> f64 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+
+        (dx / dy).atan()
     }
 }
 
@@ -104,6 +114,7 @@ pub struct Map {
     pub wall_shapes: Vec<Rc<Shape>>,
     pub block_sides: Vec<Side>,
     pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed?
+    pub entities: Vec<Entity>,
     side_count: usize,
     shape_count: usize,
 }
@@ -116,6 +127,7 @@ impl Map {
             wall_shapes: Vec::new(),
             block_sides: Vec::new(),
             block_shapes: Vec::new(),
+            entities: Vec::new(),
             side_count: 0,
             shape_count: 0,
             //points_in_border: Vec::new(),
@@ -200,6 +212,18 @@ impl Map {
             0xffffff,
             0xff00ff,
         )?;
+
+        let test_entity = Entity {
+            position: Point { x: 210.0, y: 210.0 },
+            vertical_position: 0.0,
+            facing_angle: 0.0,
+            sprite: Sprite {
+                color: 0xff0000,
+                height: 15.0,
+                width: 10.0,
+            },
+        };
+        map.entities.push(test_entity);
 
         Some(map)
     }

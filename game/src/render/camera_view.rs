@@ -8,25 +8,29 @@ use crate::render::raycast::{
     self, BlockSlice, MapSlice, RayHit, RayHitOrderer, intersect, raycast,
 };
 use crate::render::renderer_init::RendererData;
+use crate::render::sprites::task_sprite;
 use crate::{BACKGROUND_COLOR, SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
 
 type VerticalDisctance = f64;
 
 #[derive(Clone, Copy, PartialEq)]
-enum RenderTaskType {
+pub enum RenderTaskType {
     Side,
     Floor(VerticalDisctance),
     Ceiling(VerticalDisctance),
+    Sprite,
 }
 
-struct RenderTask {
-    color: u32, // TODO replace with texture
-    brightness: f64,
-    onscreen_bottom: isize,
-    onscreen_top: isize,
+#[derive(Clone)]
+pub struct RenderTask {
+    pub color: u32, // TODO replace with texture
+    pub brightness: f64,
+    pub onscreen_bottom: isize,
+    pub onscreen_top: isize,
 }
 
-struct RenderTaskOrderer {
+#[derive(Clone)]
+pub struct RenderTaskOrderer {
     pub task: RenderTask,
     task_type: RenderTaskType,
     distance: f64,
@@ -124,8 +128,6 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
         ));
     }
 
-    // TODO insert sprites here
-
     // convert every mapslice into taskings
     let mut columns_tasked: [Option<BinaryHeap<RenderTaskOrderer>>; SCREEN_WIDTH] =
         [const { None }; SCREEN_WIDTH];
@@ -137,6 +139,24 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
                 map_slice,
                 *angle_relative_to_player,
             ));
+        }
+    }
+
+    // create entity (sprite) tasks, put them into the taskings
+    // TODO fix entity wrong onscren positioning
+    for e in &game.map.entities {
+        let instruction = task_sprite(game, e, renderer_data);
+        for x in instruction.sprite_left_screen_x..instruction.sprite_right_screen_x {
+
+            if x < 0 || x > SCREEN_WIDTH-1 {
+                continue;
+            }
+
+            if let Some(tasks) = &mut columns_tasked[x]
+                && let Some(task) = instruction.tasks.get(x - instruction.sprite_left_screen_x)
+            {
+                tasks.push(task.clone()); // TODO remove necessity for clone()
+            }
         }
     }
 

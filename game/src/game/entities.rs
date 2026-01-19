@@ -3,7 +3,7 @@ use crate::render::sprites::Sprite;
 
 pub struct Entity {
     pub position: Point,
-    pub vertical_position: f64,
+    pub vertical_position: f64, // foot lever
     pub facing_angle: f64,
     pub sprite: Sprite,
 }
