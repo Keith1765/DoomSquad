@@ -27,6 +27,7 @@ pub struct SpriteInstruction {
     pub tasks: Vec<RenderTaskOrderer>,
 }
 
+// creates the instruction (task collection) for an entitys sprite
 pub fn task_sprite(
     game: &Game,
     entity: &Entity,
