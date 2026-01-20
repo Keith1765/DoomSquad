@@ -23,7 +23,7 @@ pub struct Player {
 
 impl Player {
     pub fn new() -> Self {
-        let pa: f64 = -PI / 2.0;
+        let pa: f64 = 4.0;
         Self {
             position: Point { x: 187.5, y: 225.0 },
             view_height: 0.0,

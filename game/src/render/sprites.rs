@@ -1,4 +1,5 @@
-use std::rc::Rc;
+use std::{f64::consts::PI, rc::Rc};
+use std::ops::Rem;
 
 use crate::{
     SCREEN_WIDTH,
@@ -32,11 +33,17 @@ pub fn task_sprite(
     game: &Game,
     entity: &Entity,
     renderer_data: &RendererData,
-) -> SpriteInstruction {
+) -> Option<SpriteInstruction> {
     // return the leftmost x of the sprite, and all the tasks to be rendered right of that
-    let angle_off_player_view = game.player.position.angle_to(&entity.position); // TODO abort if sprite out of FOV
+    let angle_off_player_view = game.player.position.angle_to(&entity.position)-game.player.view_angle; // TODO abort if sprite out of FOV
+    print!("{}, {}, {}\n", game.player.position.angle_to(&entity.position), game.player.view_angle, angle_off_player_view);
     let distance: f64 = game.player.position.distance_to(&entity.position);
     let normalized_distance = distance * angle_off_player_view.cos();
+
+    // TODO only for test, find cleaner solution
+    if normalized_distance < 0.0 {
+        return None
+    }
 
     let onscreen_width = ((entity.sprite.width / normalized_distance)
         * renderer_data.vertical_scale_coefficient) as isize; // TODO rename this coeff
@@ -77,9 +84,9 @@ pub fn task_sprite(
         ));
     }
 
-    return SpriteInstruction {
+    return Some(SpriteInstruction {
         sprite_left_screen_x: left_screen_x as usize,
         sprite_right_screen_x: (left_screen_x + onscreen_width) as usize,
         tasks,
-    };
+    });
 }

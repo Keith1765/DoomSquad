@@ -102,12 +102,7 @@ pub fn draw(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
     for px in buffer.iter_mut() {
         *px = renderer_data.background_color;
     }
-    //draw the top down map
-    // draw_map(buffer, game).unwrap();
-    //go through FOV in small steps, for each draw ray in top down view and corresponding line based on distance in 2.5 view
     draw_camera_view(buffer, &renderer_data, game);
-    //draw player with his looking angle
-    // draw_player(buffer, game);
     //draw grid of reference points spaced each 50 pixels for debugging
     draw_reference_points(buffer);
 }
@@ -145,17 +140,18 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     // create entity (sprite) tasks, put them into the taskings
     // TODO fix entity wrong onscren positioning
     for e in &game.map.entities {
-        let instruction = task_sprite(game, e, renderer_data);
-        for x in instruction.sprite_left_screen_x..instruction.sprite_right_screen_x {
+        if let Some(instruction) = task_sprite(game, e, renderer_data) {
+            for x in instruction.sprite_left_screen_x..instruction.sprite_right_screen_x {
 
-            if x < 0 || x > SCREEN_WIDTH-1 {
-                continue;
-            }
+                if x < 0 || x > SCREEN_WIDTH-1 {
+                    continue;
+                }
 
-            if let Some(tasks) = &mut columns_tasked[x]
-                && let Some(task) = instruction.tasks.get(x - instruction.sprite_left_screen_x)
-            {
-                tasks.push(task.clone()); // TODO remove necessity for clone()
+                if let Some(tasks) = &mut columns_tasked[x]
+                    && let Some(task) = instruction.tasks.get(x - instruction.sprite_left_screen_x)
+                {
+                    tasks.push(task.clone()); // TODO remove necessity for clone()
+                }
             }
         }
     }

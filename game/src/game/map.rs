@@ -1,7 +1,5 @@
 use std::{
-    hash::{Hash, Hasher},
-    ops::{Add, Sub},
-    rc::Rc,
+    f64::consts::PI, hash::{Hash, Hasher}, ops::{Add, Sub}, rc::Rc
 };
 
 use crate::game::entities::Entity;
@@ -19,6 +17,7 @@ pub struct Point {
 }
 
 impl Point {
+    // TODO tests for this function
     pub fn distance_to(self, other: &Self) -> f64 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
@@ -26,11 +25,14 @@ impl Point {
         (dx.powf(2.0) + dy.powf(2.0)).sqrt()
     }
 
+    // TODO tests for this function
     pub fn angle_to(self, other: &Self) -> f64 {
-        let dx = self.x - other.x;
-        let dy = self.y - other.y;
+        let dx = other.x - self.x;
+        let dy = other.y - self.y;
 
-        (dx / dy).atan()
+        let angle = (dy / dx).atan();
+
+        angle
     }
 }
 
@@ -214,7 +216,7 @@ impl Map {
         )?;
 
         let test_entity = Entity {
-            position: Point { x: 210.0, y: 210.0 },
+            position: Point { x: 230.0, y: 210.0 },
             vertical_position: 0.0,
             facing_angle: 0.0,
             sprite: Sprite {
@@ -278,4 +280,22 @@ impl Map {
         self.shape_count += 1;
         return Some(());
     }
+}
+
+#[test]
+fn test_angle() {
+    let p1 = Point {x: 0.0, y: 0.0};
+
+    let p2 = Point {x: 10.0, y: 0.0};
+    assert!((p1.angle_to(&p2)-0.0).abs() < 0.1);  
+
+    let p3 = Point {x: -10.0, y: 0.0};
+    println!("{}", p1.angle_to(&p3));
+    assert!((p1.angle_to(&p3)-0.0).abs() < 0.1);  
+
+    let p4 = Point {x: 0.0, y: 10.0};
+    assert!((p1.angle_to(&p4)-PI/2.0).abs() < 0.1);  
+
+    let p5 = Point {x: 0.0, y: -10.0};
+    assert!((p1.angle_to(&p5)+PI/2.0).abs() < 0.1);  
 }
