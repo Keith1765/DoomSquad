@@ -1,8 +1,17 @@
 use std::collections::BinaryHeap;
 
-use crate::{SCREEN_HEIGHT, game::{Game, map::{LEVEL_HEIGHT, ShapeType}}, render::{RendererData, camera_view::{RenderTask, RenderTaskOrderer, RenderTaskType, VerticalDisctance}, raycast::{BlockSlice, RayHit}}};
-
-
+use crate::{
+    SCREEN_HEIGHT,
+    game::{
+        Game,
+        map::{LEVEL_HEIGHT, ShapeType},
+    },
+    render::{
+        RendererData,
+        camera_view::{RenderTask, RenderTaskOrderer, RenderTaskType, VerticalDisctance},
+        raycast::{BlockSlice, RayHit},
+    },
+};
 
 pub fn task_side(
     side_hit: &RayHit,
