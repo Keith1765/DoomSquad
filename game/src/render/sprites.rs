@@ -36,13 +36,12 @@ pub fn task_sprite(
 ) -> Option<SpriteInstruction> {
     // return the leftmost x of the sprite, and all the tasks to be rendered right of that
     let angle_off_player_view = game.player.position.angle_to(&entity.position)-game.player.view_angle; // TODO abort if sprite out of FOV
-    print!("{}, {}, {}\n", game.player.position.angle_to(&entity.position), game.player.view_angle, angle_off_player_view);
     let distance: f64 = game.player.position.distance_to(&entity.position);
     let normalized_distance = distance * angle_off_player_view.cos();
 
-    // TODO only for test, find cleaner solution
+    // TODO temporary, find cleaner solution ?
     if normalized_distance < 0.0 {
-        return None
+        return None;
     }
 
     let onscreen_width = ((entity.sprite.width / normalized_distance)
@@ -85,8 +84,9 @@ pub fn task_sprite(
     }
 
     return Some(SpriteInstruction {
-        sprite_left_screen_x: left_screen_x as usize,
-        sprite_right_screen_x: (left_screen_x + onscreen_width) as usize,
+        // .max() ist to prevent overflow into fvery high numbers when casting to usize
+        sprite_left_screen_x: left_screen_x.max(0) as usize,
+        sprite_right_screen_x: (left_screen_x + onscreen_width).max(0) as usize,
         tasks,
     });
 }

@@ -30,7 +30,17 @@ impl Point {
         let dx = other.x - self.x;
         let dy = other.y - self.y;
 
-        let angle = (dy / dx).atan();
+        let mut angle = (dy / dx).atan();
+
+        // without this atan only works for 180 degrees
+        if dx < 0.0 {
+            angle += PI;
+        }
+
+        // if angle is negative, rotate it around 360deg to get same angle expressed positively
+        if angle < 0.0 {
+            angle += 2.0*PI;
+        }
 
         angle
     }
@@ -220,7 +230,7 @@ impl Map {
             vertical_position: 0.0,
             facing_angle: 0.0,
             sprite: Sprite {
-                color: 0xff0000,
+                color: 0xff00ff,
                 height: 15.0,
                 width: 10.0,
             },
@@ -290,12 +300,23 @@ fn test_angle() {
     assert!((p1.angle_to(&p2)-0.0).abs() < 0.1);  
 
     let p3 = Point {x: -10.0, y: 0.0};
-    println!("{}", p1.angle_to(&p3));
-    assert!((p1.angle_to(&p3)-0.0).abs() < 0.1);  
+    assert!((p1.angle_to(&p3)-PI).abs() < 0.1);  
 
     let p4 = Point {x: 0.0, y: 10.0};
     assert!((p1.angle_to(&p4)-PI/2.0).abs() < 0.1);  
 
     let p5 = Point {x: 0.0, y: -10.0};
-    assert!((p1.angle_to(&p5)+PI/2.0).abs() < 0.1);  
+    assert!((p1.angle_to(&p5)-3.0*(PI/2.0)).abs() < 0.1);  
+
+    let p6 = Point {x: 10.0, y: 10.0};
+    assert!((p1.angle_to(&p6)-PI/4.0).abs() < 0.1);
+
+    let p7 = Point {x: -10.0, y: 10.0};
+    assert!((p1.angle_to(&p7)-3.0*(PI/4.0)).abs() < 0.1);  
+
+    let p8 = Point {x: -10.0, y: -10.0};
+    assert!((p1.angle_to(&p8)-5.0*(PI/4.0)).abs() < 0.1);  
+
+    let p9 = Point {x: 10.0, y: -10.0};
+    assert!((p1.angle_to(&p9)-7.0*(PI/4.0)).abs() < 0.1);    
 }

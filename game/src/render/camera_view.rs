@@ -138,7 +138,7 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     }
 
     // create entity (sprite) tasks, put them into the taskings
-    // TODO fix entity wrong onscren positioning
+    // TODO make sprites not render behind walls
     for e in &game.map.entities {
         if let Some(instruction) = task_sprite(game, e, renderer_data) {
             for x in instruction.sprite_left_screen_x..instruction.sprite_right_screen_x {
