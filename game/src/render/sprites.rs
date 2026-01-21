@@ -1,5 +1,5 @@
-use std::{f64::consts::PI, rc::Rc};
 use std::ops::Rem;
+use std::{f64::consts::PI, rc::Rc};
 
 use crate::{
     SCREEN_WIDTH,
@@ -35,7 +35,8 @@ pub fn task_sprite(
     renderer_data: &RendererData,
 ) -> Option<SpriteInstruction> {
     // return the leftmost x of the sprite, and all the tasks to be rendered right of that
-    let angle_off_player_view = game.player.position.angle_to(&entity.position)-game.player.view_angle; // TODO abort if sprite out of FOV
+    let angle_off_player_view =
+        game.player.position.angle_to(&entity.position) - game.player.view_angle; // TODO abort if sprite out of FOV
     let distance: f64 = game.player.position.distance_to(&entity.position);
     let normalized_distance = distance * angle_off_player_view.cos();
 
@@ -45,18 +46,18 @@ pub fn task_sprite(
     }
 
     let onscreen_width = ((entity.sprite.width / normalized_distance)
-        * renderer_data.vertical_scale_coefficient) as isize; // TODO rename this coeff
+        * renderer_data.render_scale_coefficient) as isize; // TODO rename this coeff
     let onscreen_height = ((entity.sprite.height / normalized_distance)
-        * renderer_data.vertical_scale_coefficient) as isize; // TODO rename this coeff
+        * renderer_data.render_scale_coefficient) as isize; // TODO rename this coeff
 
     let bottom_onscreen: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
         + ((entity.vertical_position / normalized_distance)
         - (game.player.view_height / normalized_distance)) // adjust for view hieght
-        * renderer_data.vertical_scale_coefficient) // scale correctly
+        * renderer_data.render_scale_coefficient) // scale correctly
         as isize;
 
     let center_screen_x: isize = ((renderer_data.screen_width_as_f64 / 2.0)
-        + (angle_off_player_view.tan() * renderer_data.projection_plane_distance))
+        + (angle_off_player_view.tan() * renderer_data.render_scale_coefficient))
         as isize;
 
     let left_screen_x = center_screen_x - (onscreen_width / 2);
@@ -64,14 +65,16 @@ pub fn task_sprite(
     let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width as usize);
 
     for x in left_screen_x..left_screen_x + onscreen_width {
-
-        if x < 0 || x > SCREEN_WIDTH as isize-1 {
+        if x < 0 || x > SCREEN_WIDTH as isize - 1 {
             continue;
         }
 
         let task = RenderTask {
             color: entity.sprite.color,
-            brightness: 1.0, // TODO make more distant darker
+            // analogous to shading for sides
+            brightness: (1.0 / (distance * renderer_data.distance_darkness_coefficient)
+                + 0.5)
+                .clamp(0.2, 1.0),
             onscreen_bottom: bottom_onscreen,
             onscreen_top: bottom_onscreen + onscreen_height,
         };

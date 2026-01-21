@@ -60,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     while window.is_open() && !window.is_key_down(Key::Escape) {
         game.update(&window);
 
-        render::draw(&mut buffer, &renderer_data, &mut game);
+        render::draw_screen(&mut buffer, &renderer_data, &mut game);
 
         //fps calc
         frame_count += 1;
