@@ -9,6 +9,8 @@ on:
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
+    
+    # Da dein Rust-Projekt im Unterordner "game" liegt:
     defaults:
       run:
         working-directory: game
@@ -19,12 +21,34 @@ jobs:
 
       - name: Install Rust (stable)
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
 
+      # Installiert die notwendigen Linux-Bibliotheken für rodio (Sound) und minifb (Grafik)
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            pkg-config \
+            libasound2-dev \
+            libx11-dev \
+            libxkbcommon-dev
+
+      # Beschleunigt den Build durch Speichern der Abhängigkeiten
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          # Da wir im Unterordner arbeiten, müssen wir den Pfad zum Cache angeben
+          workspaces: "game -> target"
+
+      # Quality Gate 1: Kompilieren
       - name: Cargo build
         run: cargo build --verbose
 
+      # Quality Gate 2: Code-Analyse (Keine Warnungen erlaubt)
       - name: Cargo clippy
         run: cargo clippy -- -D warnings
 
+      # Quality Gate 3: Unit Tests
       - name: Run tests
         run: cargo test --verbose
