@@ -4,7 +4,7 @@ use std::collections::BinaryHeap;
 
 use crate::game::Game;
 use crate::game::map::{LEVEL_HEIGHT, Point, ShapeType, Side};
-use crate::render::blocks::{task_block_slice, task_partial_surface, task_side};
+use crate::render::blocks_walls::{task_block_slice, task_partial_surface, task_side};
 // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
 use crate::render::raycast::{
     self, BlockSlice, MapSlice, RayHit, RayHitOrderer, intersect, raycast,

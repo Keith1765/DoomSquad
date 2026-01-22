@@ -1,4 +1,4 @@
-pub mod blocks;
+pub mod blocks_walls;
 pub mod camera_view;
 pub mod raycast;
 mod renderer_init;
