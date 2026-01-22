@@ -2,7 +2,7 @@ use core::f64;
 use std::collections::BinaryHeap;
 
 use crate::game::Game;
-use crate::game::map::{LEVEL_HEIGHT, Point, Shape, ShapeType, Side}; // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
+use crate::game::map::{Point, ShapeType}; // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
 use crate::render::raycast::{RayHit, RayHitOrderer, intersect};
 use crate::render::renderer_init::RendererData;
 use crate::{SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
@@ -15,7 +15,7 @@ pub fn draw(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
     //draw the top down map
     // draw_map(buffer, game).unwrap();
     //go through FOV in small steps, for each draw ray in top down view and corresponding line based on distance in 2.5 view
-    draw_camera_view(buffer, &renderer_data, game);
+    draw_camera_view(buffer, renderer_data, game);
     //draw player with his looking angle
     // draw_player(buffer, game);
     //draw grid of reference points spaced each 50 pixels for debugging
@@ -26,7 +26,7 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     for x in 0..SCREEN_WIDTH {
         let pixel_distance_from_screen_middle: f64 = x as f64 - SCREEN_WIDTH as f64 / 2.0;
         let angle_relative_to_player: f64 = (pixel_distance_from_screen_middle
-            / renderer_data.projection_plane_distance as f64)
+            / renderer_data.projection_plane_distance)
             .atan();
 
         let column: [u32; SCREEN_HEIGHT] = draw_column(
@@ -152,7 +152,7 @@ fn draw_column(
                 }
 
                 let brightness = (rh.side.angle_in_world.cos() * 0.5
-                    / (rh.distance as f64 * renderer_data.distance_darkness_coefficient)
+                    / (rh.distance * renderer_data.distance_darkness_coefficient)
                     + 0.5)
                     .clamp(0.2, 1.0);
                 // 2. Extract channels
@@ -182,7 +182,7 @@ fn draw_column(
     // };
     //draw the line of this ray up to its intersect
     //draw_line(buffer, game.player.position_x as usize, game.player.position_y as usize, wall_point.x as usize, wall_point.y as usize, 0xff0000);
-    return column;
+    column
 }
 
 // fn draw_dimensional_cast(

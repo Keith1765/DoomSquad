@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //for fps count
     let mut last_time = Instant::now();
     let mut frame_count = 0;
-    let mut fps_value = 0.0;
+    let mut fps_value;
 
     //creates window Safely
     let mut window = match Window::new(
@@ -91,7 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
 
         game.update(&window);
-        render::draw(&mut buffer, &renderer_data, &mut game);
+        render::draw(&mut buffer, &renderer_data, &game);
 
         //fps calc
         frame_count += 1;

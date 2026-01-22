@@ -1,5 +1,5 @@
 use super::map::Map;
-use crate::{SCREEN_HEIGHT, SCREEN_WIDTH, game::map::LEVEL_HEIGHT};
+use crate::SCREEN_WIDTH;
 use minifb::{Key, MouseMode, Window};
 use std::f64::consts::PI;
 
@@ -32,7 +32,7 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, window: &Window, map: &Map) {
+    pub fn update(&mut self, window: &Window, _map: &Map) {
         if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
             self.check_angle();
             let dx = mx - self.last_mouse_x; // mouse delta

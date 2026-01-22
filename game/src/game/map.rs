@@ -46,13 +46,13 @@ pub struct Side {
 
 impl Side {
     pub fn new(point1: Point, point2: Point, side_type: ShapeType, height: f64) -> Self {
-        return Side {
-            point1: point1,
-            point2: point2,
-            side_type: side_type,
+        Side {
+            point1,
+            point2,
+            side_type,
             angle_in_world: ((point1.x - point2.x) / (point1.y - point2.y)).atan(),
-            height: height,
-        };
+            height,
+        }
     }
 }
 
@@ -76,8 +76,8 @@ impl Shape {
             sides.push(Side::new(point1, point2, shape_type, height)); // TODO make height passable to method
         }
         Some(Shape {
-            sides: sides,
-            shape_type: shape_type,
+            sides,
+            shape_type,
         })
     }
 }
