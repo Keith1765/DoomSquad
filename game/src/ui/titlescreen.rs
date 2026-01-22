@@ -1,24 +1,10 @@
-#![allow(dead_code)]
-
-mod game;
-mod render;
-mod parser;
-mod ui;
-
 use eframe::egui;
-use minifb::{Key, MouseMode, Window, WindowOptions};
 
-use std::time::{Duration, Instant};
-
-use crate::parser::map_parser::*;
-use crate::ui::titlescreen::*;
-
-const WIDTH: usize = 800;
-const HEIGHT: usize = 500;
 struct MyApp {
     name: String,
     age: u32,
 }
+
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -38,18 +24,4 @@ impl eframe::App for MyApp {
             ui.label(format!("Hello '{}', age {}", self.name, self.age));
         });
     }
-}
-fn main() -> eframe::Result<()> {
-    let options = eframe::NativeOptions::default();
-
-    eframe::run_native(
-        "My egui App",
-        options,
-        Box::new(|_cc| {
-            Ok(Box::new(MyApp {
-                name: String::new(),
-                age: 0,
-            }))
-        }),
-    )
 }
