@@ -8,10 +8,57 @@ use crate::{
     },
     render::{
         RendererData,
-        camera_view::{RenderTask, RenderTaskOrderer, RenderTaskType, VerticalDisctance},
-        raycast::{BlockSlice, RayHit},
+        camera_view::{
+            ColumnTasks, RenderTask, RenderTaskOrderer, RenderTaskType, VerticalDisctance,
+        },
+        raycast::{BlockSlice, MapSlice, RayHit},
     },
 };
+
+pub fn task_column(
+    game: &Game,
+    renderer_data: &RendererData,
+    map_slice: &MapSlice,
+    angle_relative_to_player: f64,
+) -> ColumnTasks {
+    let mut tasks: BinaryHeap<RenderTaskOrderer> = BinaryHeap::new();
+
+    if let Some(wall_hit) = &map_slice.wall_hit {
+        tasks.push(task_side(
+            &wall_hit,
+            angle_relative_to_player,
+            renderer_data,
+            game,
+        )); // default return value: empty column
+    }
+
+    for slice in &map_slice.block_slices {
+        tasks.append(&mut task_block_slice(
+            slice,
+            angle_relative_to_player,
+            renderer_data,
+            game,
+        ));
+    }
+
+    for exit_hit in &map_slice.hits_blocks_currently_inside {
+        if let Some(task_ord) =
+            task_partial_surface(exit_hit, angle_relative_to_player, renderer_data, game)
+        {
+            tasks.push(task_ord);
+        }
+    }
+
+    let mut wall_distance = f64::MAX;
+    if let Some(wh) = &map_slice.wall_hit {
+        wall_distance = wh.distance;
+    }
+
+    return ColumnTasks {
+        tasks,
+        wall_distance,
+    };
+}
 
 pub fn task_side(
     side_hit: &RayHit,

@@ -4,7 +4,7 @@ use std::collections::BinaryHeap;
 
 use crate::game::Game;
 use crate::game::map::{LEVEL_HEIGHT, Point, ShapeType, Side};
-use crate::render::blocks_walls::{task_block_slice, task_partial_surface, task_side};
+use crate::render::blocks_walls::{task_block_slice, task_column, task_partial_surface, task_side};
 // TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
 use crate::render::raycast::{
     self, BlockSlice, MapSlice, RayHit, RayHitOrderer, intersect, raycast,
@@ -99,6 +99,11 @@ impl RenderTaskOrderer {
     }
 }
 
+pub struct ColumnTasks {
+    pub tasks: BinaryHeap<RenderTaskOrderer>,
+    pub wall_distance: f64,
+}
+
 pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
     //write grey plane as background to overwrite past frames
     for px in buffer.iter_mut() {
@@ -126,8 +131,7 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     }
 
     // convert every mapslice into taskings
-    let mut columns_tasked: [Option<BinaryHeap<RenderTaskOrderer>>; SCREEN_WIDTH] =
-        [const { None }; SCREEN_WIDTH];
+    let mut columns_tasked: [Option<ColumnTasks>; SCREEN_WIDTH] = [const { None }; SCREEN_WIDTH];
     for x in 0..SCREEN_WIDTH {
         if let Some((map_slice, angle_relative_to_player)) = &map_slices_and_angles[x] {
             columns_tasked[x] = Some(task_column(
@@ -148,10 +152,12 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
                     continue;
                 }
 
-                if let Some(tasks) = &mut columns_tasked[x]
-                    && let Some(task) = instruction.tasks.get(x - instruction.sprite_left_screen_x)
+                if let Some(cts) = &mut columns_tasked[x]
+                    && let Some(sprite_task) =
+                        instruction.tasks.get(x - instruction.sprite_left_screen_x)
+                    && sprite_task.distance <= cts.wall_distance
                 {
-                    tasks.push(task.clone()); // TODO remove necessity for clone()
+                    cts.tasks.push(sprite_task.clone()); // TODO remove necessity for clone()
                 }
             }
         }
@@ -171,13 +177,10 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     }
 }
 
-fn draw_tasks(
-    tasks: &mut BinaryHeap<RenderTaskOrderer>,
-    renderer_data: &RendererData,
-) -> [u32; SCREEN_HEIGHT] {
+fn draw_tasks(c_tasks: &mut ColumnTasks, renderer_data: &RendererData) -> [u32; SCREEN_HEIGHT] {
     let mut column: [u32; SCREEN_HEIGHT] = [renderer_data.background_color; SCREEN_HEIGHT]; // initialize with default value
 
-    while let Some(task_ord) = tasks.pop() {
+    while let Some(task_ord) = c_tasks.tasks.pop() {
         let task = task_ord.task;
 
         for onscreen_y_isize in task.onscreen_bottom..task.onscreen_top {
@@ -203,43 +206,6 @@ fn draw_tasks(
     }
 
     return column;
-}
-
-fn task_column(
-    game: &Game,
-    renderer_data: &RendererData,
-    map_slice: &MapSlice,
-    angle_relative_to_player: f64,
-) -> BinaryHeap<RenderTaskOrderer> {
-    let mut tasks: BinaryHeap<RenderTaskOrderer> = BinaryHeap::new();
-
-    if let Some(wall_hit) = &map_slice.wall_hit {
-        tasks.push(task_side(
-            &wall_hit,
-            angle_relative_to_player,
-            renderer_data,
-            game,
-        )); // default return value: empty column
-    }
-
-    for slice in &map_slice.block_slices {
-        tasks.append(&mut task_block_slice(
-            slice,
-            angle_relative_to_player,
-            renderer_data,
-            game,
-        ));
-    }
-
-    for exit_hit in &map_slice.hits_blocks_currently_inside {
-        if let Some(task_ord) =
-            task_partial_surface(exit_hit, angle_relative_to_player, renderer_data, game)
-        {
-            tasks.push(task_ord);
-        }
-    }
-
-    return tasks;
 }
 
 //draw refernce points spaced 50 pixels apart for debugging

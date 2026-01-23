@@ -63,7 +63,7 @@ pub fn task_sprite(
     let left_screen_x = center_screen_x - (onscreen_width / 2);
 
     let angle_in_world = game.player.position.angle_to(&entity.position) - 0.5 * PI; // straight line to player +90deg
-                // analogous to shading for sides
+    // analogous to shading for sides
     let brightness = ((angle_in_world.cos() * 0.5 + 0.75)
         / (distance * renderer_data.distance_darkness_coefficient)
         + 0.5)
