@@ -65,27 +65,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         SURFACE_DEFAULT_COLOR,
     );
 
-    // while window.is_open() && !window.is_key_down(Key::Escape) {
-    //     game.update(&window);
+    while window.is_open() && !window.is_key_down(Key::Escape) {
+        game.update(&window);
 
-    render::draw(&mut buffer, &renderer_data, &mut game);
+        render::draw(&mut buffer, &renderer_data, &mut game);
 
-    //     //fps calc
-    //     frame_count += 1;
-    //     let elapsed = last_time.elapsed().as_secs_f32();
+        //fps calc
+        frame_count += 1;
+        let elapsed = last_time.elapsed().as_secs_f32();
 
-    //     if elapsed >= 1.0 {
-    //         fps_value = frame_count as f32 / elapsed;
-    //         frame_count = 0;
-    //         last_time = Instant::now();
+        if elapsed >= 1.0 {
+            fps_value = frame_count as f32 / elapsed;
+            frame_count = 0;
+            last_time = Instant::now();
+            window.set_title(&format!("My Window | FPS: {:.1}", fps_value));
+        }
 
-    window.set_title(&format!("My Window | FPS: {:.1}", fps_value));
-
-    //show buffer safely
-    if let Err(e) = window.update_with_buffer(&buffer, SCREEN_WIDTH, SCREEN_HEIGHT) {
-        eprintln!("failed to update the window: {e}");
-        return Err(Box::new(e));
+        //show buffer safely
+        if let Err(e) = window.update_with_buffer(&buffer, SCREEN_WIDTH, SCREEN_HEIGHT) {
+            eprintln!("failed to update the window: {e}");
+            return Err(Box::new(e));
+        }
     }
-
     Ok(())
 }
