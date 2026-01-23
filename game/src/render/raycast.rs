@@ -1,6 +1,13 @@
-use std::cmp::Ordering;
+use std::{
+    cmp::Ordering,
+    collections::{BinaryHeap, HashMap, HashSet, btree_map::IntoValues},
+    rc::Rc,
+};
 
-use crate::game::map::{Point, Side};
+use crate::game::{
+    Game,
+    map::{Point, Shape, ShapeID, ShapeType, Side},
+};
 
 #[derive(Clone, PartialEq)]
 pub struct RayHit {
@@ -51,6 +58,104 @@ impl RayHitOrderer {
     pub fn new(rayhit: RayHit) -> Self {
         RayHitOrderer { rh: rayhit }
     }
+}
+
+// the 'slice' a ray makes through one block
+#[derive(Clone, PartialEq)]
+pub struct BlockSlice {
+    pub entry_hit: RayHit,
+    pub exit_hit: RayHit,
+}
+
+// struct BlockSliceOrderer {
+//     bs: BlockSlice // does not stand for bullshit
+// }
+
+// a slice of the map: the wall at the back, the bottom blocks and the top blocks
+#[derive(Clone, PartialEq)]
+pub struct MapSlice {
+    pub wall_hit: Option<RayHit>,
+    pub block_slices: Vec<BlockSlice>,
+    pub hits_blocks_currently_inside: Vec<RayHit>,
+}
+
+// TODO separate into multiple functions
+// TODO also return block were standing on/under in some form
+// cast a ray and return the ordered list of all hits, ending at the closest wall hit
+pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) -> MapSlice {
+    let ray_angle = player_angle + angle_relative_to_player;
+
+    // find closest wall
+    let mut closest_wall_hit: Option<RayHit> = None;
+    for w in &game.map.wall_sides {
+        let intersection: Option<RayHit> = intersect(
+            Point {
+                x: game.player.position.x,
+                y: game.player.position.y,
+            },
+            ray_angle,
+            w.clone(), // TODO remove need for this clone
+        );
+        if let Some(rayhit) = intersection {
+            // didnt hit nothing
+            // if its a wall, discard if its not cloesest, otherwise overwrite closest
+            if let Some(closest_wall_hit_value) = &closest_wall_hit
+                && closest_wall_hit_value.distance < rayhit.distance
+            {
+                continue;
+            }
+            closest_wall_hit = Some(rayhit);
+        }
+    }
+
+    // list all blocks closer than closest wall in order of distance
+    let mut block_rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
+    for b in &game.map.block_sides {
+        let intersection: Option<RayHit> = intersect(
+            Point {
+                x: game.player.position.x,
+                y: game.player.position.y,
+            },
+            ray_angle,
+            b.clone(), // TODO remove need for this clone
+        );
+        if let Some(rayhit) = intersection {
+            // didnt hit nothing
+            if let Some(closest_wall_hit_value) = &closest_wall_hit
+                && closest_wall_hit_value.distance < rayhit.distance
+            {
+                continue;
+            }
+            block_rayhits_ordered.push(RayHitOrderer { rh: rayhit });
+        }
+    }
+
+    // we go through the rayhits back to front and remember which block (shape) it belonged to
+    // when we find another rayhit for that shape, we've exited the shape and can
+    let mut block_slices: Vec<BlockSlice> = Vec::new();
+    let mut blocks_currently_over: HashMap<ShapeID, RayHit> = HashMap::new(); // block which the raycast if currentyl passing over or under
+    while !block_rayhits_ordered.is_empty() {
+        if let Some(rh_ordering) = block_rayhits_ordered.pop() {
+            let rh = rh_ordering.rh;
+
+            if let Some(shape_exit_hit) = blocks_currently_over.remove(&rh.side.shape.id)
+            // if true, we just exited a block we were inside
+            {
+                block_slices.push(BlockSlice {
+                    entry_hit: rh,
+                    exit_hit: shape_exit_hit,
+                }); // build the slice of the block
+            } else {
+                blocks_currently_over.insert(rh.side.shape.id, rh); // if we werent in that shape already, were inside it now
+            }
+        }
+    }
+
+    return MapSlice {
+        wall_hit: closest_wall_hit,
+        block_slices: block_slices,
+        hits_blocks_currently_inside: blocks_currently_over.into_values().collect(),
+    };
 }
 
 //checks wether a ray intersect the line between two given points

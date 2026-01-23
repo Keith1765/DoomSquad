@@ -16,6 +16,7 @@ const BACKGROUND_COLOR: u32 = 0x222222;
 const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.025;
 const WALL_DEFAULT_COLOR: u32 = 0x00ff00;
 const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
+const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //for fps count
@@ -53,6 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         DISTANCE_DARKNESS_COEFFICIENT,
         WALL_DEFAULT_COLOR,
         BLOCK_DEFAULT_COLOR,
+        SURFACE_DEFAULT_COLOR,
     );
 
     while window.is_open() && !window.is_key_down(Key::Escape) {

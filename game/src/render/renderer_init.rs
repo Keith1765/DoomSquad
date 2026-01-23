@@ -8,6 +8,7 @@ pub struct RendererData {
     pub background_color: u32,
     pub wall_default_color: u32,
     pub block_default_color: u32,
+    pub surface_default_color: u32,
     pub distance_darkness_coefficient: f64,
 }
 
@@ -19,6 +20,7 @@ pub fn render_init(
     distance_darkness_coefficient: f64,
     wall_default_color: u32,
     block_default_color: u32,
+    surface_default_color: u32,
 ) -> RendererData {
     let screen_width_as_f64 = screen_width as f64;
     let screen_height_as_f64 = screen_height as f64;
@@ -41,5 +43,6 @@ pub fn render_init(
         distance_darkness_coefficient,
         wall_default_color,
         block_default_color,
+        surface_default_color,
     }
 }
