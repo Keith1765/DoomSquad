@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
 mod game;
-mod render;
 mod parser;
+mod render;
 
 use crate::render::{RendererData, render_init};
 use minifb::{Key, MouseMode, Window, WindowOptions};
@@ -22,17 +22,15 @@ const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     if let Err(e) = parse_map() {
         eprintln!("Error: {e}");
     }
 
-
-    ////!I commented game init to test parser first
-    // //for fps count
-    // let mut last_time = Instant::now();
-    // let mut frame_count = 0;
-    // let mut fps_value = 0.0;
+    //I commented game init to test parser first
+    //for fps count
+    let mut last_time = Instant::now();
+    let mut frame_count = 0;
+    let mut fps_value = 0.0;
 
     //creates window Safely
     let mut window = match Window::new(
@@ -70,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // while window.is_open() && !window.is_key_down(Key::Escape) {
     //     game.update(&window);
 
-        render::draw(&mut buffer, &renderer_data, &mut game);
+    render::draw(&mut buffer, &renderer_data, &mut game);
 
     //     //fps calc
     //     frame_count += 1;
@@ -81,13 +79,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //         frame_count = 0;
     //         last_time = Instant::now();
 
-            window.set_title(&format!("My Window | FPS: {:.1}", fps_value));
-        }
-        //show buffer safely
-        if let Err(e) = window.update_with_buffer(&buffer, SCREEN_WIDTH, SCREEN_HEIGHT) {
-            eprintln!("failed to update the window: {e}");
-            return Err(Box::new(e));
-        }
+    window.set_title(&format!("My Window | FPS: {:.1}", fps_value));
+
+    //show buffer safely
+    if let Err(e) = window.update_with_buffer(&buffer, SCREEN_WIDTH, SCREEN_HEIGHT) {
+        eprintln!("failed to update the window: {e}");
+        return Err(Box::new(e));
     }
+
     Ok(())
 }

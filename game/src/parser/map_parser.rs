@@ -1,8 +1,8 @@
 //use Geogebra API to parse map from Geogebra
 
 use anyhow::{Context, Result};
-use quick_xml::events::Event;
 use quick_xml::Reader;
+use quick_xml::events::Event;
 use std::fs::File;
 use std::io::{BufReader, Read};
 use zip::ZipArchive;
