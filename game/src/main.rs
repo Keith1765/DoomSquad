@@ -5,51 +5,85 @@ mod render;
 mod parser;
 mod ui;
 
+use crate::render::{RendererData, render_init};
 use eframe::egui;
 use minifb::{Key, MouseMode, Window, WindowOptions};
-
+use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
 use crate::parser::map_parser::*;
 use crate::ui::titlescreen::*;
 
-const WIDTH: usize = 800;
-const HEIGHT: usize = 500;
-struct MyApp {
-    name: String,
-    age: u32,
-}
-impl eframe::App for MyApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("My egui Application");
+const SCREEN_WIDTH: usize = 800;
+const SCREEN_HEIGHT: usize = 450;
+const TARGET_FPS: usize = 60;
+const HORIZONTAL_FOV: f64 = PI / 2.0;
+const BACKGROUND_COLOR: u32 = 0x222222;
+const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.025;
+const WALL_DEFAULT_COLOR: u32 = 0x00ff00;
+const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
+const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
 
-            ui.horizontal(|ui| {
-                ui.label("Your name:");
-                ui.text_edit_singleline(&mut self.name);
-            });
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    //for fps count
+    let mut last_time = Instant::now();
+    let mut frame_count = 0;
+    let mut fps_value = 0.0;
 
-            ui.add(egui::Slider::new(&mut self.age, 0..=120).text("age"));
+    //creates window Safely
+    let mut window = match Window::new(
+        "game",
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
+        WindowOptions::default(),
+    ) {
+        Ok(w) => w,
+        Err(e) => {
+            eprint!("failed to create Window");
+            return Err(Box::new(e));
+        }
+    };
+    window.set_cursor_visibility(false); // hide mouse 
 
-            if ui.button("Increment").clicked() {
-                self.age += 1;
-            }
+    //to reduce CPU load by decreasing refresh rate oder so lol
+    window.set_target_fps(TARGET_FPS);
 
-            ui.label(format!("Hello '{}', age {}", self.name, self.age));
-        });
+    let mut buffer: Vec<u32> = vec![0; SCREEN_WIDTH * SCREEN_HEIGHT];
+
+    let mut game = game::Game::new();
+
+    let renderer_data: RendererData = render_init(
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
+        HORIZONTAL_FOV,
+        BACKGROUND_COLOR,
+        DISTANCE_DARKNESS_COEFFICIENT,
+        WALL_DEFAULT_COLOR,
+        BLOCK_DEFAULT_COLOR,
+        SURFACE_DEFAULT_COLOR,
+    );
+
+    while window.is_open() && !window.is_key_down(Key::Escape) {
+        game.update(&window);
+
+        render::draw(&mut buffer, &renderer_data, &mut game);
+
+        //fps calc
+        frame_count += 1;
+        let elapsed = last_time.elapsed().as_secs_f32();
+
+        if elapsed >= 1.0 {
+            fps_value = frame_count as f32 / elapsed;
+            frame_count = 0;
+            last_time = Instant::now();
+
+            window.set_title(&format!("My Window | FPS: {:.1}", fps_value));
+        }
+        //show buffer safely
+        if let Err(e) = window.update_with_buffer(&buffer, SCREEN_WIDTH, SCREEN_HEIGHT) {
+            eprintln!("failed to update the window: {e}");
+            return Err(Box::new(e));
+        }
     }
-}
-fn main() -> eframe::Result<()> {
-    let options = eframe::NativeOptions::default();
-
-    eframe::run_native(
-        "My egui App",
-        options,
-        Box::new(|_cc| {
-            Ok(Box::new(MyApp {
-                name: String::new(),
-                age: 0,
-            }))
-        }),
-    )
+    Ok(())
 }
