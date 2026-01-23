@@ -1,9 +1,27 @@
-use std::ops::{Add, Sub};
+use std::{
+    hash::{Hash, Hasher},
+    ops::{Add, Sub},
+    rc::Rc,
+};
 
-#[derive(Clone, Copy)]
+pub const LEVEL_HEIGHT: f64 = 25.0; // TODO different for every map
+
+pub type ShapeID = usize;
+type SideID = usize;
+
+#[derive(Clone, Copy, PartialEq)]
 pub struct Point {
     pub x: f64,
     pub y: f64,
+}
+
+impl Point {
+    pub fn distance_to(self, other: &Self) -> f64 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+
+        (dx.powf(2.0) + dy.powf(2.0)).sqrt()
+    }
 }
 
 impl Sub for Point {
@@ -27,107 +45,213 @@ impl Add for Point {
     }
 }
 
-#[derive(Clone, Copy)]
-pub enum SideType {
-    Wall,
-    Block,
+#[derive(Clone, Copy, PartialEq)]
+pub enum ShapeType {
+    Wall,  // walls are ray-terminating
+    Block, // blocks are not
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Side {
+    pub id: SideID,
     pub point1: Point,
     pub point2: Point,
-    pub side_type: SideType,
     pub angle_in_world: f64,
+    pub shape: Rc<Shape>,
 }
 
 impl Side {
-    pub fn new(point1: Point, point2: Point, side_type: SideType) -> Self {
+    pub fn new(id: usize, point1: Point, point2: Point, shape: Rc<Shape>) -> Self {
         return Side {
+            id: id,
             point1: point1,
             point2: point2,
-            side_type: side_type,
-            angle_in_world: ((point1.x-point2.x)/(point1.y-point2.y)).atan(),
-        }
+            angle_in_world: ((point1.x - point2.x) / (point1.y - point2.y)).atan(),
+            shape: shape,
+        };
     }
 }
 
+// TODO remove necessety for type; justdistinguish by which list it's in (or not?)
+// TODO make blocks free not top or bottom anymore
+// TODO make walls arbitrary height
 #[derive(Clone)]
 pub struct Shape {
-    pub sides: Vec<Side>,
-    pub shape_type: SideType,
+    pub id: ShapeID,
+    pub shape_type: ShapeType,
+    pub bottom: f64,
+    pub height: f64,
+    pub color: u32,
+    pub surface_color: u32, // will be ignored for walls
 }
 
-impl Shape {
-    pub fn from_points(points: Vec<Point>, shape_type: SideType) -> Option<Self> {
+impl PartialEq for Shape {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+impl Eq for Shape {}
+impl Hash for Shape {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
+
+pub struct Map {
+    pub id: usize,
+    //pub border: Shape, // mainly for topdown renderer (maybe change to rectangle?)
+    pub wall_sides: Vec<Side>,
+    pub wall_shapes: Vec<Rc<Shape>>,
+    pub block_sides: Vec<Side>,
+    pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed?
+    side_count: usize,
+    shape_count: usize,
+}
+
+impl Map {
+    pub fn new() -> Option<Self> {
+        let mut map = Self {
+            id: 0,
+            wall_sides: Vec::new(),
+            wall_shapes: Vec::new(),
+            block_sides: Vec::new(),
+            block_shapes: Vec::new(),
+            side_count: 0,
+            shape_count: 0,
+            //points_in_border: Vec::new(),
+        };
+        let wall_points: Vec<Point> = vec![
+            Point { x: 200.0, y: 100.0 },
+            Point { x: 250.0, y: 200.0 },
+            Point { x: 350.0, y: 200.0 },
+            Point { x: 275.0, y: 250.0 },
+            Point { x: 300.0, y: 350.0 },
+            Point { x: 200.0, y: 300.0 },
+            Point { x: 100.0, y: 350.0 },
+            Point { x: 125.0, y: 250.0 },
+            Point { x: 50.0, y: 200.0 },
+            Point { x: 150.0, y: 200.0 },
+        ];
+        map.add_shape_from_points(
+            wall_points,
+            ShapeType::Wall,
+            0.0,
+            LEVEL_HEIGHT,
+            0x00ff00,
+            0xffff00,
+        )?;
+
+        let bottom_block_points: Vec<Point> = vec![
+            Point { x: 200.0, y: 200.0 },
+            Point { x: 175.0, y: 200.0 },
+            Point { x: 175.0, y: 175.0 },
+        ];
+        map.add_shape_from_points(
+            bottom_block_points,
+            ShapeType::Block,
+            0.0,
+            10.0,
+            0x0000ff,
+            0xffff00,
+        )?;
+
+        let bottom_block_points_2: Vec<Point> = vec![
+            Point { x: 200.0, y: 215.0 },
+            Point { x: 175.0, y: 215.0 },
+            Point { x: 175.0, y: 200.0 },
+            Point { x: 185.0, y: 200.0 },
+        ];
+        map.add_shape_from_points(
+            bottom_block_points_2,
+            ShapeType::Block,
+            0.0,
+            5.0,
+            0x0000ff,
+            0xffff00,
+        )?;
+
+        let top_block_points: Vec<Point> = vec![
+            // Point { x: 300.0, y: 225.0 },
+            // Point { x: 250.0, y: 225.0 },
+            // Point { x: 250.0, y: 200.0 },
+            Point { x: 205.0, y: 205.0 },
+            Point { x: 180.0, y: 205.0 },
+            Point { x: 180.0, y: 178.0 },
+        ];
+        map.add_shape_from_points(
+            top_block_points,
+            ShapeType::Block,
+            15.0,
+            10.0,
+            0xff0000,
+            0xffff00,
+        )?;
+
+        let small_block_points: Vec<Point> = vec![
+            Point { x: 200.0, y: 200.0 },
+            Point { x: 190.0, y: 200.0 },
+            Point { x: 190.0, y: 190.0 },
+        ];
+        map.add_shape_from_points(
+            small_block_points,
+            ShapeType::Block,
+            10.0,
+            1.0,
+            0xffffff,
+            0xff00ff,
+        )?;
+
+        Some(map)
+    }
+
+    // returns the sides in the shape and the shape itself as tuple
+    // add side vector from tuple into side list and shape into shape list
+    pub fn add_shape_from_points(
+        &mut self,
+        points: Vec<Point>,
+        shape_type: ShapeType,
+        bottom: f64,
+        height: f64,
+        color: u32,
+        surface_color: u32,
+    ) -> Option<()> {
         if points.is_empty() {
             return None;
         }
-        let mut sides: Vec<Side> = Vec::new();
+        let shape = Rc::new(Shape {
+            id: self.shape_count,
+            shape_type: shape_type,
+            bottom: bottom,
+            height: height,
+            color: color,
+            surface_color,
+        });
+
+        // references to push to the corect list
+        let sides: &mut Vec<Side> = match shape_type {
+            ShapeType::Wall => &mut self.wall_sides,
+            ShapeType::Block => &mut self.block_sides,
+        };
+        let shapes: &mut Vec<Rc<Shape>> = match shape_type {
+            ShapeType::Wall => &mut self.wall_shapes,
+            ShapeType::Block => &mut self.block_shapes,
+        };
+
         let mut point1: Point;
         let mut point2: Point = *points.last()?;
         for i in 0..points.len() {
             point1 = point2;
             point2 = *points.get(i)?;
             sides.push(Side::new(
+                self.side_count,
                 point1,
                 point2,
-                shape_type,
+                Rc::clone(&shape),
             ));
+            self.side_count += 1;
         }
-        Some(Shape {
-            sides: sides,
-            shape_type: shape_type,
-        })
-    }
-}
-
-// TODO master shape and side list
-
-pub struct Map {
-    pub id: usize,
-    pub border: Shape, // mainly for topdown renderer (maybe change to rectangle?)
-    pub walls: Vec<Shape>,
-    pub blocks: Vec<Shape>,
-    //pub points_in_border: Vec<Point>,
-}
-
-impl Map {
-    pub fn new() -> Option<Self> {
-        Some(Self {
-            id: 0,
-            border: Shape::from_points(
-                vec![
-                    Point { x: 200.0, y: 100.0 },
-                    Point { x: 250.0, y: 200.0 },
-                    Point { x: 350.0, y: 200.0 },
-                    Point { x: 275.0, y: 250.0 },
-                    Point { x: 300.0, y: 350.0 },
-                    Point { x: 200.0, y: 300.0 },
-                    Point { x: 100.0, y: 350.0 },
-                    Point { x: 125.0, y: 250.0 },
-                    Point { x: 50.0, y: 200.0 },
-                    Point { x: 150.0, y: 200.0 },
-                ],
-                SideType::Wall,
-            )?,
-            walls: vec![Shape::from_points(
-                vec![
-                    Point { x: 200.0, y: 100.0 },
-                    Point { x: 250.0, y: 200.0 },
-                    Point { x: 350.0, y: 200.0 },
-                    Point { x: 275.0, y: 250.0 },
-                    Point { x: 300.0, y: 350.0 },
-                    Point { x: 200.0, y: 300.0 },
-                    Point { x: 100.0, y: 350.0 },
-                    Point { x: 125.0, y: 250.0 },
-                    Point { x: 50.0, y: 200.0 },
-                    Point { x: 150.0, y: 200.0 },
-                ],
-                SideType::Wall,
-            )?],
-            blocks: Vec::new(),
-            //points_in_border: Vec::new(),
-        })
+        shapes.push(shape);
+        self.shape_count += 1;
+        return Some(());
     }
 }
