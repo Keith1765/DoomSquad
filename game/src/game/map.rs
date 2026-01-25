@@ -1,8 +1,12 @@
 use std::{
+    f64::consts::PI,
     hash::{Hash, Hasher},
     ops::{Add, Sub},
     rc::Rc,
 };
+
+use crate::game::entities::Entity;
+use crate::render::sprites::Sprite;
 
 pub const LEVEL_HEIGHT: f64 = 25.0; // TODO different for every map
 
@@ -16,11 +20,32 @@ pub struct Point {
 }
 
 impl Point {
+    // TODO tests for this function
     pub fn distance_to(self, other: &Self) -> f64 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
 
         (dx.powf(2.0) + dy.powf(2.0)).sqrt()
+    }
+
+    // TODO tests for this function
+    pub fn angle_to(self, other: &Self) -> f64 {
+        let dx = other.x - self.x;
+        let dy = other.y - self.y;
+
+        let mut angle = (dy / dx).atan();
+
+        // without this atan only works for 180 degrees
+        if dx < 0.0 {
+            angle += PI;
+        }
+
+        // if angle is negative, rotate it around 360deg to get same angle expressed positively
+        if angle < 0.0 {
+            angle += 2.0 * PI;
+        }
+
+        angle
     }
 }
 
@@ -104,6 +129,7 @@ pub struct Map {
     pub wall_shapes: Vec<Rc<Shape>>,
     pub block_sides: Vec<Side>,
     pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed?
+    pub entities: Vec<Entity>,
     side_count: usize,
     shape_count: usize,
 }
@@ -116,6 +142,7 @@ impl Map {
             wall_shapes: Vec::new(),
             block_sides: Vec::new(),
             block_shapes: Vec::new(),
+            entities: Vec::new(),
             side_count: 0,
             shape_count: 0,
             //points_in_border: Vec::new(),
@@ -201,6 +228,18 @@ impl Map {
             0xff00ff,
         )?;
 
+        let test_entity = Entity {
+            position: Point { x: 230.0, y: 210.0 },
+            vertical_position: 0.0,
+            facing_angle: 0.0,
+            sprite: Sprite {
+                color: 0xff00ff,
+                height: 15.0,
+                width: 15.0,
+            },
+        };
+        map.entities.push(test_entity);
+
         Some(map)
     }
 
@@ -254,4 +293,33 @@ impl Map {
         self.shape_count += 1;
         return Some(());
     }
+}
+
+#[test]
+fn test_angle() {
+    let p1 = Point { x: 0.0, y: 0.0 };
+
+    let p2 = Point { x: 10.0, y: 0.0 };
+    assert!((p1.angle_to(&p2) - 0.0).abs() < 0.1);
+
+    let p3 = Point { x: -10.0, y: 0.0 };
+    assert!((p1.angle_to(&p3) - PI).abs() < 0.1);
+
+    let p4 = Point { x: 0.0, y: 10.0 };
+    assert!((p1.angle_to(&p4) - PI / 2.0).abs() < 0.1);
+
+    let p5 = Point { x: 0.0, y: -10.0 };
+    assert!((p1.angle_to(&p5) - 3.0 * (PI / 2.0)).abs() < 0.1);
+
+    let p6 = Point { x: 10.0, y: 10.0 };
+    assert!((p1.angle_to(&p6) - PI / 4.0).abs() < 0.1);
+
+    let p7 = Point { x: -10.0, y: 10.0 };
+    assert!((p1.angle_to(&p7) - 3.0 * (PI / 4.0)).abs() < 0.1);
+
+    let p8 = Point { x: -10.0, y: -10.0 };
+    assert!((p1.angle_to(&p8) - 5.0 * (PI / 4.0)).abs() < 0.1);
+
+    let p9 = Point { x: 10.0, y: -10.0 };
+    assert!((p1.angle_to(&p9) - 7.0 * (PI / 4.0)).abs() < 0.1);
 }
