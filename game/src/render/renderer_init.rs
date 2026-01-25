@@ -1,3 +1,7 @@
+use std::{collections::HashMap, fs, io, path::Path};
+
+use image::ImageReader;
+
 pub struct RendererData {
     pub screen_width_as_f64: f64,
     pub screen_height_as_f64: f64,
@@ -42,4 +46,25 @@ pub fn render_init(
         block_default_color,
         surface_default_color,
     }
+}
+
+fn load_textures() -> Option<HashMap<String, Vec<u32>>> {
+    let mut textures = HashMap::new();
+
+    for entry in fs::read_dir(Path::new("./assets/textures")).ok()? {
+
+        let entry = entry.ok()?;
+        let path = entry.path();
+
+        let image_buffer = ImageReader::open(path).ok()?.decode().ok()?.as_rgb8()?.clone();
+    }
+
+    Some(textures)
+}
+
+
+
+#[test]
+fn test_texture_load() {
+    assert!(load_textures().is_some());
 }
