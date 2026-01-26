@@ -11,6 +11,7 @@ use crate::render::raycast::{
 };
 use crate::render::renderer_init::RendererData;
 use crate::render::sprites::task_sprite;
+use crate::render::textures::Texture;
 use crate::{BACKGROUND_COLOR, SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
 
 pub type VerticalDisctance = f64;
@@ -112,6 +113,7 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     draw_camera_view(buffer, &renderer_data, game);
     //draw grid of reference points spaced each 50 pixels for debugging
     draw_reference_points(buffer);
+    draw_texture_bottom_left(buffer, renderer_data.textures.get(&0).unwrap()); // ! TODO remove unwrap
 }
 
 fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
@@ -144,7 +146,6 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     }
 
     // create entity (sprite) tasks, put them into the taskings
-    // TODO make sprites not render behind walls
     for e in &game.map.entities {
         if let Some(instruction) = task_sprite(game, e, renderer_data) {
             for x in instruction.sprite_left_screen_x..instruction.sprite_right_screen_x {
@@ -206,6 +207,17 @@ fn draw_tasks(c_tasks: &mut ColumnTasks, renderer_data: &RendererData) -> [u32; 
     }
 
     return column;
+}
+
+// TODO add positioning to make actualyl useful
+// TODO this whole thing is temporary mostly
+fn draw_texture_bottom_left( buffer: &mut [u32], texture: &Texture) {
+    for x in 0..texture.width {
+        let column = texture.get_column(x).unwrap(); // ! TODO get rid of unwrap
+        for y in 0..column.len()-1 {
+            buffer[(y*SCREEN_WIDTH)+x] = *column.get(y).unwrap(); // ! TODO get rid of unwrap
+        }
+    }
 }
 
 //draw refernce points spaced 50 pixels apart for debugging

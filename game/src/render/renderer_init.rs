@@ -1,6 +1,8 @@
-use std::{collections::HashMap, fs, io, path::Path};
+use std::{collections::HashMap, ffi::OsString, fs, hash::{DefaultHasher, Hash}, io, path::Path};
 
 use image::ImageReader;
+
+use crate::render::textures::{Texture, load_textures};
 
 pub struct RendererData {
     pub screen_width_as_f64: f64,
@@ -13,6 +15,7 @@ pub struct RendererData {
     pub block_default_color: u32,
     pub surface_default_color: u32,
     pub distance_darkness_coefficient: f64,
+    pub textures: HashMap<usize, Texture>,
 }
 
 pub fn render_init(
@@ -34,6 +37,10 @@ pub fn render_init(
     // would be the sam with height / vertical_fov: can be used for both horizontal and vertical scaling
     let render_scale_coefficient: f64 = (screen_width as f64 / 2.0) / (horizontal_fov / 2.0).tan();
 
+    // we accept this unwrap for now, if textures not working just crash, it's fine for now
+    // TODO remove necessity for unwrap
+    let textures = load_textures().unwrap();
+
     RendererData {
         screen_width_as_f64,
         screen_height_as_f64,
@@ -45,26 +52,7 @@ pub fn render_init(
         wall_default_color,
         block_default_color,
         surface_default_color,
+        textures,
     }
 }
 
-fn load_textures() -> Option<HashMap<String, Vec<u32>>> {
-    let mut textures = HashMap::new();
-
-    for entry in fs::read_dir(Path::new("./assets/textures")).ok()? {
-
-        let entry = entry.ok()?;
-        let path = entry.path();
-
-        let image_buffer = ImageReader::open(path).ok()?.decode().ok()?.as_rgb8()?.clone();
-    }
-
-    Some(textures)
-}
-
-
-
-#[test]
-fn test_texture_load() {
-    assert!(load_textures().is_some());
-}
