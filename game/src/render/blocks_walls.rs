@@ -23,13 +23,10 @@ pub fn task_column(
 ) -> ColumnTasks {
     let mut tasks: BinaryHeap<RenderTaskOrderer> = BinaryHeap::new();
 
-    if let Some(wall_hit) = &map_slice.wall_hit {
-        tasks.push(task_side(
-            &wall_hit,
-            angle_relative_to_player,
-            renderer_data,
-            game,
-        )); // default return value: empty column
+    if let Some(wall_hit) = &map_slice.wall_hit
+        && let Some(wall_task) = task_side(&wall_hit, angle_relative_to_player, renderer_data, game)
+    {
+        tasks.push(wall_task); // default return value: empty column
     }
 
     for slice in &map_slice.block_slices {
@@ -65,29 +62,37 @@ pub fn task_side(
     angle_relative_to_player: f64,
     renderer_data: &RendererData,
     game: &Game,
-) -> RenderTaskOrderer {
+) -> Option<RenderTaskOrderer> {
     let (side_bottom_onscreen, side_top_onscreen) =
         calculate_side_bottom_top(&side_hit, angle_relative_to_player, renderer_data, game);
-
-    let color = side_hit.side.shape.color;
-    // match &side_hit.side.shape.shape_type {
-    //     ShapeType::Wall => renderer_data.wall_default_color,
-    //     ShapeType::Block => renderer_data.block_default_color,
-    // };
 
     let brightness = (side_hit.side.angle_in_world.cos() * 0.5
         / (side_hit.distance * renderer_data.distance_darkness_coefficient)
         + 0.5)
         .clamp(0.2, 1.0);
 
-    let task = RenderTask {
-        color,
-        brightness,
-        onscreen_bottom: side_bottom_onscreen,
-        onscreen_top: side_top_onscreen,
-    };
+    let texture = renderer_data.textures.get(&side_hit.side.texture_id);
 
-    return RenderTaskOrderer::new(task, side_hit.distance, RenderTaskType::Side);
+    if let Some(texture) = texture {
+        let distance_along_side = (side_hit.proportion_along_side * side_hit.side.length) as usize;
+        let texture_u = distance_along_side % texture.width;
+        if let Some(texture_column) = texture.get_column(texture_u) {
+            let task = RenderTask {
+                texture_column: Some(texture_column),
+                color: 0x000000,
+                brightness,
+                onscreen_bottom: side_bottom_onscreen,
+                onscreen_top: side_top_onscreen,
+            };
+            return Some(RenderTaskOrderer::new(
+                task,
+                side_hit.distance,
+                RenderTaskType::SideTexture,
+            ));
+        };
+    }
+
+    None
 }
 
 pub fn task_surface(
@@ -152,6 +157,7 @@ pub fn task_surface(
         && let Some(vertical_distance_value) = vertical_distance
     {
         let task: RenderTask = RenderTask {
+            texture_column: None,
             color: slice.entry_hit.side.shape.surface_color,
             brightness,
             onscreen_bottom: onscreen_bottom,
@@ -212,6 +218,7 @@ pub fn task_partial_surface(
         let vert_dist =
             game.player.view_height - exit_hit.side.shape.bottom + exit_hit.side.shape.height;
         let task: RenderTask = RenderTask {
+            texture_column: None,
             color: exit_hit.side.shape.surface_color,
             brightness: brightness,
             onscreen_bottom: 0,
@@ -226,6 +233,7 @@ pub fn task_partial_surface(
         // otherwise we are below the block
         let vert_dist = exit_hit.side.shape.bottom - game.player.view_height;
         let task: RenderTask = RenderTask {
+            texture_column: None,
             color: exit_hit.side.shape.surface_color,
             brightness: brightness,
             onscreen_bottom: exit_bottom_onscreen,
@@ -245,14 +253,16 @@ pub fn task_block_slice(
     renderer_data: &RendererData,
     game: &Game,
 ) -> BinaryHeap<RenderTaskOrderer> {
-    let mut tasks = BinaryHeap::new();
+    let mut tasks: BinaryHeap<RenderTaskOrderer> = BinaryHeap::new();
 
-    tasks.push(task_side(
+    if let Some(side_task) = task_side(
         &slice.entry_hit,
         angle_relative_to_player,
         renderer_data,
         game,
-    ));
+    ) {
+        tasks.push(side_task);
+    }
 
     if let Some(task_surface_value) =
         task_surface(slice, angle_relative_to_player, renderer_data, game)

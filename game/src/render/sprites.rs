@@ -77,6 +77,7 @@ pub fn task_sprite(
         }
 
         let task = RenderTask {
+            texture_column: None, // TODO change this to enable textures for spirites
             color: entity.sprite.color,
             brightness: brightness,
             onscreen_bottom: bottom_onscreen,
@@ -86,7 +87,7 @@ pub fn task_sprite(
         tasks.push(RenderTaskOrderer::new(
             task,
             distance,
-            RenderTaskType::Sprite,
+            RenderTaskType::SpriteUnicolor,
         ));
     }
 

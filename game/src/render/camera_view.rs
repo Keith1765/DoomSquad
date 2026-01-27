@@ -18,15 +18,16 @@ pub type VerticalDisctance = f64;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum RenderTaskType {
-    Side,
-    Floor(VerticalDisctance),
+    Floor(VerticalDisctance), // vert dist is needed for sorting between surface tasks
     Ceiling(VerticalDisctance),
-    Sprite,
+    SpriteUnicolor,
+    SideTexture,
 }
 
 #[derive(Clone)]
 pub struct RenderTask {
-    pub color: u32, // TODO replace with texture
+    pub texture_column: Option<Vec<u32>>, // texture and color will never both be used
+    pub color: u32,
     pub brightness: f64,
     pub onscreen_bottom: isize,
     pub onscreen_top: isize,
@@ -179,11 +180,28 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
 }
 
 fn draw_tasks(c_tasks: &mut ColumnTasks, renderer_data: &RendererData) -> [u32; SCREEN_HEIGHT] {
-    let mut column: [u32; SCREEN_HEIGHT] = [renderer_data.background_color; SCREEN_HEIGHT]; // initialize with default value
+    let mut screen_column: [u32; SCREEN_HEIGHT] = [renderer_data.background_color; SCREEN_HEIGHT]; // initialize with default value
 
     while let Some(task_ord) = c_tasks.tasks.pop() {
         let task = task_ord.task;
 
+        // try to render a texture, if the task has one
+        // TODO give textures proper vertical scaling, dont just repeat
+        if let Some(texture_column) = task.texture_column {
+            let texture_height = texture_column.len();
+            for onscreen_y in task.onscreen_bottom..task.onscreen_top {
+                if onscreen_y < 0 {
+                    continue;
+                };
+                let onscreen_y = onscreen_y as usize;
+                if let Some(pixel_color) = texture_column.get(onscreen_y % texture_height) {
+                    screen_column[onscreen_y as usize] = *pixel_color;
+                }
+            }
+            continue; // go back to beginning of loop, otherwise will get overwritten by color drawing code below
+        } 
+
+        // render the color if the task has no texture
         for onscreen_y_isize in task.onscreen_bottom..task.onscreen_top {
             let onscreen_y = onscreen_y_isize as usize; // TODO remove need for this type conversion?
 
@@ -202,20 +220,20 @@ fn draw_tasks(c_tasks: &mut ColumnTasks, renderer_data: &RendererData) -> [u32; 
             let b = (b as f64 * task.brightness) as u32;
 
             // 4. Repack
-            column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
+            screen_column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
         }
     }
 
-    return column;
+    screen_column
 }
 
 // TODO add positioning to make actualyl useful
 // TODO this whole thing is temporary mostly
-fn draw_texture_bottom_left( buffer: &mut [u32], texture: &Texture) {
+fn draw_texture_bottom_left(buffer: &mut [u32], texture: &Texture) {
     for x in 0..texture.width {
         let column = texture.get_column(x).unwrap(); // ! TODO get rid of unwrap
-        for y in 0..column.len()-1 {
-            buffer[(y*SCREEN_WIDTH)+x] = *column.get(y).unwrap(); // ! TODO get rid of unwrap
+        for y in 0..column.len() - 1 {
+            buffer[(y * SCREEN_WIDTH) + x] = *column.get(y).unwrap(); // ! TODO get rid of unwrap
         }
     }
 }

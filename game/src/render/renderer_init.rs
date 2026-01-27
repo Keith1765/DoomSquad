@@ -1,4 +1,11 @@
-use std::{collections::HashMap, ffi::OsString, fs, hash::{DefaultHasher, Hash}, io, path::Path};
+use std::{
+    collections::HashMap,
+    ffi::OsString,
+    fs,
+    hash::{DefaultHasher, Hash},
+    io,
+    path::Path,
+};
 
 use image::ImageReader;
 
@@ -55,4 +62,3 @@ pub fn render_init(
         textures,
     }
 }
-

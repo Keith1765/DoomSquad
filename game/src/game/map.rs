@@ -82,31 +82,38 @@ pub struct Side {
     pub point1: Point,
     pub point2: Point,
     pub angle_in_world: f64,
+    pub length: f64,
     pub shape: Rc<Shape>,
+    pub texture_id: usize,
 }
 
 impl Side {
-    pub fn new(id: usize, point1: Point, point2: Point, shape: Rc<Shape>) -> Self {
+    pub fn new(
+        id: usize,
+        point1: Point,
+        point2: Point,
+        shape: Rc<Shape>,
+        texture_id: usize,
+    ) -> Self {
         return Side {
             id: id,
             point1: point1,
             point2: point2,
             angle_in_world: ((point1.x - point2.x) / (point1.y - point2.y)).atan(),
+            length: point1.distance_to(&point2),
             shape: shape,
+            texture_id: texture_id,
         };
     }
 }
 
-// TODO remove necessety for type; justdistinguish by which list it's in (or not?)
-// TODO make blocks free not top or bottom anymore
-// TODO make walls arbitrary height
 #[derive(Clone)]
 pub struct Shape {
     pub id: ShapeID,
     pub shape_type: ShapeType,
     pub bottom: f64,
     pub height: f64,
-    pub color: u32,
+    pub color: u32,         // TODO remove when no longer needed
     pub surface_color: u32, // will be ignored for walls
 }
 
@@ -166,6 +173,7 @@ impl Map {
             LEVEL_HEIGHT,
             0x00ff00,
             0xffff00,
+            0,
         )?;
 
         let bottom_block_points: Vec<Point> = vec![
@@ -180,6 +188,7 @@ impl Map {
             10.0,
             0x0000ff,
             0xffff00,
+            0,
         )?;
 
         let bottom_block_points_2: Vec<Point> = vec![
@@ -195,6 +204,7 @@ impl Map {
             5.0,
             0x0000ff,
             0xffff00,
+            0,
         )?;
 
         let top_block_points: Vec<Point> = vec![
@@ -212,6 +222,7 @@ impl Map {
             10.0,
             0xff0000,
             0xffff00,
+            0,
         )?;
 
         let small_block_points: Vec<Point> = vec![
@@ -226,6 +237,7 @@ impl Map {
             1.0,
             0xffffff,
             0xff00ff,
+            0,
         )?;
 
         let test_entity = Entity {
@@ -251,8 +263,9 @@ impl Map {
         shape_type: ShapeType,
         bottom: f64,
         height: f64,
-        color: u32,
+        color: u32, // TODO remove when no longer needed
         surface_color: u32,
+        texture_id: usize, // TODO change later so that different sides can have different textures
     ) -> Option<()> {
         if points.is_empty() {
             return None;
@@ -286,6 +299,7 @@ impl Map {
                 point1,
                 point2,
                 Rc::clone(&shape),
+                texture_id,
             ));
             self.side_count += 1;
         }
