@@ -14,6 +14,7 @@ use crate::render::textures::{Texture, load_textures};
 pub struct RendererData {
     pub screen_width_as_f64: f64,
     pub screen_height_as_f64: f64,
+    pub screen_height_as_isize: isize,
     pub horizontal_fov: f64,
     pub vertical_fov: f64,
     pub render_scale_coefficient: f64,
@@ -35,8 +36,10 @@ pub fn render_init(
     block_default_color: u32,
     surface_default_color: u32,
 ) -> RendererData {
+    // thsee three will be used often => makes sense to calculate them only once and save
     let screen_width_as_f64 = screen_width as f64;
     let screen_height_as_f64 = screen_height as f64;
+    let screen_height_as_isize: isize = screen_height as isize;
 
     let vertical_fov: f64 =
         ((screen_height_as_f64 / screen_width as f64) * (horizontal_fov / 2.0).tan()).atan() * 2.0;
@@ -51,6 +54,7 @@ pub fn render_init(
     RendererData {
         screen_width_as_f64,
         screen_height_as_f64,
+        screen_height_as_isize,
         horizontal_fov,
         vertical_fov,
         render_scale_coefficient,

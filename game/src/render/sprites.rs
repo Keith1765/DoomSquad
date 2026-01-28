@@ -69,7 +69,7 @@ pub fn task_sprite(
         + 0.5)
         .clamp(0.2, 1.0);
 
-    let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width as usize);
+    let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width.max(0) as usize);
 
     for x in left_screen_x..left_screen_x + onscreen_width {
         if x < 0 || x > SCREEN_WIDTH as isize - 1 {

@@ -76,7 +76,13 @@ pub fn task_side(
     if let Some(texture) = texture {
         let distance_along_side = (side_hit.proportion_along_side * side_hit.side.length) as usize;
         let texture_u = distance_along_side % texture.width;
-        if let Some(texture_column) = texture.get_column(texture_u) {
+        if let Some(texture_column) = texture.get_texture_column(
+            texture_u,
+            side_bottom_onscreen,
+            side_top_onscreen,
+            side_hit.side.shape.height,
+            renderer_data,
+        ) {
             let task = RenderTask {
                 texture_column: Some(texture_column),
                 color: 0x000000,
@@ -290,9 +296,7 @@ pub fn calculate_side_bottom_top(
         * renderer_data.render_scale_coefficient) // scale correctly
         as isize;
 
-    let side_top_onscreen =
-        (side_bottom_onscreen + side_height_onscreen).min(SCREEN_HEIGHT as isize);
-    side_bottom_onscreen = side_bottom_onscreen.max(0);
+    let side_top_onscreen = side_bottom_onscreen + side_height_onscreen;
 
     (side_bottom_onscreen, side_top_onscreen)
 }

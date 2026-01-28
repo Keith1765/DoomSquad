@@ -2,6 +2,8 @@ use std::{collections::HashMap, fs, path::Path};
 
 use image::ImageReader;
 
+use crate::render::RendererData;
+
 pub struct Texture {
     pub width: usize,
     pub height: usize,
@@ -9,19 +11,47 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn get_column(&self, u: usize) -> Option<Vec<u32>> {
+    pub fn get_texture_column(
+        &self,
+        u: usize,
+        onscreen_bottom: isize,
+        onscreen_top: isize,
+        inworld_height: f64,
+        renderer_data: &RendererData,
+    ) -> Option<Vec<u32>> {
         if u >= self.width {
             return None;
         }
 
-        let mut column = Vec::with_capacity(self.height);
-        for v in 1..self.height+1 {
+        // get the unscaled column
+        let mut unscaled_column = Vec::with_capacity(self.height);
+        for v in 1..self.height + 1 {
             // give column in form bottom->top, not top->bottom
             if let Some(pixel) = self.pixels.get((self.height - v) * self.width + u) {
-                column.push(*pixel);
+                unscaled_column.push(*pixel);
             }
         }
-        Some(column)
+        let onscreen_height = onscreen_top - onscreen_bottom; //.max(renderer_data.screen_height_as_isize);
+        let mut scaled_column: Vec<u32> = Vec::with_capacity(
+            onscreen_height
+                .max(0)
+                .min(renderer_data.screen_height_as_isize) as usize,
+        );
+        let onscreen_inworld_ratio = onscreen_height as f64 / inworld_height;
+        for onscreen_y in onscreen_bottom..onscreen_top {
+            if onscreen_y < 0 || onscreen_y >= renderer_data.screen_height_as_isize {
+                continue;
+            }
+
+            let onscreen_y_on_tex = onscreen_y - onscreen_bottom;
+            let inworld_y_on_tex = (onscreen_y_on_tex as f64 / onscreen_inworld_ratio) as usize;
+            let v = inworld_y_on_tex % self.height;
+            if let Some(color) = unscaled_column.get(v) {
+                scaled_column.push(*color);
+            }
+        }
+
+        Some(scaled_column)
     }
 }
 
