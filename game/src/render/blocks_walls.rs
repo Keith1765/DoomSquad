@@ -219,7 +219,7 @@ pub fn task_partial_surface(
 
     let brightness = 0.5 + (&exit_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
 
-    // if we are above the block
+    // if we are above the block (case floor)
     if exit_hit.side.shape.bottom + exit_hit.side.shape.height < game.player.view_height {
         let vert_dist =
             game.player.view_height - exit_hit.side.shape.bottom + exit_hit.side.shape.height;
@@ -236,7 +236,7 @@ pub fn task_partial_surface(
             distance: exit_hit.distance,
         });
     } else {
-        // otherwise we are below the block
+        // otherwise we are below the block (case ceiling)
         let vert_dist = exit_hit.side.shape.bottom - game.player.view_height;
         let task: RenderTask = RenderTask {
             texture_column: None,
@@ -296,7 +296,8 @@ pub fn calculate_side_bottom_top(
         * renderer_data.render_scale_coefficient) // scale correctly
         as isize;
 
-    let side_top_onscreen = side_bottom_onscreen + side_height_onscreen;
+
+    let side_top_onscreen = side_bottom_onscreen+side_height_onscreen;
 
     (side_bottom_onscreen, side_top_onscreen)
 }
