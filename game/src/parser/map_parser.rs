@@ -18,7 +18,7 @@ fn read_ggb_as_string(path: &str) -> Result<String> {
 
     let mut archive = ZipArchive::new(file).context("File is not a valid .ggb (zip) archive")?;
 
-    // GeoGebra always stores data in "geogebra.xml"
+    //GeoGebra always stores data in "geogebra.xml"
     let mut xml_file = archive
         .by_name("geogebra.xml")
         .context("geogebra.xml not found in .ggb file")?;
@@ -34,16 +34,16 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
 
     let mut archive = ZipArchive::new(file).context("File is not a valid .ggb (zip) archive")?;
 
-    // geogebra.xml aus dem ZIP holen
+    //geogebra.xml aus dem ZIP holen
     let mut xml_file = archive
         .by_name("geogebra.xml")
         .context("geogebra.xml not found in .ggb file")?;
 
-    // XML in String laden
+    //XML in String laden
     let mut xml_content = String::new();
     xml_file.read_to_string(&mut xml_content)?;
 
-    // XML-Reader vorbereiten
+    //XML-Reader vorbereiten
     let mut reader = Reader::from_str(&xml_content);
 
     let mut buf = Vec::new();
