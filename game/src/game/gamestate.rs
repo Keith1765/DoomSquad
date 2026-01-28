@@ -11,7 +11,7 @@ impl Game {
     pub fn new() -> Self {
         Self {
             player: Player::new(),
-            map: Map::new().unwrap(), // TODO remove unwrap
+            map: Map::new_test_map().unwrap(), // TODO remove unwrap
         }
     }
 

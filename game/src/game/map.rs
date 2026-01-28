@@ -142,7 +142,7 @@ pub struct Map {
 }
 
 impl Map {
-    pub fn new() -> Option<Self> {
+    pub fn new_test_map() -> Option<Self> {
         let mut map = Self {
             id: 0,
             wall_sides: Vec::new(),
