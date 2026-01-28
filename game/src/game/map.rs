@@ -167,13 +167,13 @@ impl Map {
             Point { x: 150.0, y: 200.0 },
         ];
         map.add_shape_from_points(
-            wall_points,
+            wall_points.clone(), // TODO remove this clone(), also the others
             ShapeType::Wall,
             0.0,
             LEVEL_HEIGHT,
             0x00ff00,
             0xffff00,
-            0,
+            vec![0; wall_points.len()],
         )?;
 
         let bottom_block_points: Vec<Point> = vec![
@@ -182,13 +182,13 @@ impl Map {
             Point { x: 175.0, y: 175.0 },
         ];
         map.add_shape_from_points(
-            bottom_block_points,
+            bottom_block_points.clone(),
             ShapeType::Block,
             0.0,
             10.0,
             0x0000ff,
             0xffff00,
-            0,
+            vec![0; bottom_block_points.len()],
         )?;
 
         let bottom_block_points_2: Vec<Point> = vec![
@@ -198,13 +198,13 @@ impl Map {
             Point { x: 185.0, y: 200.0 },
         ];
         map.add_shape_from_points(
-            bottom_block_points_2,
+            bottom_block_points_2.clone(),
             ShapeType::Block,
             0.0,
             5.0,
             0x0000ff,
             0xffff00,
-            0,
+            vec![0; bottom_block_points_2.len()],
         )?;
 
         let top_block_points: Vec<Point> = vec![
@@ -216,13 +216,13 @@ impl Map {
             Point { x: 180.0, y: 178.0 },
         ];
         map.add_shape_from_points(
-            top_block_points,
+            top_block_points.clone(),
             ShapeType::Block,
             15.0,
             10.0,
             0xff0000,
             0xffff00,
-            0,
+            vec![0; top_block_points.len()],
         )?;
 
         let small_block_points: Vec<Point> = vec![
@@ -231,13 +231,13 @@ impl Map {
             Point { x: 190.0, y: 190.0 },
         ];
         map.add_shape_from_points(
-            small_block_points,
+            small_block_points.clone(),
             ShapeType::Block,
             10.0,
             1.0,
             0xffffff,
             0xff00ff,
-            0,
+            vec![0; small_block_points.len()],
         )?;
 
         let test_entity = Entity {
@@ -265,9 +265,9 @@ impl Map {
         height: f64,
         color: u32, // TODO remove when no longer needed
         surface_color: u32,
-        texture_id: usize, // TODO change later so that different sides can have different textures
+        texture_ids: Vec<usize>, // TODO change later so that different sides can have different textures
     ) -> Option<()> {
-        if points.is_empty() {
+        if points.is_empty() || points.len() != texture_ids.len() {
             return None;
         }
         let shape = Rc::new(Shape {
@@ -294,13 +294,16 @@ impl Map {
         for i in 0..points.len() {
             point1 = point2;
             point2 = *points.get(i)?;
-            sides.push(Side::new(
-                self.side_count,
-                point1,
-                point2,
-                Rc::clone(&shape),
-                texture_id,
-            ));
+            if let Some(texture_id) = texture_ids.get(i) {
+                sides.push(Side::new(
+                    self.side_count,
+                    point1,
+                    point2,
+                    Rc::clone(&shape),
+                    *texture_id,
+                ));
+            }
+            
             self.side_count += 1;
         }
         shapes.push(shape);
