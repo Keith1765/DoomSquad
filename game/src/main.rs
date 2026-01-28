@@ -15,8 +15,8 @@ const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
 const TARGET_FPS: usize = 60;
 const HORIZONTAL_FOV: f64 = PI / 2.0;
-const BACKGROUND_COLOR: u32 = 0x222222;
-const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.025;
+const BACKGROUND_COLOR: u32 = 0x444444;
+const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.005;
 const WALL_DEFAULT_COLOR: u32 = 0x00ff00;
 const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
@@ -68,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     while window.is_open() && !window.is_key_down(Key::Escape) {
         game.update(&window);
 
-        render::draw(&mut buffer, &renderer_data, &mut game);
+        render::draw_screen(&mut buffer, &renderer_data, &mut game);
 
         //fps calc
         frame_count += 1;
