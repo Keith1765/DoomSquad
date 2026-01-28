@@ -10,7 +10,7 @@ use std::time::{Duration, Instant};
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
-const TARGET_FPS: usize = 60;
+const TARGET_FPS: usize = 30;
 const HORIZONTAL_FOV: f64 = PI / 2.0;
 const BACKGROUND_COLOR: u32 = 0x444444;
 const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.005;

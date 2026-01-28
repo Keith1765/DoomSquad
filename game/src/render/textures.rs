@@ -31,11 +31,9 @@ impl Texture {
                 unscaled_column.push(*pixel);
             }
         }
-        let onscreen_height = onscreen_top - onscreen_bottom; //.max(renderer_data.screen_height_as_isize);
+        let onscreen_height = onscreen_top - onscreen_bottom;
         let mut scaled_column: Vec<u32> = Vec::with_capacity(
-            onscreen_height
-                .max(0)
-                .min(renderer_data.screen_height_as_isize) as usize,
+            onscreen_height.clamp(0, renderer_data.screen_height_as_isize) as usize,
         );
         let onscreen_inworld_ratio = onscreen_height as f64 / inworld_height;
         for onscreen_y in onscreen_bottom..onscreen_top {

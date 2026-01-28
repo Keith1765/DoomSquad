@@ -245,8 +245,8 @@ impl Map {
             vertical_position: 0.0,
             facing_angle: 0.0,
             sprite: Sprite {
-                color: 0xff00ff,
-                height: 15.0,
+                texture_id: 0,
+                height: 20.0,
                 width: 15.0,
             },
         };
@@ -303,7 +303,7 @@ impl Map {
                     *texture_id,
                 ));
             }
-            
+
             self.side_count += 1;
         }
         shapes.push(shape);
