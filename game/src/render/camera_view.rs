@@ -11,21 +11,23 @@ use crate::render::raycast::{
 };
 use crate::render::renderer_init::RendererData;
 use crate::render::sprites::task_sprite;
+use crate::render::textures::Texture;
 use crate::{BACKGROUND_COLOR, SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
 
 pub type VerticalDisctance = f64;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum RenderTaskType {
-    Side,
-    Floor(VerticalDisctance),
+    Floor(VerticalDisctance), // vert dist is needed for sorting between surface tasks
     Ceiling(VerticalDisctance),
-    Sprite,
+    SpriteUnicolor,
+    SideTexture,
 }
 
 #[derive(Clone)]
 pub struct RenderTask {
-    pub color: u32, // TODO replace with texture
+    pub texture_column: Option<Vec<u32>>, // texture and color will never both be used
+    pub color: u32,
     pub brightness: f64,
     pub onscreen_bottom: isize,
     pub onscreen_top: isize,
@@ -112,6 +114,7 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     draw_camera_view(buffer, &renderer_data, game);
     //draw grid of reference points spaced each 50 pixels for debugging
     draw_reference_points(buffer);
+    //draw_texture_bottom_left(buffer, renderer_data.textures.get(&0).unwrap()); // ! TODO remove unwrap
 }
 
 fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
@@ -144,7 +147,6 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     }
 
     // create entity (sprite) tasks, put them into the taskings
-    // TODO make sprites not render behind walls
     for e in &game.map.entities {
         if let Some(instruction) = task_sprite(game, e, renderer_data) {
             for x in instruction.sprite_left_screen_x..instruction.sprite_right_screen_x {
@@ -177,18 +179,56 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     }
 }
 
-fn draw_tasks(c_tasks: &mut ColumnTasks, renderer_data: &RendererData) -> [u32; SCREEN_HEIGHT] {
-    let mut column: [u32; SCREEN_HEIGHT] = [renderer_data.background_color; SCREEN_HEIGHT]; // initialize with default value
+fn draw_tasks(
+    column_tasks: &mut ColumnTasks,
+    renderer_data: &RendererData,
+) -> [u32; SCREEN_HEIGHT] {
+    let mut screen_column: [u32; SCREEN_HEIGHT] = [renderer_data.background_color; SCREEN_HEIGHT]; // initialize with default value
 
-    while let Some(task_ord) = c_tasks.tasks.pop() {
+    while let Some(task_ord) = column_tasks.tasks.pop() {
         let task = task_ord.task;
+        let (onscreen_bottom, onscreen_top) = (
+            task.onscreen_bottom
+                .clamp(0, renderer_data.screen_height_as_isize),
+            task.onscreen_top
+                .clamp(0, renderer_data.screen_height_as_isize),
+        );
+        // try to render a texture, if the task has one
+        if let Some(texture_column) = task.texture_column {
+            //println!("{}",texture_column.len());
+            for screen_y in onscreen_bottom..onscreen_top {
+                let column_v = screen_y - onscreen_bottom;
+                if let Some(pixel_color) = texture_column.get(column_v as usize) {
+                    // dont draw outside of screen bounds
+                    if screen_y < 0 || screen_y >= renderer_data.screen_height_as_isize {
+                        continue;
+                    }
 
-        for onscreen_y_isize in task.onscreen_bottom..task.onscreen_top {
-            let onscreen_y = onscreen_y_isize as usize; // TODO remove need for this type conversion?
+                    // 2. Extract channels
+                    let a = (pixel_color >> 24) & 0xFF;
+                    let r = (pixel_color >> 16) & 0xFF;
+                    let g = (pixel_color >> 8) & 0xFF;
+                    let b = pixel_color & 0xFF;
 
-            if onscreen_y >= SCREEN_HEIGHT {
+                    // 3. Scale each channel with brightness
+                    let r = (r as f64 * task.brightness) as u32;
+                    let g = (g as f64 * task.brightness) as u32;
+                    let b = (b as f64 * task.brightness) as u32;
+
+                    // 4. Repack
+                    screen_column[screen_y as usize] = (a << 24) | (r << 16) | (g << 8) | b;
+                }
+            }
+            continue; // go back to beginning of loop, otherwise will get overwritten by color drawing code below
+        }
+
+        // render the color if the task has no texture
+        for onscreen_y in task.onscreen_bottom.max(0)..task.onscreen_top {
+            // dont draw outside of screen bounds
+            if onscreen_y < 0 || onscreen_y >= renderer_data.screen_height_as_isize {
                 continue;
             }
+
             // 2. Extract channels
             let a = (task.color >> 24) & 0xFF;
             let r = (task.color >> 16) & 0xFF;
@@ -201,12 +241,23 @@ fn draw_tasks(c_tasks: &mut ColumnTasks, renderer_data: &RendererData) -> [u32; 
             let b = (b as f64 * task.brightness) as u32;
 
             // 4. Repack
-            column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
+            screen_column[onscreen_y as usize] = (a << 24) | (r << 16) | (g << 8) | b;
         }
     }
 
-    return column;
+    screen_column
 }
+
+// // TODO add positioning to make actualyl useful
+// // TODO this whole thing is temporary mostly
+// fn draw_texture_bottom_left(buffer: &mut [u32], texture: &Texture) {
+//     for x in 0..texture.width {
+//         let column = texture.get_column(x).unwrap(); // ! TODO get rid of unwrap
+//         for y in 0..column.len() - 1 {
+//             buffer[(y * SCREEN_WIDTH) + x] = *column.get(y).unwrap(); // ! TODO get rid of unwrap
+//         }
+//     }
+// }
 
 //draw refernce points spaced 50 pixels apart for debugging
 fn draw_reference_points(buffer: &mut [u32]) {

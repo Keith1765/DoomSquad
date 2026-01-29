@@ -1,6 +1,7 @@
 use std::ops::Rem;
 use std::{f64::consts::PI, rc::Rc};
 
+use crate::render::textures::Texture;
 use crate::{
     SCREEN_WIDTH,
     game::{Game, entities::Entity},
@@ -11,11 +12,12 @@ use crate::{
 };
 
 pub struct Sprite {
-    pub color: u32, // TODO replace with texture
+    pub texture_id: usize,
     pub height: f64,
     pub width: f64,
 }
 
+// currently unused
 struct SpriteSlice {
     sprite: Rc<Sprite>,
     proportion: f64,
@@ -46,11 +48,10 @@ pub fn task_sprite(
     }
 
     let onscreen_width = ((entity.sprite.width / normalized_distance)
-        * renderer_data.render_scale_coefficient) as isize; // TODO rename this coeff
+        * renderer_data.render_scale_coefficient) as isize;
     let onscreen_height = ((entity.sprite.height / normalized_distance)
-        * renderer_data.render_scale_coefficient) as isize; // TODO rename this coeff
-
-    let bottom_onscreen: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
+        * renderer_data.render_scale_coefficient) as isize;
+    let onscreen_bottom: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
         + ((entity.vertical_position / normalized_distance)
         - (game.player.view_height / normalized_distance)) // adjust for view hieght
         * renderer_data.render_scale_coefficient) // scale correctly
@@ -69,25 +70,43 @@ pub fn task_sprite(
         + 0.5)
         .clamp(0.2, 1.0);
 
-    let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width as usize);
+    let texture = renderer_data.textures.get(&entity.sprite.texture_id);
+    let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width.max(0) as usize);
 
-    for x in left_screen_x..left_screen_x + onscreen_width {
-        if x < 0 || x > SCREEN_WIDTH as isize - 1 {
-            continue;
+    if let Some(texture) = texture {
+
+        // will be used often, so makes sense to cast only once
+        let onscreen_width_f64 = onscreen_width.max(0) as f64;
+
+        for x in left_screen_x..left_screen_x + onscreen_width {
+            if x < 0 || x > SCREEN_WIDTH as isize - 1 {
+                continue;
+            }
+
+            let texture_u =
+                ((x-left_screen_x) as f64 * (entity.sprite.width / onscreen_width_f64)) as usize % texture.width;
+            let texture_column = texture.get_texture_column(
+                texture_u,
+                onscreen_bottom,
+                onscreen_bottom + onscreen_height,
+                entity.sprite.height,
+                renderer_data,
+            );
+
+            let task = RenderTask {
+                texture_column: texture_column,
+                color: 0x000000, // default color, should not be read because texture exists
+                brightness: brightness,
+                onscreen_bottom,
+                onscreen_top: onscreen_bottom + onscreen_height,
+            };
+
+            tasks.push(RenderTaskOrderer::new(
+                task,
+                distance,
+                RenderTaskType::SpriteUnicolor,
+            ));
         }
-
-        let task = RenderTask {
-            color: entity.sprite.color,
-            brightness: brightness,
-            onscreen_bottom: bottom_onscreen,
-            onscreen_top: bottom_onscreen + onscreen_height,
-        };
-
-        tasks.push(RenderTaskOrderer::new(
-            task,
-            distance,
-            RenderTaskType::Sprite,
-        ));
     }
 
     return Some(SpriteInstruction {
