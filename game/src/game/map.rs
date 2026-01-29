@@ -193,6 +193,7 @@ impl Map {
 
         let bottom_block_points_2: Vec<Point> = vec![
             Point { x: 200.0, y: 215.0 },
+            Point { x: 180.0, y: 205.0 },
             Point { x: 175.0, y: 215.0 },
             Point { x: 175.0, y: 200.0 },
             Point { x: 185.0, y: 200.0 },
