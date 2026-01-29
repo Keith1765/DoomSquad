@@ -19,6 +19,7 @@ const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.005;
 const WALL_DEFAULT_COLOR: u32 = 0x00ff00;
 const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
+const AUDIO_ENABLED: bool = false;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //for fps count
@@ -59,12 +60,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         SURFACE_DEFAULT_COLOR,
     );
 
-    let mut audio = Audio::new().ok();
+    let mut audio: Option<Audio> = None;
+    if AUDIO_ENABLED {
 
-    if let Some(a) = audio.as_mut() {
-        let _ = a.load_sfx("step", "assets/audio/step.wav");
-        let _ = a.load_sfx("jump", "assets/audio/jump.wav");
-        let _ = a.play_music_loop("assets/audio/music.wav", 0.6);
+        audio = Audio::new().ok();
+
+        if let Some(a) = audio.as_mut() {
+            let _ = a.load_sfx("step", "assets/audio/step.wav");
+            let _ = a.load_sfx("jump", "assets/audio/jump.wav");
+            let _ = a.play_music_loop("assets/audio/music.wav", 0.6);
+        }
     }
 
     let mut prev_keys = (false, false, false, false, false); // (W, A, S, D, Space)
