@@ -95,5 +95,5 @@ pub fn load_textures() -> Option<HashMap<usize, Texture>> {
 
 #[test]
 fn test_texture_load() {
-    assert!(!load_textures().is_some());
+    assert!(load_textures().is_some());
 }

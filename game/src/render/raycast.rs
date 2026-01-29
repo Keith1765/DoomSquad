@@ -32,13 +32,7 @@ impl Eq for RayHitOrderer {} // PartialEQ already handles functionality, but mus
 
 impl PartialOrd for RayHitOrderer {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.rh.distance > other.rh.distance {
-            Some(Ordering::Greater)
-        } else if self.rh.distance < other.rh.distance {
-            Some(Ordering::Less)
-        } else {
-            Some(Ordering::Equal)
-        }
+        Some(self.cmp(other))
     }
 }
 
@@ -191,12 +185,12 @@ pub fn intersect(ray_origin: Point, ray_angle: f64, side: Side) -> Option<RayHit
         rotate_point_around_origin(position_in_trasformed_coords, ray_angle) + ray_origin;
 
     // let angle = (side_point2.y-side_point1.y).atan2(side_point2.x-side_point1.x);
-    return Some(RayHit {
-        position: position,
-        distance: distance,
+    Some(RayHit {
+        position,
+        distance,
         proportion_along_side: proportion,
-        side: side,
-    });
+        side,
+    })
 }
 
 fn rotate_point_around_origin(point: Point, angle: f64) -> Point {
@@ -206,8 +200,8 @@ fn rotate_point_around_origin(point: Point, angle: f64) -> Point {
     let transformed_x = point.x * cos_of_angle - point.y * sin_of_angle;
     let transformed_y = point.x * sin_of_angle + point.y * cos_of_angle;
 
-    return Point {
+    Point {
         x: transformed_x,
         y: transformed_y,
-    };
+    }
 }

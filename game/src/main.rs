@@ -1,12 +1,14 @@
 #![allow(dead_code)]
 
+mod audio;
 mod game;
 mod render;
 
+use crate::audio::Audio;
 use crate::render::{RendererData, render_init};
-use minifb::{Key, MouseMode, Window, WindowOptions};
+use minifb::{Key, Window, WindowOptions};
 use std::f64::consts::PI;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
@@ -17,12 +19,13 @@ const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.005;
 const WALL_DEFAULT_COLOR: u32 = 0x00ff00;
 const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
+const AUDIO_ENABLED: bool = false;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //for fps count
     let mut last_time = Instant::now();
     let mut frame_count = 0;
-    let mut fps_value = 0.0;
+    let mut fps_value;
 
     //creates window Safely
     let mut window = match Window::new(
@@ -57,10 +60,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         SURFACE_DEFAULT_COLOR,
     );
 
-    while window.is_open() && !window.is_key_down(Key::Escape) {
-        game.update(&window);
+    let mut audio: Option<Audio> = None;
+    if AUDIO_ENABLED {
 
-        render::draw_screen(&mut buffer, &renderer_data, &mut game);
+        audio = Audio::new().ok();
+
+        if let Some(a) = audio.as_mut() {
+            let _ = a.load_sfx("step", "assets/audio/step.wav");
+            let _ = a.load_sfx("jump", "assets/audio/jump.wav");
+            let _ = a.play_music_loop("assets/audio/music.wav", 0.6);
+        }
+    }
+
+    let mut prev_keys = (false, false, false, false, false); // (W, A, S, D, Space)
+
+    while window.is_open() && !window.is_key_down(Key::Escape) {
+        let (_, _, _, _, prev_space) = prev_keys;
+
+        let cur_w = window.is_key_down(Key::W);
+        let cur_a = window.is_key_down(Key::A);
+        let cur_s = window.is_key_down(Key::S);
+        let cur_d = window.is_key_down(Key::D);
+        let cur_space = window.is_key_down(Key::Space);
+
+        if let Some(a) = &mut audio {
+            // call this for any movement key pressed
+            if cur_w || cur_a || cur_s || cur_d {
+                a.play_step(); // step sound with cooldown
+            }
+
+            // jump SFX
+            if cur_space && !prev_space {
+                a.play_sfx("jump");
+            }
+        }
+
+        prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
+
+        game.update(&window);
+        render::draw_screen(&mut buffer, &renderer_data, &game);
 
         //fps calc
         frame_count += 1;

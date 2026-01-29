@@ -34,7 +34,7 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, window: &Window, map: &Map) {
+    pub fn update(&mut self, window: &Window, _map: &Map) {
         if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
             self.check_angle();
             let dx = mx - self.last_mouse_x; // mouse delta
