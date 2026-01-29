@@ -12,12 +12,13 @@ use std::time::Instant;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
-const TARGET_FPS: usize = 60;
+const TARGET_FPS: usize = 30;
 const HORIZONTAL_FOV: f64 = PI / 2.0;
-const BACKGROUND_COLOR: u32 = 0x222222;
-const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.025;
+const BACKGROUND_COLOR: u32 = 0x444444;
+const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.005;
 const WALL_DEFAULT_COLOR: u32 = 0x00ff00;
 const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
+const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //for fps count
@@ -55,6 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         DISTANCE_DARKNESS_COEFFICIENT,
         WALL_DEFAULT_COLOR,
         BLOCK_DEFAULT_COLOR,
+        SURFACE_DEFAULT_COLOR,
     );
 
     let mut audio = Audio::new().ok();
@@ -91,7 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
 
         game.update(&window);
-        render::draw(&mut buffer, &renderer_data, &game);
+        render::draw_screen(&mut buffer, &renderer_data, &game);
 
         //fps calc
         frame_count += 1;
