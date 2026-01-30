@@ -1,9 +1,8 @@
 use crate::game::map::Point;
+use crate::game::movement::Mover;
 use crate::render::sprites::Sprite;
 
 pub struct Entity {
-    pub position: Point,
-    pub vertical_position: f64, // foot lever
-    pub facing_angle: f64,
+    pub mover: Mover,
     pub sprite: Sprite,
 }

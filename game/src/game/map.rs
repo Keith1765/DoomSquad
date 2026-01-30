@@ -5,7 +5,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::game::entities::Entity;
+use crate::game::{entities::Entity, movement::Mover};
 use crate::render::sprites::Sprite;
 
 pub const LEVEL_HEIGHT: f64 = 25.0; // TODO different for every map
@@ -242,9 +242,14 @@ impl Map {
         )?;
 
         let test_entity = Entity {
-            position: Point { x: 230.0, y: 210.0 },
-            vertical_position: 0.0,
-            facing_angle: 0.0,
+            mover: Mover {
+                position: Point { x: 230.0, y: 210.0 },
+                floor_level: 0.0,
+                foot_level: 0.0,
+                view_level: 15.0,
+                height: 15.0,
+                facing_direction: 0.0,
+            },
             sprite: Sprite {
                 texture_id: 1,
                 height: 20.0,

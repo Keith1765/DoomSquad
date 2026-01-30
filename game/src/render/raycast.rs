@@ -84,8 +84,8 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
     for w in &game.map.wall_sides {
         let intersection: Option<RayHit> = intersect(
             Point {
-                x: game.player.position.x,
-                y: game.player.position.y,
+                x: game.player.mover.position.x,
+                y: game.player.mover.position.y,
             },
             ray_angle,
             w.clone(), // TODO remove need for this clone
@@ -107,8 +107,8 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
     for b in &game.map.block_sides {
         let intersection: Option<RayHit> = intersect(
             Point {
-                x: game.player.position.x,
-                y: game.player.position.y,
+                x: game.player.mover.position.x,
+                y: game.player.mover.position.y,
             },
             ray_angle,
             b.clone(), // TODO remove need for this clone
