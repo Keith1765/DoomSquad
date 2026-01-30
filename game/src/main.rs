@@ -22,6 +22,8 @@ const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    parse_map();
+    
     if let Err(e) = parse_map() {
         eprintln!("Error: {e}");
     }
