@@ -37,9 +37,13 @@ pub fn task_sprite(
     renderer_data: &RendererData,
 ) -> Option<SpriteInstruction> {
     // return the leftmost x of the sprite, and all the tasks to be rendered right of that
-    let angle_off_player_view =
-        game.player.mover.position.angle_to(&entity.mover.position) - game.player.mover.facing_direction; // TODO abort if sprite out of FOV
-    let distance: f64 = game.player.mover.position.distance_to(&entity.mover.position);
+    let angle_off_player_view = game.player.mover.position.angle_to(&entity.mover.position)
+        - game.player.mover.facing_direction; // TODO abort if sprite out of FOV
+    let distance: f64 = game
+        .player
+        .mover
+        .position
+        .distance_to(&entity.mover.position);
     let normalized_distance = distance * angle_off_player_view.cos();
 
     // TODO temporary, find cleaner solution ?
@@ -74,7 +78,6 @@ pub fn task_sprite(
     let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width.max(0) as usize);
 
     if let Some(texture) = texture {
-
         // will be used often, so makes sense to cast only once
         let onscreen_width_f64 = onscreen_width.max(0) as f64;
 
@@ -83,8 +86,9 @@ pub fn task_sprite(
                 continue;
             }
 
-            let texture_u =
-                ((x-left_screen_x) as f64 * (entity.sprite.width / onscreen_width_f64)) as usize % texture.width;
+            let texture_u = ((x - left_screen_x) as f64
+                * (entity.sprite.width / onscreen_width_f64)) as usize
+                % texture.width;
             let texture_column = texture.get_texture_column(
                 texture_u,
                 onscreen_bottom,
