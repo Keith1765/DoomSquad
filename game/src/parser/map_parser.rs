@@ -46,6 +46,12 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
             Event::Eof => break,
             _ => {}
         }
+        //TODO
+        // match reader.read_event_into(&mut buf)? {
+        //     Event::Start(ref e) if e.name().as_ref() == b"command" => {
+        //     _ => {
+        // }
+        //TODO END
         buf.clear();
     }
 
@@ -82,27 +88,40 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Resu
 }
 
 fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Result<()> {
-    let mut p1 = "unnamed".to_string();
-    let mut p2 = "unnamed".to_string();
-
     loop {
+        let mut r = None;
+        let mut g = None;
+        let mut b = None;
+        let mut alpha = None;
+
         match reader.read_event_into(buf)? {
-            Event::Empty(ref e) if e.name().as_ref() == b"segment" => {
+            Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
                 for attr in e.attributes() {
                     let attr = attr?;
+
                     match attr.key.as_ref() {
-                        b"point1" => p1 = attr.unescape_value()?.to_string(),
-                        b"point2" => p2 = attr.unescape_value()?.to_string(),
+                        b"r" => r = Some(attr.unescape_value()?.parse::<u8>()?),
+                        b"g" => g = Some(attr.unescape_value()?.parse::<u8>()?),
+                        b"b" => b = Some(attr.unescape_value()?.parse::<u8>()?),
+                        b"alpha" => alpha = Some(attr.unescape_value()?.parse::<u8>()?),
                         _ => {}
                     }
                 }
+                println!(
+                    "Segment: {},Farbe: rgba({}, {}, {}, {})",
+                    name,
+                    r.unwrap_or(0),
+                    g.unwrap_or(0),
+                    b.unwrap_or(0),
+                    alpha.unwrap_or(255)
+                );
             }
+
             Event::End(ref e) if e.name().as_ref() == b"element" => break,
             _ => {}
         }
+
         buf.clear();
     }
-
-    println!("Segment {} zwischen {} und {}", name, p1, p2);
     Ok(())
 }
