@@ -1,10 +1,10 @@
+use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink, Source};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, Cursor};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink, Source};
 
 pub struct Audio {
     _stream: OutputStream, // must stay alive
@@ -28,12 +28,21 @@ impl Audio {
         })
     }
 
-    pub fn load_sfx<P: AsRef<Path>>(&mut self, name: &str, path: P) -> Result<(), Box<dyn std::error::Error>> {
-        self.sfx_data.insert(name.to_string(), Arc::from(std::fs::read(path)?));
+    pub fn load_sfx<P: AsRef<Path>>(
+        &mut self,
+        name: &str,
+        path: P,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        self.sfx_data
+            .insert(name.to_string(), Arc::from(std::fs::read(path)?));
         Ok(())
     }
 
-    pub fn play_music_loop<P: AsRef<Path>>(&mut self, path: P, volume: f32) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn play_music_loop<P: AsRef<Path>>(
+        &mut self,
+        path: P,
+        volume: f32,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.stop_music();
         let file = File::open(path)?;
         let source = Decoder::new(BufReader::new(file))?.repeat_infinite();
@@ -59,7 +68,10 @@ impl Audio {
             None => return,
         };
         let cursor = Cursor::new(Arc::clone(data));
-        if let (Ok(decoder), Ok(sink)) = (Decoder::new(BufReader::new(cursor)), Sink::try_new(&self.handle)) {
+        if let (Ok(decoder), Ok(sink)) = (
+            Decoder::new(BufReader::new(cursor)),
+            Sink::try_new(&self.handle),
+        ) {
             sink.append(decoder);
             sink.detach();
         }
@@ -73,7 +85,10 @@ impl Audio {
         self.last_step_time = now;
         if let Some(data) = self.sfx_data.get("step") {
             let cursor = Cursor::new(Arc::clone(data));
-            if let (Ok(decoder), Ok(sink)) = (Decoder::new(BufReader::new(cursor)), Sink::try_new(&self.handle)) {
+            if let (Ok(decoder), Ok(sink)) = (
+                Decoder::new(BufReader::new(cursor)),
+                Sink::try_new(&self.handle),
+            ) {
                 sink.set_volume(0.5); // half volume
                 sink.append(decoder);
                 sink.detach();
