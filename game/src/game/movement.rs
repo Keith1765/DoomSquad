@@ -19,14 +19,14 @@ impl Mover {
     pub fn step(&mut self, step_size: f64, relative_direction: f64, map: &Map, godmode: bool) {
         let absolute_direction = self.facing_direction + relative_direction;
 
-        // if we walk into any wall and arent in godmode, we dont move
+        // if we walk into any wall and arent in godmode, we stop
         for wall in &map.wall_sides {
             if let Some(_) = step_intersect(
                 self.position,
                 absolute_direction,
                 Rc::clone(wall),
                 step_size,
-            ) && !godmode
+            ) && !godmode // in godmode, we can walk through walls
             {
                 return;
             }
