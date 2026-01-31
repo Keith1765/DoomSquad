@@ -62,7 +62,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut audio: Option<Audio> = None;
     if AUDIO_ENABLED {
-
         audio = Audio::new().ok();
 
         if let Some(a) = audio.as_mut() {

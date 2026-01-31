@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs, path::Path};
 
 use image::ImageReader;
 
-use crate::render::RendererData;
+use crate::{SCREEN_HEIGHT, render::RendererData};
 
 pub struct Texture {
     pub width: usize,
@@ -36,11 +36,9 @@ impl Texture {
             onscreen_height.clamp(0, renderer_data.screen_height_as_isize) as usize,
         );
         let onscreen_inworld_ratio = onscreen_height as f64 / inworld_height;
-        for onscreen_y in onscreen_bottom..onscreen_top {
-            if onscreen_y < 0 || onscreen_y >= renderer_data.screen_height_as_isize {
-                continue;
-            }
-
+        for onscreen_y in onscreen_bottom.clamp(0, renderer_data.screen_height_as_isize)
+            ..onscreen_top.clamp(0, renderer_data.screen_height_as_isize)
+        {
             let onscreen_y_on_tex = onscreen_y - onscreen_bottom;
             let inworld_y_on_tex = (onscreen_y_on_tex as f64 / onscreen_inworld_ratio) as usize;
             let v = inworld_y_on_tex % self.height;

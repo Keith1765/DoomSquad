@@ -74,7 +74,6 @@ pub fn task_sprite(
     let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width.max(0) as usize);
 
     if let Some(texture) = texture {
-
         // will be used often, so makes sense to cast only once
         let onscreen_width_f64 = onscreen_width.max(0) as f64;
 
@@ -83,8 +82,9 @@ pub fn task_sprite(
                 continue;
             }
 
-            let texture_u =
-                ((x-left_screen_x) as f64 * (entity.sprite.width / onscreen_width_f64)) as usize % texture.width;
+            let texture_u = ((x - left_screen_x) as f64
+                * (entity.sprite.width / onscreen_width_f64)) as usize
+                % texture.width;
             let texture_column = texture.get_texture_column(
                 texture_u,
                 onscreen_bottom,
