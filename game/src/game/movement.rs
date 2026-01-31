@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::game::{
     Game,
     map::{Map, Point, Side},
@@ -19,14 +21,11 @@ impl Mover {
 
         // if we walk into any wall and arent in godmode, we dont move
         for wall in &map.wall_sides {
-            // TODO remove need for clone()
-            // stop somewhat short of wall fro lag prevention
-            // TODO change that when lag fixed
             if let Some(_) = step_intersect(
                 self.position,
                 absolute_direction,
-                wall.clone(),
-                step_size * 15.0,
+                Rc::clone(wall),
+                step_size,
             ) && !godmode
             {
                 return;
@@ -46,7 +45,7 @@ impl Mover {
 pub struct StepRayHit {
     pub position: Point,
     pub distance: f64, // TODO remove, not needed ?
-    pub side: Side,
+    pub side: Rc<Side>,
 }
 
 //checks wether a ray intersect the line between two given points and is closer than given distance
@@ -54,7 +53,7 @@ pub struct StepRayHit {
 pub fn step_intersect(
     ray_origin: Point,
     ray_angle: f64,
-    side: Side,
+    side: Rc<Side>,
     max_distance: f64,
 ) -> Option<StepRayHit> {
     let side_point1 = side.point1; // point is a copy type
@@ -92,7 +91,7 @@ pub fn step_intersect(
     Some(StepRayHit {
         position,
         distance,
-        side,
+        side: Rc::clone(&side),
     })
 }
 
