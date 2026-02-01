@@ -241,6 +241,22 @@ impl Map {
             vec![0; small_block_points.len()],
         )?;
 
+        let floor_block_points: Vec<Point> = vec![
+            Point { x: 205.0, y: 220.0 },
+            Point { x: 205.0, y: 170.0 },
+            Point { x: 170.0, y: 170.0 },
+            Point { x: 170.0, y: 220.0 },
+        ];
+        map.add_shape_from_points(
+            floor_block_points.clone(),
+            ShapeType::Block,
+            0.0,
+            0.0,
+            0xffffff,
+            0x000000,
+            vec![0; floor_block_points.len()],
+        )?;
+
         let test_entity = Entity {
             mover: Mover {
                 position: Point { x: 230.0, y: 210.0 },

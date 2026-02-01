@@ -113,8 +113,10 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     }
     draw_camera_view(buffer, &renderer_data, game);
     //draw grid of reference points spaced each 50 pixels for debugging
-    draw_reference_points(buffer);
-    //draw_texture_bottom_left(buffer, renderer_data.textures.get(&0).unwrap()); // ! TODO remove unwrap
+    if game.player.godmode {
+        draw_reference_points(buffer);
+    }
+    //draw_texture_bottom_left(buffer, renderer_data.textures.get(&0).unwrap());
 }
 
 fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
@@ -234,7 +236,6 @@ fn draw_tasks(
                 .onscreen_top
                 .clamp(0, renderer_data.screen_height_as_isize)
         {
-
             // 2. Extract channels
             let a = (task.color >> 24) & 0xFF;
             let r = (task.color >> 16) & 0xFF;

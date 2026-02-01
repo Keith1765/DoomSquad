@@ -1,9 +1,11 @@
-use std::rc::Rc;
-
 use crate::game::{
     Game,
-    map::{Map, Point, Side},
+    map::{Map, Point, Side}, player::PLAYER_VIEW_HEIGHT,
 };
+use core::f64;
+use std::rc::Rc;
+
+const MAX_STEP_UP_HEIGHT: f64 = 5.0;
 
 #[derive(Clone)]
 pub struct Mover {
@@ -16,21 +18,92 @@ pub struct Mover {
 }
 
 impl Mover {
+
+    // TODO test this properly
     pub fn step(&mut self, step_size: f64, relative_direction: f64, map: &Map, godmode: bool) {
+
+        //println!("{}", self.floor_level);        
+
         let absolute_direction = self.facing_direction + relative_direction;
 
         // if we walk into any wall and arent in godmode, we stop
-        for wall in &map.wall_sides {
-            if let Some(_) = step_intersect(
-                self.position,
-                absolute_direction,
-                Rc::clone(wall),
-                step_size,
-            ) && !godmode // in godmode, we can walk through walls
+        for w in &map.wall_sides {
+            if let Some(_) =
+                step_intersect(self.position, absolute_direction, Rc::clone(w), step_size)
+                && !godmode
+            // in godmode, we can walk through walls
             {
                 return;
             }
         }
+
+        // we find all the sides which we would cross in the coming step
+        // if we are in godmode, we just go through everything, so we disregard everything
+        let mut intersections: Vec<StepRayHit> = Vec::new();
+        for b in &map.block_sides {
+            if let Some(intersection) =
+                step_intersect(self.position, absolute_direction, Rc::clone(b), step_size)
+            {
+                intersections.push(intersection)
+            }
+        }
+
+        // find the lowest ceiling whose block cantbe stepped up onto
+        let mut ceiling_level = f64::MAX;
+        for intersection in &intersections {
+            let shape_bottom = intersection.side.shape.bottom;
+            let shape_top = intersection.side.shape.bottom + intersection.side.shape.height;
+
+            if shape_bottom < ceiling_level // lower thn lowest previously found ceiling level
+                && shape_top > self.floor_level + MAX_STEP_UP_HEIGHT // block cant be stepped up onto
+            {
+                ceiling_level = shape_bottom;
+            } 
+        }
+
+        let mut new_floor_level = self.floor_level; // to be changed if we make a step up/down a ledge
+
+        // do stepping up/down
+        // * stepping down only work properly when we can step down onto a block, not into nothing
+        // in god mode, floor level is still tracked, in case we go back out of godmode
+        for intersection in &intersections {
+
+            let shape_bottom = intersection.side.shape.bottom;
+            let shape_top = intersection.side.shape.bottom + intersection.side.shape.height;
+            let head_level = self.foot_level+self.height;
+
+            // we check if the current side is completely above us; if so ,we just continue to check the next;
+            if shape_bottom > head_level {
+                continue;
+            }
+
+            // we check if the current side blocks our path completely; if so, we dont make a step
+            if shape_bottom <= head_level // bottom is below our head
+                && shape_top > self.floor_level + MAX_STEP_UP_HEIGHT // cant step up the side
+            {
+                if !godmode {return;} // if we are in godmode, we dont let ourselves get blocked
+            }
+
+            // checks for steps up ledges
+            if shape_bottom <= head_level // bottom below our head (not totally out of way)
+                && shape_top <= self.floor_level + MAX_STEP_UP_HEIGHT // can step up the side
+                && shape_top > new_floor_level // would be a higher step than any previous steps up; if not, irrelevant, do nothing
+            {
+                new_floor_level = intersection.side.shape.bottom + intersection.side.shape.height
+            }
+
+            // if we find a ledge down, and there is no step up "established"
+            if shape_top < self.floor_level && new_floor_level <= self.floor_level {
+                new_floor_level = shape_top;
+            }
+        }
+
+        // if our new floor level would result in us bumping our head into the ceiling, we dont make a step
+        if new_floor_level + self.height >= ceiling_level {
+            return;
+        }
+
+        self.floor_level = new_floor_level;
 
         let step_x = absolute_direction.cos() * step_size;
         let step_y = absolute_direction.sin() * step_size;

@@ -12,8 +12,8 @@ use std::f64::consts::PI;
 const ROTATION_SPEED: f64 = 2.0;
 const MOVE_SPEED: f64 = 1.0;
 const FLY_UP_DOWN_SPEED: f64 = 1.0;
-const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 const PLAYER_HEAD_HEIGHT: f64 = 15.0;
+pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 
 // TODO refactor to use entites?
 #[derive(Clone)]
@@ -81,16 +81,24 @@ impl Player {
         }
 
         if window.is_key_down(Key::Space) && self.godmode {
-            self.mover.view_level += FLY_UP_DOWN_SPEED;
+            self.mover.foot_level += FLY_UP_DOWN_SPEED;
         }
 
         if window.is_key_down(Key::LeftShift) && self.godmode {
-            self.mover.view_level -= FLY_UP_DOWN_SPEED;
+            self.mover.foot_level -= FLY_UP_DOWN_SPEED;
         }
 
+        // TODO make not fiddly (currently switches every tick)
         if window.is_key_down(Key::G) {
             self.godmode = !self.godmode;
         }
+
+        //adjust feet_level to fit floor_level
+        // TODO make smoother
+        if !self.godmode {
+            self.mover.foot_level = self.mover.floor_level;
+        }
+        self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
     }
 
     fn check_angle(&mut self) {
