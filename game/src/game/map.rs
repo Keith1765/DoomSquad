@@ -193,7 +193,7 @@ impl Map {
 
         let bottom_block_points_2: Vec<Point> = vec![
             Point { x: 200.0, y: 215.0 },
-            Point { x: 180.0, y: 205.0 },
+            Point { x: 185.0, y: 210.0 },
             Point { x: 175.0, y: 215.0 },
             Point { x: 175.0, y: 200.0 },
             Point { x: 185.0, y: 200.0 },
@@ -242,10 +242,10 @@ impl Map {
         )?;
 
         let floor_block_points: Vec<Point> = vec![
-            Point { x: 205.0, y: 220.0 },
+            Point { x: 205.0, y: 250.0 },
             Point { x: 205.0, y: 170.0 },
             Point { x: 170.0, y: 170.0 },
-            Point { x: 170.0, y: 220.0 },
+            Point { x: 170.0, y: 250.0 },
         ];
         map.add_shape_from_points(
             floor_block_points.clone(),

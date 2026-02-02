@@ -1,9 +1,9 @@
 use crate::game::{
     Game,
-    map::{Map, Point, Side}, player::PLAYER_VIEW_HEIGHT,
+    map::{Map, Point, Shape, ShapeID, Side}, player::PLAYER_VIEW_HEIGHT,
 };
 use core::f64;
-use std::rc::Rc;
+use std::{collections::{HashSet, hash_set::{IntoIter, Iter}}, rc::Rc};
 
 const MAX_STEP_UP_HEIGHT: f64 = 5.0;
 
@@ -37,82 +37,84 @@ impl Mover {
             }
         }
 
-        // we find all the sides which we would cross in the coming step
-        // if we are in godmode, we just go through everything, so we disregard everything
-        let mut intersections: Vec<StepRayHit> = Vec::new();
-        for b in &map.block_sides {
-            if let Some(intersection) =
-                step_intersect(self.position, absolute_direction, Rc::clone(b), step_size)
-            {
-                intersections.push(intersection)
-            }
-        }
-
-        // find the lowest ceiling whose block cantbe stepped up onto
-        let mut ceiling_level = f64::MAX;
-        for intersection in &intersections {
-            let shape_bottom = intersection.side.shape.bottom;
-            let shape_top = intersection.side.shape.bottom + intersection.side.shape.height;
-
-            if shape_bottom < ceiling_level // lower thn lowest previously found ceiling level
-                && shape_top > self.floor_level + MAX_STEP_UP_HEIGHT // block cant be stepped up onto
-            {
-                ceiling_level = shape_bottom;
-            } 
-        }
-
-        let mut new_floor_level = self.floor_level; // to be changed if we make a step up/down a ledge
-
-        // do stepping up/down
-        // * stepping down only work properly when we can step down onto a block, not into nothing
-        // in god mode, floor level is still tracked, in case we go back out of godmode
-        for intersection in &intersections {
-
-            let shape_bottom = intersection.side.shape.bottom;
-            let shape_top = intersection.side.shape.bottom + intersection.side.shape.height;
-            let head_level = self.foot_level+self.height;
-
-            // we check if the current side is completely above us; if so ,we just continue to check the next;
-            if shape_bottom > head_level {
-                continue;
-            }
-
-            // we check if the current side blocks our path completely; if so, we dont make a step
-            if shape_bottom <= head_level // bottom is below our head
-                && shape_top > self.floor_level + MAX_STEP_UP_HEIGHT // cant step up the side
-            {
-                if !godmode {return;} // if we are in godmode, we dont let ourselves get blocked
-            }
-
-            // checks for steps up ledges
-            if shape_bottom <= head_level // bottom below our head (not totally out of way)
-                && shape_top <= self.floor_level + MAX_STEP_UP_HEIGHT // can step up the side
-                && shape_top > new_floor_level // would be a higher step than any previous steps up; if not, irrelevant, do nothing
-            {
-                new_floor_level = intersection.side.shape.bottom + intersection.side.shape.height
-            }
-
-            // if we find a ledge down, and there is no step up "established"
-            if shape_top < self.floor_level && new_floor_level <= self.floor_level {
-                new_floor_level = shape_top;
-            }
-        }
-
-        // if our new floor level would result in us bumping our head into the ceiling, we dont make a step
-        if new_floor_level + self.height >= ceiling_level {
-            return;
-        }
-
-        self.floor_level = new_floor_level;
-
         let step_x = absolute_direction.cos() * step_size;
         let step_y = absolute_direction.sin() * step_size;
-        self.position = self.position
+        let new_position = self.position
             + Point {
                 x: step_x,
                 y: step_y,
+            };
+
+        // we find all the sides which we would cross in the coming step
+        // if we are in godmode, we just go through everything, so we disregard everything
+        let blocks_were_stepping_inside = find_blocks_were_currently_in(new_position, map);
+        for block in &blocks_were_stepping_inside { // TODO remove
+            //println!("{}", block.id);
+        }
+
+        let mut lowest_ceiling_level = f64::MAX;
+        let mut height_to_step_to = 0.0;
+        for block in &blocks_were_stepping_inside {
+            let block_bottom = block.bottom;
+            let block_top = block.bottom + block.height;
+            let head_level = self.foot_level+self.height;
+
+            // we check if the current side blocks our path completely; if so, we dont make a step at all
+            if block_bottom <= head_level // bottom is below our head
+                && block_top > self.floor_level + MAX_STEP_UP_HEIGHT // cant step up the side
+            {
+                //println!("blocked completely");
+                if !godmode {return;} // if we are in godmode, we dont let ourselves get blocked
+                continue;
             }
+
+            if block_bottom < lowest_ceiling_level // lower thn lowest previously found ceiling level
+                && block_top > self.floor_level + MAX_STEP_UP_HEIGHT // block cant be stepped up onto
+            {
+                lowest_ceiling_level = block_bottom;
+            }
+
+            // checks for steps up ledges
+            if block_bottom <= head_level // bottom below our head (not totally out of way)
+                && block_top <= self.floor_level + MAX_STEP_UP_HEIGHT // can step up the side
+                && block_top > height_to_step_to // would be a higher step than any previous steps up; if not, irrelevant, do nothing
+            {
+                //println!("up {}", block.id);
+                height_to_step_to = block_top;
+                continue;
+            }
+        }
+
+        
+
+        // if our new floor level would result in us bumping our head into the ceiling, we dont make a step
+        if height_to_step_to + self.height >= lowest_ceiling_level {
+            return;
+        }
+
+        self.position = new_position;
+        self.floor_level = height_to_step_to;
+        
     }
+}
+
+
+// finds all block we are currently staning inside of in 2d space
+// if we intersect a blocks sides an even number of times, we are outside of it, if odd, we are inside
+fn find_blocks_were_currently_in(position: Point, map: &Map) -> Vec<Rc<Shape>> {
+    let mut blocks_currently_inside: HashSet<Rc<Shape>> = HashSet::new();
+    for side in &map.block_sides {
+        if step_intersect(position, 0.0, Rc::clone(side), f64::MAX).is_some() {
+            // if its already in set, this was an even-numbered inteersect and we want to remove again
+            if blocks_currently_inside.contains(&Rc::clone(&side.shape)) { 
+                blocks_currently_inside.remove(&Rc::clone(&side.shape));
+            // if its not in set, we conversely need to add it (back) in
+            } else {    
+                blocks_currently_inside.insert(Rc::clone(&side.shape));
+            }
+        }
+    }
+    return Vec::from_iter(blocks_currently_inside.into_iter());
 }
 
 pub struct StepRayHit {
@@ -121,8 +123,8 @@ pub struct StepRayHit {
     pub side: Rc<Side>,
 }
 
-//checks wether a ray intersect the line between two given points and is closer than given distance
-//mostly a copy of intersect() in raycast.rs
+//checks wether a ray intersect the line between two given points
+// adapted from intersect() in raycast.rs
 pub fn step_intersect(
     ray_origin: Point,
     ray_angle: f64,
@@ -180,3 +182,5 @@ fn rotate_point_around_origin(point: Point, angle: f64) -> Point {
         y: transformed_y,
     }
 }
+
+// TODO tests fro blocks_were_inside() etc
