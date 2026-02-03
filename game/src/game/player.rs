@@ -13,6 +13,7 @@ const ROTATION_SPEED: f64 = 2.0;
 const MOVE_SPEED: f64 = 1.0;
 const FLY_UP_DOWN_SPEED: f64 = 1.0;
 const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
+pub const MAX_STEP_UP_HEIGHT: f64 = 100.0;
 const PLAYER_HEAD_HEIGHT: f64 = 15.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 

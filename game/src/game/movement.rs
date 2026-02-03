@@ -4,8 +4,8 @@ use crate::game::{
 };
 use core::f64;
 use std::{collections::{HashSet, hash_set::{IntoIter, Iter}}, rc::Rc};
+use crate::game::player::MAX_STEP_UP_HEIGHT;
 
-const MAX_STEP_UP_HEIGHT: f64 = 5.0;
 
 #[derive(Clone)]
 pub struct Mover {
