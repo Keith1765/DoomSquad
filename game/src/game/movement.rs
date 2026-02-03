@@ -48,9 +48,6 @@ impl Mover {
         // we find all the sides which we would cross in the coming step
         // if we are in godmode, we just go through everything, so we disregard everything
         let blocks_were_stepping_inside = find_blocks_were_currently_in(new_position, map);
-        for block in &blocks_were_stepping_inside { // TODO remove
-            //println!("{}", block.id);
-        }
 
         let mut lowest_ceiling_level = f64::MAX;
         let mut height_to_step_to = 0.0;
