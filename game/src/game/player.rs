@@ -12,6 +12,7 @@ use std::f64::consts::PI;
 const ROTATION_SPEED: f64 = 2.0;
 const MOVE_SPEED: f64 = 1.0;
 const FLY_UP_DOWN_SPEED: f64 = 1.0;
+const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 const PLAYER_HEAD_HEIGHT: f64 = 15.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 
@@ -94,9 +95,16 @@ impl Player {
         }
 
         //adjust feet_level to fit floor_level
-        // TODO make smoother
+        // smoothing: only "catch up" foot level with floor level at s smooting speed
         if !self.godmode {
-            self.mover.foot_level = self.mover.floor_level;
+            if (self.mover.foot_level-self.mover.floor_level).abs() < MOVEMENT_SMOOTHING_SPEED {
+                self.mover.foot_level = self.mover.floor_level;
+            } else if self.mover.foot_level < self.mover.floor_level {
+                self.mover.foot_level += MOVEMENT_SMOOTHING_SPEED;
+            } else {
+                self.mover.foot_level -= MOVEMENT_SMOOTHING_SPEED;
+            }
+            
         }
         self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
     }

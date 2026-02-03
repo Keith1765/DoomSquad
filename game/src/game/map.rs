@@ -8,7 +8,7 @@ use std::{
 use crate::game::{entities::Entity, movement::Mover};
 use crate::render::sprites::Sprite;
 
-pub const LEVEL_HEIGHT: f64 = 25.0; // TODO different for every map
+pub const LEVEL_HEIGHT: f64 = 50.0; // TODO different for every map
 
 pub type ShapeID = usize;
 type SideID = usize;
