@@ -16,7 +16,6 @@ const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 const PLAYER_HEAD_HEIGHT: f64 = 15.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 
-// TODO refactor to use entites?
 #[derive(Clone)]
 pub struct Player {
     pub mover: Mover,
