@@ -157,12 +157,19 @@ fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
 fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Result<()> {
     let mut name = name.to_string();
     let mut vertices: Vec<String> = Vec::new();
+    let mut segments: Vec<String> = Vec::new();
     loop {
         match reader.read_event_into(buf)? {
             Event::Empty(ref e) if e.name().as_ref() == b"input" => {
                 for attr in e.attributes() {
                     let attr = attr?;
                     vertices.push(attr.unescape_value()?.to_string());
+                } 
+            }
+            Event::Empty(ref e) if e.name().as_ref() == b"output" => {
+                for attr in e.attributes() {
+                    let attr = attr?;
+                    segments.push(attr.unescape_value()?.to_string())
                 }
             }
 
@@ -172,15 +179,9 @@ fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
 
             _ => {}
         }
-        // //todo
-        // match reader.read_event_into(buf)? {
-        //     Event::End(ref e) if e.name().as_ref() == b"output" => break,
-        //     _ => {}
-        // }
-        // //todo end
         buf.clear();
     }
 
-    println!("Polygon: {}, Vertices: {:?}", name, vertices);
+    println!("Polygon: {}, Vertices: {:?}, Segments: {:?}", name, vertices, segments);
     Ok(())
 }
