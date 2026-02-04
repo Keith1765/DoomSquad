@@ -6,8 +6,14 @@ use quick_xml::events::Event;
 use std::fs::File;
 use std::io::{BufReader, Read};
 
+pub struct GeogebraPoint {
+    pub label: String,
+    pub x: f64,
+    pub y: f64,
+}
+
 pub fn parse_map() -> Result<()> {
-    let ggb_path = "src/parser/geogebra.xml";
+    let ggb_path = "src/parser/geogebra_only_polygone.xml";
     reading_attr_from_ggb(ggb_path)?;
     Ok(())
 }
@@ -21,6 +27,8 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
     let mut reader = Reader::from_str(&xml_content);
 
     let mut buf = Vec::new();
+
+     let mut pointList: Vec<GeogebraPoint> = Vec::new();
 
     loop {
         match reader.read_event_into(&mut buf)? {
@@ -38,7 +46,7 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
                 }
 
                 match element_type.as_deref() {
-                    Some("point") => read_point(&mut reader, &mut buf, &label)?,
+                    Some("point") => read_point(&mut reader, &mut buf, &label,&mut pointList)?,
                     Some("segment") => read_segment(&mut reader, &mut buf, &label)?,
                     _ => {}
                 }
@@ -58,10 +66,10 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
     Ok(())
 }
 
-fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Result<()> {
+fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, pointList: &mut Vec<GeogebraPoint>) -> Result<()> {
     let mut x = None;
     let mut y = None;
-
+    
     loop {
         match reader.read_event_into(buf)? {
             Event::Empty(ref e) if e.name().as_ref() == b"coords" => {
@@ -81,7 +89,12 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Resu
     }
 
     if let (Some(x), Some(y)) = (x, y) {
-        println!("Punkt {}: ({}, {})", name, x, y);
+        let point = GeogebraPoint {label: name.to_string(), x, y };
+        pointList.push(point);
+    }
+    for x in pointList {
+        println!("Label: {}, X: {}, Y: {}", x.label, x.x, x.y);
+        println!("ich bin aus der liste")
     }
 
     Ok(())
