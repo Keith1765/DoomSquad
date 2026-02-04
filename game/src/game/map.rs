@@ -353,6 +353,38 @@ impl Map {
             vec![0; floor_block_points.len()],
         )?;
 
+        let mvmttest_block_points_7: Vec<Point> = vec![
+            Point { x: 210.0, y: 250.0 },
+            Point { x: 200.0, y: 250.0 },
+            Point { x: 200.0, y: 260.0 },
+            Point { x: 210.0, y: 260.0 },
+        ];
+        map.add_shape_from_points(
+            mvmttest_block_points_7.clone(),
+            ShapeType::Block,
+            10.0,
+            5.0,
+            0xffffff,
+            0x00ff00,
+            vec![0; floor_block_points.len()],
+        )?;
+
+        let mvmttest_block_points_8: Vec<Point> = vec![
+            Point { x: 210.0, y: 250.0 },
+            Point { x: 200.0, y: 250.0 },
+            Point { x: 200.0, y: 260.0 },
+            Point { x: 210.0, y: 260.0 },
+        ];
+        map.add_shape_from_points(
+            mvmttest_block_points_8.clone(),
+            ShapeType::Block,
+            27.5,
+            5.0,
+            0xffffff,
+            0x00ff00,
+            vec![0; floor_block_points.len()],
+        )?;
+
         let test_entity = Entity {
             mover: Mover {
                 position: Point { x: 230.0, y: 210.0 },
