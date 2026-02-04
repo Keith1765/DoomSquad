@@ -188,7 +188,7 @@ impl Map {
             10.0,
             0x0000ff,
             0xffff00,
-            vec![0; bottom_block_points.len()],
+            vec![0, 0, 1], // demonstrates separate textures for different sides
         )?;
 
         let bottom_block_points_2: Vec<Point> = vec![
