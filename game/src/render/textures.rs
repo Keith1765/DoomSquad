@@ -64,7 +64,7 @@ pub fn load_textures() -> Option<HashMap<usize, Texture>> {
             .ok()?
             .decode()
             .ok()?
-            .as_rgb8()?
+            .to_rgba8()
             .clone();
         let (width, height) = image_buffer.dimensions();
 
@@ -74,8 +74,7 @@ pub fn load_textures() -> Option<HashMap<usize, Texture>> {
             let r: u32 = p.0[0] as u32;
             let g: u32 = p.0[1] as u32;
             let b: u32 = p.0[2] as u32;
-            let a: u32 = 255; // no  transparent textures implemented, but our format requires an alpha value
-
+            let a: u32 = p.0[3] as u32;
             let pixel_color: u32 = (a << 24) | (r << 16) | (g << 8) | b;
 
             pixels.push(pixel_color);
