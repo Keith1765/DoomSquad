@@ -108,8 +108,7 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, pointLi
         pointList.push(point);
     }
     for x in pointList {
-        println!("Label: {}, X: {}, Y: {}", x.label, x.x, x.y);
-        println!("ich bin aus der liste")
+        println!("Point: Label: {}, X: {}, Y: {}", x.label, x.x, x.y);
     }
 
     Ok(())
