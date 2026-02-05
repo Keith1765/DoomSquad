@@ -14,7 +14,7 @@ pub struct RayHit {
     pub position: Point,
     pub distance: f64,
     pub proportion_along_side: f64, // how far of the way from left to right we go along the side
-    pub side: Side,
+    pub side: Rc<Side>,
 }
 
 // allows us to implement Ord based on distance of the rayhit without making rh1 == rh2 depend only on distance (i.e. it remains actual full equality)
@@ -88,7 +88,7 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
                 y: game.player.position.y,
             },
             ray_angle,
-            w.clone(), // TODO remove need for this clone
+            Rc::clone(w), // TODO remove need for this clone
         );
         if let Some(rayhit) = intersection {
             // didnt hit nothing
@@ -111,7 +111,7 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
                 y: game.player.position.y,
             },
             ray_angle,
-            b.clone(), // TODO remove need for this clone
+            Rc::clone(b), // TODO remove need for this clone
         );
         if let Some(rayhit) = intersection {
             // didnt hit nothing
@@ -153,7 +153,7 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
 }
 
 //checks wether a ray intersect the line between two given points
-pub fn intersect(ray_origin: Point, ray_angle: f64, side: Side) -> Option<RayHit> {
+pub fn intersect(ray_origin: Point, ray_angle: f64, side: Rc<Side>) -> Option<RayHit> {
     let side_point1 = side.point1; // point is a copy type
     let side_point2 = side.point2;
 
@@ -189,7 +189,7 @@ pub fn intersect(ray_origin: Point, ray_angle: f64, side: Side) -> Option<RayHit
         position,
         distance,
         proportion_along_side: proportion,
-        side,
+        side: Rc::clone(&side),
     })
 }
 

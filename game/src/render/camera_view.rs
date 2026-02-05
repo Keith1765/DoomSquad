@@ -5,7 +5,7 @@ use std::collections::BinaryHeap;
 use crate::game::Game;
 use crate::game::map::{LEVEL_HEIGHT, Point, ShapeType, Side};
 use crate::render::blocks_walls::{task_block_slice, task_column, task_partial_surface, task_side};
-// TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
+// TODO LEVEL_HEIGHT and other map data into sth similar to renderer_data?
 use crate::render::raycast::{
     self, BlockSlice, MapSlice, RayHit, RayHitOrderer, intersect, raycast,
 };
@@ -222,12 +222,14 @@ fn draw_tasks(
             continue; // go back to beginning of loop, otherwise will get overwritten by color drawing code below
         }
 
-        // render the color if the task has no texture
-        for onscreen_y in task.onscreen_bottom.max(0)..task.onscreen_top {
-            // dont draw outside of screen bounds
-            if onscreen_y < 0 || onscreen_y >= renderer_data.screen_height_as_isize {
-                continue;
-            }
+        // render the color instead if the task has no texture
+        for onscreen_y in task
+            .onscreen_bottom
+            .clamp(0, renderer_data.screen_height_as_isize)
+            ..task
+                .onscreen_top
+                .clamp(0, renderer_data.screen_height_as_isize)
+        {
 
             // 2. Extract channels
             let a = (task.color >> 24) & 0xFF;
