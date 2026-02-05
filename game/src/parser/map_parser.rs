@@ -182,6 +182,6 @@ fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
         buf.clear();
     }
 
-    println!("Polygon: {}, Vertices: {:?}, Segments: {:?}", name, vertices, segments);
+    println!("Polygon: {}, Vertices: {:?}, Segments: {:?}", segments.first().unwrap(), vertices, segments);
     Ok(())
 }
