@@ -129,6 +129,7 @@ impl Hash for Shape {
     }
 }
 
+#[derive(Clone)]
 pub struct Map {
     pub id: usize,
     //pub border: Shape, // mainly for topdown renderer (maybe change to rectangle?)

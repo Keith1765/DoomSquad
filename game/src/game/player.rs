@@ -10,7 +10,7 @@ use minifb::{Key, MouseMode, Window};
 use std::f64::consts::PI;
 
 const ROTATION_SPEED: f64 = 2.0;
-const MOVE_SPEED: f64 = 1.0;
+pub const MOVE_SPEED: f64 = 1.0;
 const FLY_UP_DOWN_SPEED: f64 = 1.0;
 const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 pub const MAX_STEP_UP_HEIGHT: f64 = 5.0;

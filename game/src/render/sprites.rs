@@ -11,6 +11,7 @@ use crate::{
     },
 };
 
+#[derive(Clone)]
 pub struct Sprite {
     pub texture_id: usize,
     pub height: f64,
