@@ -137,8 +137,8 @@ pub struct Map {
     pub block_sides: Vec<Side>,
     pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed?
     pub entities: Vec<Entity>,
-    side_count: usize,
-    shape_count: usize,
+    pub side_count: usize,
+    pub shape_count: usize,
 }
 
 impl Map {

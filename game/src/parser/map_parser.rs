@@ -5,6 +5,7 @@ use quick_xml::{Reader};
 use quick_xml::events::Event;
 use std::fs::File;
 use std::io::{Read};
+use crate::game::map;
 
 pub struct GeogebraPoint {
     pub label: String,
@@ -30,11 +31,23 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
     file.read_to_string(&mut xml_content)?;
 
     let mut reader = Reader::from_str(&xml_content);
-
     let mut buf = Vec::new();
 
     let mut point_list: Vec<GeogebraPoint> = Vec::new();
     let mut polygon_list: Vec<GeogebraPolygon> = Vec::new();
+
+    let mut input_list_of_points: Vec<String> = Vec::new();
+
+    let mut map = map::Map {
+        id: 0,
+        wall_sides: Vec::new(),
+        wall_shapes: Vec::new(),
+        block_sides: Vec::new(),
+        block_shapes: Vec::new(),
+        entities: Vec::new(),
+        side_count: 0,
+        shape_count: 0,
+    };
 
     loop {
     match reader.read_event_into(&mut buf)? {
@@ -84,13 +97,23 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
     buf.clear();
 }
     //TODO Points und Segmente kombinieren
-    println!("Found {} polygons", polygon_list.len());
+    // println!("Found {} polygons", polygon_list.len());
+    // for x in polygon_list {
+    //     println!("Polygon: Label: {}, Vertices: {:?}, Segments: {:?}", x.label, x.vertices, x.segments);
+    // }
+    // println!("Found {} points", point_list.len());
+    // for x in point_list {
+    //     println!("Point: Label: {}, X: {}, Y: {}", x.label, x.x, x.y);
+    // }
     for x in polygon_list {
-        println!("Polygon: Label: {}, Vertices: {:?}, Segments: {:?}", x.label, x.vertices, x.segments);
-    }
-    println!("Found {} points", point_list.len());
-    for x in point_list {
-        println!("Point: Label: {}, X: {}, Y: {}", x.label, x.x, x.y);
+        for vertex in x.vertices {
+            if let Some(point) = point_list.iter().find(|p| p.label == vertex) {
+                
+                println!("Polygon {} has vertex {} at ({}, {})", x.label, vertex, point.x, point.y);
+            } else {
+                println!("Vertex {} of Polygon {} not found in points list", vertex, x.label);
+            }
+        }
     }    
     Ok(())
 }
