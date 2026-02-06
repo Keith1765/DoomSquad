@@ -47,8 +47,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut buffer: Vec<u32> = vec![0; SCREEN_WIDTH * SCREEN_HEIGHT];
 
-    let mut game = game::Game::new();
-
     let renderer_data: RendererData = render_init(
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
@@ -59,6 +57,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         BLOCK_DEFAULT_COLOR,
         SURFACE_DEFAULT_COLOR,
     );
+
+    let mut game = game::Game::new_test(&renderer_data);
 
     let mut audio: Option<Audio> = None;
     if AUDIO_ENABLED {

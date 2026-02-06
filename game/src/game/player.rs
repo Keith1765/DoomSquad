@@ -97,14 +97,13 @@ impl Player {
         //adjust feet_level to fit floor_level
         // smoothing: only "catch up" foot level with floor level at s smooting speed
         if !self.godmode {
-            if (self.mover.foot_level-self.mover.floor_level).abs() < MOVEMENT_SMOOTHING_SPEED {
+            if (self.mover.foot_level - self.mover.floor_level).abs() < MOVEMENT_SMOOTHING_SPEED {
                 self.mover.foot_level = self.mover.floor_level;
             } else if self.mover.foot_level < self.mover.floor_level {
                 self.mover.foot_level += MOVEMENT_SMOOTHING_SPEED;
             } else {
                 self.mover.foot_level -= MOVEMENT_SMOOTHING_SPEED;
             }
-            
         }
         self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
     }

@@ -137,7 +137,6 @@ pub struct Map {
     pub wall_shapes: Vec<Rc<Shape>>,
     pub block_sides: Vec<Rc<Side>>,
     pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed?
-    pub entities: Vec<Entity>,
     side_count: usize,
     shape_count: usize,
 }
@@ -150,7 +149,6 @@ impl Map {
             wall_shapes: Vec::new(),
             block_sides: Vec::new(),
             block_shapes: Vec::new(),
-            entities: Vec::new(),
             side_count: 0,
             shape_count: 0,
             //points_in_border: Vec::new(),
@@ -385,23 +383,6 @@ impl Map {
             0x00ff00,
             vec![0; floor_block_points.len()],
         )?;
-
-        let test_entity = Entity {
-            mover: Mover {
-                position: Point { x: 230.0, y: 210.0 },
-                floor_level: 0.0,
-                foot_level: 0.0,
-                view_level: 15.0,
-                height: 15.0,
-                facing_direction: 0.0,
-            },
-            sprite: Sprite {
-                texture_id: 1,
-                height: 20.0,
-                width: 16.0,
-            },
-        };
-        map.entities.push(test_entity);
 
         Some(map)
     }
