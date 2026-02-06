@@ -1,10 +1,10 @@
 //use Geogebra API to parse map from Geogebra
 
-use anyhow::{Context, Result};
-use quick_xml::{Reader, name};
+use anyhow::{Result};
+use quick_xml::{Reader};
 use quick_xml::events::Event;
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::{Read};
 
 pub struct GeogebraPoint {
     pub label: String,
@@ -33,8 +33,8 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
 
     let mut buf = Vec::new();
 
-    let mut pointList: Vec<GeogebraPoint> = Vec::new();
-    let mut polygonList: Vec<GeogebraPolygon> = Vec::new();
+    let mut point_list: Vec<GeogebraPoint> = Vec::new();
+    let mut polygon_list: Vec<GeogebraPolygon> = Vec::new();
 
     loop {
     match reader.read_event_into(&mut buf)? {
@@ -52,7 +52,7 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
             }
 
             match element_type.as_deref() {
-                Some("point") => read_point(&mut reader, &mut buf, &label, &mut pointList)?,
+                Some("point") => read_point(&mut reader, &mut buf, &label, &mut point_list)?,
                 Some("segment") => read_segment(&mut reader, &mut buf, &label)?,
                 _ => {}
             }
@@ -70,8 +70,7 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
 
             match command_name.as_deref() {
                 Some("Polygon") => {
-                    println!("Found Polygon Command");
-                    read_polygon(&mut reader, &mut buf, "Polygon", &mut polygonList)?;
+                   read_polygon(&mut reader, &mut buf, "Polygon", &mut polygon_list)?;
     
                 }
                 _ => {}
@@ -84,11 +83,20 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
 
     buf.clear();
 }
+    //TODO Points und Segmente kombinieren
+    println!("Found {} polygons", polygon_list.len());
+    for x in polygon_list {
+        println!("Polygon: Label: {}, Vertices: {:?}, Segments: {:?}", x.label, x.vertices, x.segments);
+    }
+    println!("Found {} points", point_list.len());
+    for x in point_list {
+        println!("Point: Label: {}, X: {}, Y: {}", x.label, x.x, x.y);
+    }    
     Ok(())
 }
 
 
-fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, pointList: &mut Vec<GeogebraPoint>) -> Result<()> {
+fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, point_list: &mut Vec<GeogebraPoint>) -> Result<()> {
     let mut x = None;
     let mut y = None;
     
@@ -112,15 +120,12 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, pointLi
 
     if let (Some(x), Some(y)) = (x, y) {
         let point = GeogebraPoint {label: name.to_string(), x, y };
-        pointList.push(point);
+        point_list.push(point);
     }
-    for x in pointList {
-        println!("Point: Label: {}, X: {}, Y: {}", x.label, x.x, x.y);
-    }
-
     Ok(())
 }
 
+//TODO Segment struc erstellen und in vec speichern
 fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Result<()> {
     loop {
         let mut r = None;
@@ -160,10 +165,12 @@ fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
     Ok(())
 }
 
-fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, polygonList: &mut Vec<GeogebraPolygon>) -> Result<()> {
+fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, polygon_list: &mut Vec<GeogebraPolygon>) -> Result<()> {
     let mut name = name.to_string();
     let mut vertices: Vec<String> = Vec::new();
     let mut segments: Vec<String> = Vec::new();
+    
+
     loop {
         match reader.read_event_into(buf)? {
             Event::Empty(ref e) if e.name().as_ref() == b"input" => {
@@ -187,12 +194,12 @@ fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, polyg
         }
         buf.clear();
     }
+    if segments.is_empty() {
+        return Ok(());
+    }
     let first_segment = segments.remove(0);
     let geogebrapolygon = GeogebraPolygon {label: first_segment.clone(), vertices, segments: segments};
 
-    polygonList.push(geogebrapolygon);
-    for x in polygonList {
-        println!("Polygon: Label: {}, Vertices: {:?}, Segments: {:?}", x.label, x.vertices, x.segments);
-    }
+    polygon_list.push(geogebrapolygon);
     Ok(())
 }
