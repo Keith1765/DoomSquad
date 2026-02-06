@@ -11,6 +11,11 @@ pub struct GeogebraPoint {
     pub x: f64,
     pub y: f64,
 }
+pub struct GeogebraPolygon {
+    pub label: String,
+    pub vertices: Vec<String>,
+    pub segments: Vec<String>,
+}
 
 pub fn parse_map() -> Result<()> {
     let ggb_path = "src/parser/geogebra_only_polygone.xml";
@@ -28,7 +33,8 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
 
     let mut buf = Vec::new();
 
-     let mut pointList: Vec<GeogebraPoint> = Vec::new();
+    let mut pointList: Vec<GeogebraPoint> = Vec::new();
+    let mut polygonList: Vec<GeogebraPolygon> = Vec::new();
 
     loop {
     match reader.read_event_into(&mut buf)? {
@@ -65,7 +71,8 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
             match command_name.as_deref() {
                 Some("Polygon") => {
                     println!("Found Polygon Command");
-                    read_polygon(&mut reader, &mut buf, "Polygon")?;    
+                    read_polygon(&mut reader, &mut buf, "Polygon", &mut polygonList)?;
+    
                 }
                 _ => {}
             }
@@ -153,7 +160,7 @@ fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
     Ok(())
 }
 
-fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Result<()> {
+fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, polygonList: &mut Vec<GeogebraPolygon>) -> Result<()> {
     let mut name = name.to_string();
     let mut vertices: Vec<String> = Vec::new();
     let mut segments: Vec<String> = Vec::new();
@@ -180,7 +187,12 @@ fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
         }
         buf.clear();
     }
+    let first_segment = segments.remove(0);
+    let geogebrapolygon = GeogebraPolygon {label: first_segment.clone(), vertices, segments: segments};
 
-    println!("Polygon: {}, Vertices: {:?}, Segments: {:?}", segments.first().unwrap(), vertices, segments);
+    polygonList.push(geogebrapolygon);
+    for x in polygonList {
+        println!("Polygon: Label: {}, Vertices: {:?}, Segments: {:?}", x.label, x.vertices, x.segments);
+    }
     Ok(())
 }
