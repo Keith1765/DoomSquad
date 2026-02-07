@@ -56,6 +56,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut game = game::Game::new();
 
+    //TODo TEST
+    game.map = parse_map().unwrap(); // TODO remove unwrap
+
     let renderer_data: RendererData = render_init(
         SCREEN_WIDTH,
         SCREEN_HEIGHT,

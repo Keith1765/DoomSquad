@@ -1,11 +1,11 @@
 //use Geogebra API to parse map from Geogebra
 
-use anyhow::{Result};
-use quick_xml::{Reader};
+use crate::game::map::{self, Point, ShapeType};
+use anyhow::Result;
+use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
-use std::io::{Read};
-use crate::game::map;
+use std::io::Read;
 
 pub struct GeogebraPoint {
     pub label: String,
@@ -18,13 +18,13 @@ pub struct GeogebraPolygon {
     pub segments: Vec<String>,
 }
 
-pub fn parse_map() -> Result<()> {
+pub fn parse_map() -> Result<map::Map> {
     let ggb_path = "src/parser/geogebra_only_polygone.xml";
-    reading_attr_from_ggb(ggb_path)?;
-    Ok(())
+
+    Ok(reading_attr_from_ggb(ggb_path).unwrap())
 }
 
-fn reading_attr_from_ggb(path: &str) -> Result<()> {
+fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
     //XML laden
     let mut file = File::open(path)?;
     let mut xml_content = String::new();
@@ -35,8 +35,6 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
 
     let mut point_list: Vec<GeogebraPoint> = Vec::new();
     let mut polygon_list: Vec<GeogebraPolygon> = Vec::new();
-
-    let mut input_list_of_points: Vec<String> = Vec::new();
 
     let mut map = map::Map {
         id: 0,
@@ -50,52 +48,51 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
     };
 
     loop {
-    match reader.read_event_into(&mut buf)? {
-        Event::Start(ref e) if e.name().as_ref() == b"element" => {
-            let mut element_type = None;
-            let mut label = "unnamed".to_string();
+        match reader.read_event_into(&mut buf)? {
+            Event::Start(ref e) if e.name().as_ref() == b"element" => {
+                let mut element_type = None;
+                let mut label = "unnamed".to_string();
 
-            for attr in e.attributes() {
-                let attr = attr?;
-                match attr.key.as_ref() {
-                    b"type" => element_type = Some(attr.unescape_value()?.to_string()),
-                    b"label" => label = attr.unescape_value()?.to_string(),
+                for attr in e.attributes() {
+                    let attr = attr?;
+                    match attr.key.as_ref() {
+                        b"type" => element_type = Some(attr.unescape_value()?.to_string()),
+                        b"label" => label = attr.unescape_value()?.to_string(),
+                        _ => {}
+                    }
+                }
+
+                match element_type.as_deref() {
+                    Some("point") => read_point(&mut reader, &mut buf, &label, &mut point_list)?,
+                    Some("segment") => read_segment(&mut reader, &mut buf, &label)?,
                     _ => {}
                 }
             }
 
-            match element_type.as_deref() {
-                Some("point") => read_point(&mut reader, &mut buf, &label, &mut point_list)?,
-                Some("segment") => read_segment(&mut reader, &mut buf, &label)?,
-                _ => {}
-            }
-        }
+            Event::Start(ref e) if e.name().as_ref() == b"command" => {
+                let mut command_name = None;
 
-        Event::Start(ref e) if e.name().as_ref() == b"command" => {
-            let mut command_name = None;
+                for attr in e.attributes() {
+                    let attr = attr?;
+                    if attr.key.as_ref() == b"name" {
+                        command_name = Some(attr.unescape_value()?.to_string());
+                    }
+                }
 
-            for attr in e.attributes() {
-                let attr = attr?;
-                if attr.key.as_ref() == b"name" {
-                    command_name = Some(attr.unescape_value()?.to_string());
+                match command_name.as_deref() {
+                    Some("Polygon") => {
+                        read_polygon(&mut reader, &mut buf, "Polygon", &mut polygon_list)?;
+                    }
+                    _ => {}
                 }
             }
 
-            match command_name.as_deref() {
-                Some("Polygon") => {
-                   read_polygon(&mut reader, &mut buf, "Polygon", &mut polygon_list)?;
-    
-                }
-                _ => {}
-            }
+            Event::Eof => break,
+            _ => {}
         }
 
-        Event::Eof => break,
-        _ => {}
+        buf.clear();
     }
-
-    buf.clear();
-}
     //TODO Points und Segmente kombinieren
     // println!("Found {} polygons", polygon_list.len());
     // for x in polygon_list {
@@ -108,21 +105,50 @@ fn reading_attr_from_ggb(path: &str) -> Result<()> {
     for x in polygon_list {
         for vertex in x.vertices {
             if let Some(point) = point_list.iter().find(|p| p.label == vertex) {
-                
-                println!("Polygon {} has vertex {} at ({}, {})", x.label, vertex, point.x, point.y);
+                let mut input_list_of_points: Vec<Point> = Vec::new();
+
+                println!(
+                    "Polygon {} has vertex {} at ({}, {})",
+                    &x.label, &vertex, &point.x, &point.y
+                );
+                print!(
+                    "Adding point to map at scaled position: ({}, {})\n",
+                    point.x * 100.0,
+                    point.y * 100.0
+                );
+                input_list_of_points.push(Point {
+                    x: point.x * 100.0,
+                    y: point.y * 100.0,
+                });
+                map.add_shape_from_points(
+                    input_list_of_points.clone(),
+                    map::ShapeType::Block,
+                    0.0,
+                    10.0,
+                    0xFFFFFF,
+                    0xAAAAAA,
+                    vec![0; input_list_of_points.len()],
+                );
             } else {
-                println!("Vertex {} of Polygon {} not found in points list", vertex, x.label);
+                println!(
+                    "Vertex {} of Polygon {} not found in points list",
+                    vertex, x.label
+                );
             }
         }
-    }    
-    Ok(())
+    }
+    Ok(map)
 }
 
-
-fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, point_list: &mut Vec<GeogebraPoint>) -> Result<()> {
+fn read_point(
+    reader: &mut Reader<&[u8]>,
+    buf: &mut Vec<u8>,
+    name: &str,
+    point_list: &mut Vec<GeogebraPoint>,
+) -> Result<()> {
     let mut x = None;
     let mut y = None;
-    
+
     loop {
         match reader.read_event_into(buf)? {
             Event::Empty(ref e) if e.name().as_ref() == b"coords" => {
@@ -142,7 +168,11 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, point_l
     }
 
     if let (Some(x), Some(y)) = (x, y) {
-        let point = GeogebraPoint {label: name.to_string(), x, y };
+        let point = GeogebraPoint {
+            label: name.to_string(),
+            x,
+            y,
+        };
         point_list.push(point);
     }
     Ok(())
@@ -188,11 +218,15 @@ fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
     Ok(())
 }
 
-fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, polygon_list: &mut Vec<GeogebraPolygon>) -> Result<()> {
+fn read_polygon(
+    reader: &mut Reader<&[u8]>,
+    buf: &mut Vec<u8>,
+    name: &str,
+    polygon_list: &mut Vec<GeogebraPolygon>,
+) -> Result<()> {
     let mut name = name.to_string();
     let mut vertices: Vec<String> = Vec::new();
     let mut segments: Vec<String> = Vec::new();
-    
 
     loop {
         match reader.read_event_into(buf)? {
@@ -200,7 +234,7 @@ fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, polyg
                 for attr in e.attributes() {
                     let attr = attr?;
                     vertices.push(attr.unescape_value()?.to_string());
-                } 
+                }
             }
             Event::Empty(ref e) if e.name().as_ref() == b"output" => {
                 for attr in e.attributes() {
@@ -221,7 +255,11 @@ fn read_polygon(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, polyg
         return Ok(());
     }
     let first_segment = segments.remove(0);
-    let geogebrapolygon = GeogebraPolygon {label: first_segment.clone(), vertices, segments: segments};
+    let geogebrapolygon = GeogebraPolygon {
+        label: first_segment.clone(),
+        vertices,
+        segments: segments,
+    };
 
     polygon_list.push(geogebrapolygon);
     Ok(())
