@@ -246,7 +246,7 @@ impl Map {
             vertical_position: 0.0,
             facing_angle: 0.0,
             sprite: Sprite {
-                texture_id: 1,
+                texture_id: 2,
                 height: 20.0,
                 width: 16.0,
             },
