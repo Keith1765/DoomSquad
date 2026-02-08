@@ -20,7 +20,6 @@ pub struct GeogebraPolygon {
 
 pub fn parse_map() -> Result<map::Map> {
     let ggb_path = "src/parser/geogebra_only_polygone.xml";
-
     Ok(reading_attr_from_ggb(ggb_path).unwrap())
 }
 
