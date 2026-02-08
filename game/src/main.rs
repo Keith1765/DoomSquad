@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     //TODo TEST
     let map = parse_map(); // TODO remove unwrap
-    game.map = map.unwrap();
+    game.map = map.unwrap(); //if there is an error, it panics so unwrap is ok 
 
     let renderer_data: RendererData = render_init(
         SCREEN_WIDTH,
