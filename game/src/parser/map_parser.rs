@@ -101,14 +101,16 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
     // for x in point_list {
     //     println!("Point: Label: {}, X: {}, Y: {}", x.label, x.x, x.y);
     // }
-    for x in polygon_list {
-        for vertex in x.vertices {
+    for p in polygon_list {
+
+        let mut input_list_of_points: Vec<Point> = Vec::new();
+        // TODO remove the printlns
+        for vertex in p.vertices {
             if let Some(point) = point_list.iter().find(|p| p.label == vertex) {
-                let mut input_list_of_points: Vec<Point> = Vec::new();
 
                 println!(
                     "Polygon {} has vertex {} at ({}, {})",
-                    &x.label, &vertex, &point.x, &point.y
+                    &p.label, &vertex, &point.x, &point.y
                 );
                 print!(
                     "Adding point to map at scaled position: ({}, {})\n",
@@ -119,22 +121,27 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
                     x: point.x * 100.0,
                     y: point.y * 100.0,
                 });
-                map.add_shape_from_points(
-                    input_list_of_points.clone(),
-                    map::ShapeType::Block,
-                    0.0,
-                    10.0,
-                    0xFFFFFF,
-                    0xAAAAAA,
-                    vec![0; input_list_of_points.len()],
-                );
+                
             } else {
                 println!(
                     "Vertex {} of Polygon {} not found in points list",
-                    vertex, x.label
+                    vertex, p.label
                 );
             }
         }
+        let shape_type = match map.shape_count {
+            0 => ShapeType::Wall,
+            _ => ShapeType::Block,
+        };
+        map.add_shape_from_points(
+            input_list_of_points.clone(),
+            shape_type,
+            0.0,
+            10.0,
+            0xFFFFFF,
+            0xAAAAAA,
+            vec![0; input_list_of_points.len()],
+        );
     }
     Ok(map)
 }

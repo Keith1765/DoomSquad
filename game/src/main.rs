@@ -22,7 +22,6 @@ const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    parse_map();
     
     if let Err(e) = parse_map() {
         eprintln!("Error: {e}");
@@ -57,7 +56,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut game = game::Game::new();
 
     //TODo TEST
-    game.map = parse_map().unwrap(); // TODO remove unwrap
+    let map = parse_map(); // TODO remove unwrap
+    game.map = map.unwrap();
 
     let renderer_data: RendererData = render_init(
         SCREEN_WIDTH,
