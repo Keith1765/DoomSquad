@@ -5,6 +5,7 @@ mod parser;
 mod render;
 
 use crate::render::{RendererData, render_init};
+use std::error::Error;
 use minifb::{Key, MouseMode, Window, WindowOptions};
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
@@ -22,10 +23,6 @@ const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    
-    if let Err(e) = parse_map() {
-        eprintln!("Error: {e}");
-    }
 
     //I commented game init to test parser first
     //for fps count
@@ -57,7 +54,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     //TODo TEST
     let map = parse_map(); // TODO remove unwrap
-    game.map = map.unwrap(); //if there is an error, it panics so unwrap is ok 
+    if let Ok(map) = map {
+        game.map = map;
+    } else {
+        return Err("Error parsing map".into());
+    }
 
     let renderer_data: RendererData = render_init(
         SCREEN_WIDTH,
