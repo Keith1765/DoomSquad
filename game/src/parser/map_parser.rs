@@ -12,15 +12,48 @@ pub struct GeogebraPoint {
     pub x: f64,
     pub y: f64,
 }
-pub struct GeogebraPolygon {
+pub struct GeogebraPolygonCommand {
     pub label: String,
     pub vertices: Vec<String>,
     pub segments: Vec<String>,
 }
+pub struct GeogebraPolygonElement {
+    pub label: String,
+    pub bottom: f64,
+    pub height: f64,
+    pub surface_color: u32,
+    texture_id: usize,
+}
+
+pub struct GeogebraPolygone{
+    label: String,
+    shape_type: ShapeType, //show object ture/ false
+    bottom: f64,
+    height: f64,
+    surface_color: u32,
+    texture_id: usize,
+    vertices: Vec<String>,
+    segments: Vec<String>,
+}
+
+impl Default for GeogebraPolygone {
+    fn default() -> Self {
+        Self {
+            label: String::new(),
+            shape_type: ShapeType::Block,
+            bottom: 0.0,
+            height: 0.0,
+            surface_color: 0xFFFFFF,
+            texture_id: 0,
+            vertices: Vec::new(),
+            segments: Vec::new(),
+        }
+    }
+}
 
 pub fn parse_map() -> Result<map::Map> {
     let ggb_path = "src/parser/geogebra_only_polygone.xml";
-    let map  = reading_attr_from_ggb(ggb_path);
+    let map = reading_attr_from_ggb(ggb_path);
     map
 }
 
@@ -34,7 +67,8 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
     let mut buf = Vec::new();
 
     let mut point_list: Vec<GeogebraPoint> = Vec::new();
-    let mut polygon_list: Vec<GeogebraPolygon> = Vec::new();
+    let mut polygon_command_list: Vec<GeogebraPolygonCommand> = Vec::new();
+    let mut polygon_element_list: Vec<GeogebraPolygonElement> = Vec::new();
 
     let mut map = map::Map {
         id: 0,
@@ -65,6 +99,9 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
                 match element_type.as_deref() {
                     Some("point") => read_point(&mut reader, &mut buf, &label, &mut point_list)?,
                     Some("segment") => read_segment(&mut reader, &mut buf, &label)?,
+                    Some("polygon") => {
+                        read_polygon_element(&mut reader, &mut buf, &label, &mut polygon_element_list)?
+                    }
                     _ => {}
                 }
             }
@@ -81,7 +118,7 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
 
                 match command_name.as_deref() {
                     Some("Polygon") => {
-                        read_polygon(&mut reader, &mut buf, "Polygon", &mut polygon_list)?;
+                        read_polygon_command(&mut reader, &mut buf, "Polygon", &mut polygon_command_list)?;
                     }
                     _ => {}
                 }
@@ -94,21 +131,19 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
         buf.clear();
     }
     //TODO Points und Segmente kombinieren
-    // println!("Found {} polygons", polygon_list.len());
-    // for x in polygon_list {
+    // println!("Found {} polygons", polygon_command_list.len());
+    // for x in polygon_command_list {
     //     println!("Polygon: Label: {}, Vertices: {:?}, Segments: {:?}", x.label, x.vertices, x.segments);
     // }
     // println!("Found {} points", point_list.len());
     // for x in point_list {
     //     println!("Point: Label: {}, X: {}, Y: {}", x.label, x.x, x.y);
     // }
-    for p in polygon_list {
-
+    for p in polygon_command_list {
         let mut input_list_of_points: Vec<Point> = Vec::new();
         // TODO remove the printlns
         for vertex in p.vertices {
             if let Some(point) = point_list.iter().find(|p| p.label == vertex) {
-
                 println!(
                     "Polygon {} has vertex {} at ({}, {})",
                     &p.label, &vertex, &point.x, &point.y
@@ -122,7 +157,6 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
                     x: point.x * 100.0,
                     y: point.y * 100.0,
                 });
-                
             } else {
                 println!(
                     "Vertex {} of Polygon {} not found in points list",
@@ -225,12 +259,7 @@ fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
     Ok(())
 }
 
-fn read_polygon(
-    reader: &mut Reader<&[u8]>,
-    buf: &mut Vec<u8>,
-    name: &str,
-    polygon_list: &mut Vec<GeogebraPolygon>,
-) -> Result<()> {
+fn read_polygon_command(reader: &mut Reader<&[u8]>,buf: &mut Vec<u8>,name: &str,polygon_command_list: &mut Vec<GeogebraPolygonCommand>,) -> Result<()> {
     let mut name = name.to_string();
     let mut vertices: Vec<String> = Vec::new();
     let mut segments: Vec<String> = Vec::new();
@@ -262,12 +291,17 @@ fn read_polygon(
         return Ok(());
     }
     let first_segment = segments.remove(0);
-    let geogebrapolygon = GeogebraPolygon {
+    let geogebrapolygon = GeogebraPolygonCommand {
         label: first_segment.clone(),
         vertices,
         segments: segments,
     };
 
-    polygon_list.push(geogebrapolygon);
+    polygon_command_list.push(geogebrapolygon);
+    Ok(())
+}
+
+fn read_polygon_element(reader: &mut Reader<&[u8]>,buf: &mut Vec<u8>,name: &str,polygon_element_list: &mut Vec<GeogebraPolygonElement>,) -> Result<()> {
+    //TODO
     Ok(())
 }
