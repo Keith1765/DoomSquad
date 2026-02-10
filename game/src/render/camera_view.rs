@@ -5,7 +5,7 @@ use std::collections::BinaryHeap;
 use crate::game::Game;
 use crate::game::map::{LEVEL_HEIGHT, Point, ShapeType, Side};
 use crate::render::blocks_walls::{task_block_slice, task_column, task_partial_surface, task_side};
-// TODO LEVEL_HEIGHT and othe rmap data into sth similar to renderer_data
+// TODO LEVEL_HEIGHT and other map data into sth similar to renderer_data?
 use crate::render::raycast::{
     self, BlockSlice, MapSlice, RayHit, RayHitOrderer, intersect, raycast,
 };
@@ -187,14 +187,18 @@ fn draw_tasks(
 
     while let Some(task_ord) = column_tasks.tasks.pop() {
         let task = task_ord.task;
-
+        let (onscreen_bottom, onscreen_top) = (
+            task.onscreen_bottom
+                .clamp(0, renderer_data.screen_height_as_isize),
+            task.onscreen_top
+                .clamp(0, renderer_data.screen_height_as_isize),
+        );
         // try to render a texture, if the task has one
         if let Some(texture_column) = task.texture_column {
             //println!("{}",texture_column.len());
-            for column_v in 0..texture_column.len() {
-                if let Some(pixel_color) = texture_column.get(column_v) {
-                    let screen_y = task.onscreen_bottom.max(0) + column_v as isize;
-
+            for screen_y in onscreen_bottom..onscreen_top {
+                let column_v = screen_y - onscreen_bottom;
+                if let Some(pixel_color) = texture_column.get(column_v as usize) {
                     // dont draw outside of screen bounds
                     if screen_y < 0 || screen_y >= renderer_data.screen_height_as_isize {
                         continue;
@@ -206,7 +210,10 @@ fn draw_tasks(
                     let g = (pixel_color >> 8) & 0xFF;
                     let b = pixel_color & 0xFF;
 
-                    // 3. Scale each channel
+                    // if we have transparency at this pixel, we dont draw it; partial transparency not supported
+                    if a != 255 {continue;}
+
+                    // 3. Scale each channel with brightness
                     let r = (r as f64 * task.brightness) as u32;
                     let g = (g as f64 * task.brightness) as u32;
                     let b = (b as f64 * task.brightness) as u32;
@@ -218,13 +225,15 @@ fn draw_tasks(
             continue; // go back to beginning of loop, otherwise will get overwritten by color drawing code below
         }
 
-        // render the color if the task has no texture
-        for onscreen_y_isize in task.onscreen_bottom..task.onscreen_top {
-            let onscreen_y = onscreen_y_isize.max(0) as usize;
+        // render the color instead if the task has no texture
+        for onscreen_y in task
+            .onscreen_bottom
+            .clamp(0, renderer_data.screen_height_as_isize)
+            ..task
+                .onscreen_top
+                .clamp(0, renderer_data.screen_height_as_isize)
+        {
 
-            if onscreen_y >= SCREEN_HEIGHT {
-                continue;
-            }
             // 2. Extract channels
             let a = (task.color >> 24) & 0xFF;
             let r = (task.color >> 16) & 0xFF;
@@ -237,7 +246,7 @@ fn draw_tasks(
             let b = (b as f64 * task.brightness) as u32;
 
             // 4. Repack
-            screen_column[onscreen_y] = (a << 24) | (r << 16) | (g << 8) | b;
+            screen_column[onscreen_y as usize] = (a << 24) | (r << 16) | (g << 8) | b;
         }
     }
 

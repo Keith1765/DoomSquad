@@ -132,9 +132,9 @@ impl Hash for Shape {
 pub struct Map {
     pub id: usize,
     //pub border: Shape, // mainly for topdown renderer (maybe change to rectangle?)
-    pub wall_sides: Vec<Side>,
+    pub wall_sides: Vec<Rc<Side>>,
     pub wall_shapes: Vec<Rc<Shape>>,
-    pub block_sides: Vec<Side>,
+    pub block_sides: Vec<Rc<Side>>,
     pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed?
     pub entities: Vec<Entity>,
     pub side_count: usize,
@@ -193,6 +193,7 @@ impl Map {
 
         let bottom_block_points_2: Vec<Point> = vec![
             Point { x: 200.0, y: 215.0 },
+            Point { x: 180.0, y: 205.0 },
             Point { x: 175.0, y: 215.0 },
             Point { x: 175.0, y: 200.0 },
             Point { x: 185.0, y: 200.0 },
@@ -245,9 +246,9 @@ impl Map {
             vertical_position: 0.0,
             facing_angle: 0.0,
             sprite: Sprite {
-                color: 0xff00ff,
-                height: 15.0,
-                width: 15.0,
+                texture_id: 2,
+                height: 20.0,
+                width: 16.0,
             },
         };
         map.entities.push(test_entity);
@@ -280,7 +281,7 @@ impl Map {
         });
 
         // references to push to the corect list
-        let sides: &mut Vec<Side> = match shape_type {
+        let sides: &mut Vec<Rc<Side>> = match shape_type {
             ShapeType::Wall => &mut self.wall_sides,
             ShapeType::Block => &mut self.block_sides,
         };
@@ -295,15 +296,15 @@ impl Map {
             point1 = point2;
             point2 = *points.get(i)?;
             if let Some(texture_id) = texture_ids.get(i) {
-                sides.push(Side::new(
+                sides.push(Rc::new(Side::new(
                     self.side_count,
                     point1,
                     point2,
                     Rc::clone(&shape),
                     *texture_id,
-                ));
+                )));
             }
-            
+
             self.side_count += 1;
         }
         shapes.push(shape);

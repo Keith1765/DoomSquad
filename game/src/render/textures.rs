@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs, path::Path};
 
 use image::ImageReader;
 
-use crate::render::RendererData;
+use crate::{SCREEN_HEIGHT, render::RendererData};
 
 pub struct Texture {
     pub width: usize,
@@ -31,18 +31,14 @@ impl Texture {
                 unscaled_column.push(*pixel);
             }
         }
-        let onscreen_height = onscreen_top - onscreen_bottom; //.max(renderer_data.screen_height_as_isize);
+        let onscreen_height = onscreen_top - onscreen_bottom;
         let mut scaled_column: Vec<u32> = Vec::with_capacity(
-            onscreen_height
-                .max(0)
-                .min(renderer_data.screen_height_as_isize) as usize,
+            onscreen_height.clamp(0, renderer_data.screen_height_as_isize) as usize,
         );
         let onscreen_inworld_ratio = onscreen_height as f64 / inworld_height;
-        for onscreen_y in onscreen_bottom..onscreen_top {
-            if onscreen_y < 0 || onscreen_y >= renderer_data.screen_height_as_isize {
-                continue;
-            }
-
+        for onscreen_y in onscreen_bottom.clamp(0, renderer_data.screen_height_as_isize)
+            ..onscreen_top.clamp(0, renderer_data.screen_height_as_isize)
+        {
             let onscreen_y_on_tex = onscreen_y - onscreen_bottom;
             let inworld_y_on_tex = (onscreen_y_on_tex as f64 / onscreen_inworld_ratio) as usize;
             let v = inworld_y_on_tex % self.height;
@@ -68,7 +64,7 @@ pub fn load_textures() -> Option<HashMap<usize, Texture>> {
             .ok()?
             .decode()
             .ok()?
-            .as_rgb8()?
+            .to_rgba8()
             .clone();
         let (width, height) = image_buffer.dimensions();
 
@@ -78,8 +74,7 @@ pub fn load_textures() -> Option<HashMap<usize, Texture>> {
             let r: u32 = p.0[0] as u32;
             let g: u32 = p.0[1] as u32;
             let b: u32 = p.0[2] as u32;
-            let a: u32 = 255; // no  transparent textures implemented, but our format requires an alpha value
-
+            let a: u32 = p.0[3] as u32;
             let pixel_color: u32 = (a << 24) | (r << 16) | (g << 8) | b;
 
             pixels.push(pixel_color);
@@ -97,5 +92,5 @@ pub fn load_textures() -> Option<HashMap<usize, Texture>> {
 
 #[test]
 fn test_texture_load() {
-    assert!(!load_textures().is_some());
+    assert!(load_textures().is_some());
 }

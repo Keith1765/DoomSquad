@@ -57,6 +57,32 @@ pub fn task_column(
     };
 }
 
+pub fn task_block_slice(
+    slice: &BlockSlice,
+    angle_relative_to_player: f64,
+    renderer_data: &RendererData,
+    game: &Game,
+) -> BinaryHeap<RenderTaskOrderer> {
+    let mut tasks: BinaryHeap<RenderTaskOrderer> = BinaryHeap::new();
+
+    if let Some(side_task) = task_side(
+        &slice.entry_hit,
+        angle_relative_to_player,
+        renderer_data,
+        game,
+    ) {
+        tasks.push(side_task);
+    }
+
+    if let Some(task_surface_value) =
+        task_surface(slice, angle_relative_to_player, renderer_data, game)
+    {
+        tasks.push(task_surface_value);
+    }
+
+    tasks
+}
+
 pub fn task_side(
     side_hit: &RayHit,
     angle_relative_to_player: f64,
@@ -76,26 +102,25 @@ pub fn task_side(
     if let Some(texture) = texture {
         let distance_along_side = (side_hit.proportion_along_side * side_hit.side.length) as usize;
         let texture_u = distance_along_side % texture.width;
-        if let Some(texture_column) = texture.get_texture_column(
+        let texture_column = texture.get_texture_column(
             texture_u,
             side_bottom_onscreen,
             side_top_onscreen,
             side_hit.side.shape.height,
             renderer_data,
-        ) {
-            let task = RenderTask {
-                texture_column: Some(texture_column),
-                color: 0x000000,
-                brightness,
-                onscreen_bottom: side_bottom_onscreen,
-                onscreen_top: side_top_onscreen,
-            };
-            return Some(RenderTaskOrderer::new(
-                task,
-                side_hit.distance,
-                RenderTaskType::SideTexture,
-            ));
+        );
+        let task = RenderTask {
+            texture_column: texture_column,
+            color: 0x000000,
+            brightness,
+            onscreen_bottom: side_bottom_onscreen,
+            onscreen_top: side_top_onscreen,
         };
+        return Some(RenderTaskOrderer::new(
+            task,
+            side_hit.distance,
+            RenderTaskType::SideTexture,
+        ));
     }
 
     None
@@ -253,32 +278,6 @@ pub fn task_partial_surface(
     }
 }
 
-pub fn task_block_slice(
-    slice: &BlockSlice,
-    angle_relative_to_player: f64,
-    renderer_data: &RendererData,
-    game: &Game,
-) -> BinaryHeap<RenderTaskOrderer> {
-    let mut tasks: BinaryHeap<RenderTaskOrderer> = BinaryHeap::new();
-
-    if let Some(side_task) = task_side(
-        &slice.entry_hit,
-        angle_relative_to_player,
-        renderer_data,
-        game,
-    ) {
-        tasks.push(side_task);
-    }
-
-    if let Some(task_surface_value) =
-        task_surface(slice, angle_relative_to_player, renderer_data, game)
-    {
-        tasks.push(task_surface_value);
-    }
-
-    tasks
-}
-
 pub fn calculate_side_bottom_top(
     rh: &RayHit,
     angle_relative_to_player: f64,
@@ -290,14 +289,12 @@ pub fn calculate_side_bottom_top(
     let side_height_onscreen = ((rh.side.shape.height / normalized_distance_to_side)
         * renderer_data.render_scale_coefficient) as isize; // must be addable to bottom_onscreen
 
-    let mut side_bottom_onscreen: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
+    let side_bottom_onscreen: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
         + ((rh.side.shape.bottom / normalized_distance_to_side)
         - (game.player.view_height / normalized_distance_to_side)) // adjust for view hieght
         * renderer_data.render_scale_coefficient) // scale correctly
         as isize;
 
-
-    let side_top_onscreen = side_bottom_onscreen+side_height_onscreen;
-
+    let side_top_onscreen = side_bottom_onscreen + side_height_onscreen;
     (side_bottom_onscreen, side_top_onscreen)
 }

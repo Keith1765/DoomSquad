@@ -49,7 +49,7 @@ pub fn render_init(
 
     // we accept this unwrap for now, if textures not working just crash, it's fine for now
     // TODO remove necessity for unwrap
-    let textures = load_textures().unwrap();
+    let textures = load_textures().unwrap_or(HashMap::new());
 
     RendererData {
         screen_width_as_f64,

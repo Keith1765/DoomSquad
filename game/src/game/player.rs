@@ -7,8 +7,8 @@ use minifb::{Key, MouseMode, Window};
 use std::f64::consts::PI;
 
 const ROTATIONSPEED: f64 = 2.0;
-const MOVESPEED: f64 = 0.5;
-const FLYUPANDDOWNSPEED: f64 = 0.5;
+const MOVESPEED: f64 = 1.0;
+const FLYUPANDDOWNSPEED: f64 = 1.0;
 
 // TODO refactor to use entites?
 #[derive(Clone, Copy)]
@@ -34,7 +34,7 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, window: &Window, map: &Map) {
+    pub fn update(&mut self, window: &Window, _map: &Map) {
         if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
             self.check_angle();
             let dx = mx - self.last_mouse_x; // mouse delta
