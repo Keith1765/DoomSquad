@@ -153,19 +153,6 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
                 });
             }
         }
-        // let shape_type = match map.shape_count {
-        //     0 => ShapeType::Wall,
-        //     _ => ShapeType::Block,
-        // };
-        // map.add_shape_from_points(
-        //     input_list_of_points.clone(),
-        //     shape_type,
-        //     0.0,
-        //     10.0,
-        //     0xFFFFFF,
-        //     0xAAAAAA,
-        //     vec![0; input_list_of_points.len()],
-        // );
     }
     for e in &polygon_element_list {
         for c in &polygon_command_list {
@@ -395,7 +382,7 @@ fn read_polygon_element(
                         b"r" => bottom = attr.unescape_value()?.parse::<u8>()? as f64,
                         b"g" => height = attr.unescape_value()?.parse::<u8>()? as f64,
                         b"b" => texture_id = attr.unescape_value()?.parse::<u8>()? as f64,
-                        b"alpha" => surface_color = attr.unescape_value()?.parse::<f64>()?,
+                        b"opacity" => surface_color = attr.unescape_value()?.parse::<f64>()?,
                         _ => {}
                     }
                 }
@@ -413,11 +400,11 @@ fn read_polygon_element(
             _ => {}
         }
     }
-    // for x in polygon_element_list {
-    //     println!(
-    //         "Polygon: {},Farbe: bottom: {} height: {} texture_id: {} surface_color: {})",
-    //         &x.label, &x.bottom, &x.height, &x.texture_id, &x.surface_color
-    //     );
-    // }
+    for x in polygon_element_list {
+        println!(
+            "Polygon: {},Farbe: bottom: {} height: {} texture_id: {} surface_color: {})",
+            &x.label, &x.bottom, &x.height, &x.texture_id, &x.surface_color
+        );
+    }
     Ok(())
 }
