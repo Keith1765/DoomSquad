@@ -213,8 +213,8 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
             p.shape_type,
             p.bottom,
             p.height,
-            p.surface_color,
             0xAAAAAA,
+            p.surface_color,
             vec![p.texture_id; input_list_of_points.len()],
         );
     }
@@ -382,7 +382,7 @@ fn read_polygon_element(
                         b"r" => bottom = attr.unescape_value()?.parse::<u8>()? as f64,
                         b"g" => height = attr.unescape_value()?.parse::<u8>()? as f64,
                         b"b" => texture_id = attr.unescape_value()?.parse::<u8>()? as f64,
-                        b"opacity" => surface_color = attr.unescape_value()?.parse::<f64>()?,
+                        b"alpha" => surface_color = attr.unescape_value()?.parse::<f64>()?,
                         _ => {}
                     }
                 }

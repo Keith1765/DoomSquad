@@ -218,9 +218,9 @@
 	<output a0="v2" a1="e" a2="f" a3="g" a4="h"/>
 </command>
 <element type="polygon" label="v2">
-	<lineStyle thickness="5" type="0" typeHidden="1" opacity="16711680"/>
+	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="50" b="2" alpha="0.1"/>
+	<objColor r="0" g="50" b="2" alpha="3881791"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
