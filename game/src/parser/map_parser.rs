@@ -6,6 +6,7 @@ use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
 use std::io::Read;
+const SCALING_FACTOR: f64 = 100.0;
 
 pub struct GeogebraPoint {
     pub label: String,
@@ -69,6 +70,7 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
     let mut point_list: Vec<GeogebraPoint> = Vec::new();
     let mut polygon_command_list: Vec<GeogebraPolygonCommand> = Vec::new();
     let mut polygon_element_list: Vec<GeogebraPolygonElement> = Vec::new();
+    let mut geogebra_polygone_list: Vec<GeogebraPolygone> = Vec::new();
 
     let mut map = map::Map {
         id: 0,
@@ -147,41 +149,64 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
     // for x in point_list {
     //     println!("Point: Label: {}, X: {}, Y: {}", x.label, x.x, x.y);
     // }
-    for p in polygon_command_list {
+    for p in &polygon_command_list {
         let mut input_list_of_points: Vec<Point> = Vec::new();
         // TODO remove the printlns
-        for vertex in p.vertices {
-            if let Some(point) = point_list.iter().find(|p| p.label == vertex) {
-                println!(
-                    "Polygon {} has vertex {} at ({}, {})",
-                    &p.label, &vertex, &point.x, &point.y
-                );
-                print!(
-                    "Adding point to map at scaled position: ({}, {})\n",
-                    point.x * 100.0,
-                    point.y * 100.0
-                );
+        for vertex in &p.vertices {
+            if let Some(point) = point_list.iter().find(|p| p.label == *vertex) {
                 input_list_of_points.push(Point {
                     x: point.x * 100.0,
                     y: point.y * 100.0,
                 });
-            } else {
-                println!(
-                    "Vertex {} of Polygon {} not found in points list",
-                    vertex, p.label
-                );
+            } 
+        }
+        // let shape_type = match map.shape_count {
+        //     0 => ShapeType::Wall,
+        //     _ => ShapeType::Block,
+        // };
+        // map.add_shape_from_points(
+        //     input_list_of_points.clone(),
+        //     shape_type,
+        //     0.0,
+        //     10.0,
+        //     0xFFFFFF,
+        //     0xAAAAAA,
+        //     vec![0; input_list_of_points.len()],
+        // );
+    }
+    for e in &polygon_element_list {
+        for c in &polygon_command_list{
+            if c.label == e.label {
+                let geogebra_polygon = GeogebraPolygone {
+                    label: e.label.clone(),
+                    shape_type: ShapeType::Block,
+                    bottom: e.bottom,
+                    height: e.height,
+                    surface_color: e.surface_color,
+                    texture_id: e.texture_id,
+                    vertices: c.vertices.clone(),
+                    segments: c.segments.clone(),
+                };
+                geogebra_polygone_list.push(geogebra_polygon);
             }
         }
-        let shape_type = match map.shape_count {
-            0 => ShapeType::Wall,
-            _ => ShapeType::Block,
-        };
+    }
+    for p in geogebra_polygone_list {
+        let mut input_list_of_points: Vec<Point> = Vec::new();
+        for vertex in &p.vertices {
+            if let Some(point) = point_list.iter().find(|p| p.label == *vertex) {
+                input_list_of_points.push(Point {
+                    x: point.x * SCALING_FACTOR,
+                    y: point.y * SCALING_FACTOR,
+                });
+            } 
+        }
         map.add_shape_from_points(
             input_list_of_points.clone(),
-            shape_type,
-            0.0,
-            10.0,
-            0xFFFFFF,
+            p.shape_type,
+            p.bottom,
+            p.height,
+            p.surface_color,
             0xAAAAAA,
             vec![0; input_list_of_points.len()],
         );
