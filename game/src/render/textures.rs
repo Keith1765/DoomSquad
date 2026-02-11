@@ -58,7 +58,6 @@ pub fn load_textures() -> Option<HashMap<usize, Texture>> {
     for entry in fs::read_dir(Path::new("./assets/textures")).ok()? {
         let entry = entry.ok()?;
         let path = entry.path();
-
         // TODO make whole function not fail when one file doesnt work
         let image_buffer = ImageReader::open(&path)
             .ok()?
