@@ -25,7 +25,7 @@ pub struct GeogebraPolygonElement {
     texture_id: usize,
 }
 
-pub struct GeogebraPolygone{
+pub struct GeogebraPolygone {
     label: String,
     shape_type: ShapeType, //show object ture/ false
     bottom: f64,
@@ -99,7 +99,12 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
                 match element_type.as_deref() {
                     Some("point") => read_point(&mut reader, &mut buf, &label, &mut point_list)?,
                     Some("segment") => read_segment(&mut reader, &mut buf, &label)?,
-                    Some("polygon") => read_polygon_element(&mut reader, &mut buf, &label, &mut polygon_element_list)?,
+                    Some("polygon") => read_polygon_element(
+                        &mut reader,
+                        &mut buf,
+                        &label,
+                        &mut polygon_element_list,
+                    )?,
                     _ => {}
                 }
             }
@@ -116,7 +121,12 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
 
                 match command_name.as_deref() {
                     Some("Polygon") => {
-                        read_polygon_command(&mut reader, &mut buf, "Polygon", &mut polygon_command_list)?;
+                        read_polygon_command(
+                            &mut reader,
+                            &mut buf,
+                            "Polygon",
+                            &mut polygon_command_list,
+                        )?;
                     }
                     _ => {}
                 }
@@ -238,14 +248,14 @@ fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
                         _ => {}
                     }
                 }
-                println!(
-                    "Segment: {},Farbe: rgba({}, {}, {}, {})",
-                    name,
-                    r.unwrap_or(0),
-                    g.unwrap_or(0),
-                    b.unwrap_or(0),
-                    alpha.unwrap_or(255)
-                );
+                // println!(
+                //     "Segment: {},Farbe: rgba({}, {}, {}, {})",
+                //     name,
+                //     r.unwrap_or(0),
+                //     g.unwrap_or(0),
+                //     b.unwrap_or(0),
+                //     alpha.unwrap_or(255)
+                // );
             }
 
             Event::End(ref e) if e.name().as_ref() == b"element" => break,
@@ -257,7 +267,12 @@ fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
     Ok(())
 }
 
-fn read_polygon_command(reader: &mut Reader<&[u8]>,buf: &mut Vec<u8>,name: &str,polygon_command_list: &mut Vec<GeogebraPolygonCommand>,) -> Result<()> {
+fn read_polygon_command(
+    reader: &mut Reader<&[u8]>,
+    buf: &mut Vec<u8>,
+    name: &str,
+    polygon_command_list: &mut Vec<GeogebraPolygonCommand>,
+) -> Result<()> {
     let mut name = name.to_string();
     let mut vertices: Vec<String> = Vec::new();
     let mut segments: Vec<String> = Vec::new();
@@ -299,14 +314,19 @@ fn read_polygon_command(reader: &mut Reader<&[u8]>,buf: &mut Vec<u8>,name: &str,
     Ok(())
 }
 
-fn read_polygon_element(reader: &mut Reader<&[u8]>,buf: &mut Vec<u8>,name: &str,polygon_element_list: &mut Vec<GeogebraPolygonElement>,) -> Result<()> {
+fn read_polygon_element(
+    reader: &mut Reader<&[u8]>,
+    buf: &mut Vec<u8>,
+    name: &str,
+    polygon_element_list: &mut Vec<GeogebraPolygonElement>,
+) -> Result<()> {
     let mut name = name.to_string();
     let mut bottom: f64 = 0.0;
     let mut height: f64 = 0.0;
     let mut surface_color: f64 = 16711680.0; //default red
     let mut texture_id: f64 = 0.0;
     loop {
-            match reader.read_event_into(buf)? {
+        match reader.read_event_into(buf)? {
             Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
                 for attr in e.attributes() {
                     let attr = attr?;
@@ -319,18 +339,28 @@ fn read_polygon_element(reader: &mut Reader<&[u8]>,buf: &mut Vec<u8>,name: &str,
                         _ => {}
                     }
                 }
-                println!(
-                    "Polygon: {},Farbe: bottom: {} height: {} texture_id: {} surface_color: {})",
-                    name,
+                // println!(
+                //     "Polygon: {},Farbe: bottom: {} height: {} texture_id: {} surface_color: {})",
+                //     &name, &bottom, &height, &texture_id, &surface_color
+                // );
+                let geogebrapolygon = GeogebraPolygonElement {
+                    label: name.clone(),
                     bottom,
                     height,
-                    texture_id,
-                    surface_color
-                );
+                    surface_color: surface_color as u32,
+                    texture_id: texture_id as usize,
+                };
+                polygon_element_list.push(geogebrapolygon);
             }
             Event::End(ref e) if e.name().as_ref() == b"element" => break,
             _ => {}
         }
     }
+    // for x in polygon_element_list {
+    //     println!(
+    //         "Polygon: {},Farbe: bottom: {} height: {} texture_id: {} surface_color: {})",
+    //         &x.label, &x.bottom, &x.height, &x.texture_id, &x.surface_color
+    //     );
+    // }
     Ok(())
 }
