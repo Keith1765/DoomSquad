@@ -383,6 +383,17 @@ impl Map {
             0x00ff00,
             vec![0; floor_block_points.len()],
         )?;
+        let test_entity = Entity {
+            position: Point { x: 230.0, y: 210.0 },
+            vertical_position: 0.0,
+            facing_angle: 0.0,
+            sprite: Sprite {
+                texture_id: 2,
+                height: 20.0,
+                width: 16.0,
+            },
+        };
+        map.entities.push(test_entity);
 
         Some(map)
     }

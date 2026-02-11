@@ -216,6 +216,9 @@ fn draw_tasks(
                     let g = (pixel_color >> 8) & 0xFF;
                     let b = pixel_color & 0xFF;
 
+                    // if we have transparency at this pixel, we dont draw it; partial transparency not supported
+                    if a != 255 {continue;}
+
                     // 3. Scale each channel with brightness
                     let r = (r as f64 * task.brightness) as u32;
                     let g = (g as f64 * task.brightness) as u32;
