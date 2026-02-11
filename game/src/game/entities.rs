@@ -15,7 +15,7 @@ const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 #[derive(Clone)]
 pub struct Entity {
     pub mover: Mover,
-    movement_locked: bool,
+    pub movement_locked: bool,
     pub sprite: Sprite,
 }
 

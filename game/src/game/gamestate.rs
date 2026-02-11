@@ -16,11 +16,11 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new_test(renderer_data: &RendererData) -> Self {
+    pub fn new_test_game(renderer_data: &RendererData) -> Self {
         
         Self {
             player: Player::new(),
-            entities: vec![Entity::new(Point { x: 230.0, y: 210.0 }, 0.0, 20.0, 0.0, 1, renderer_data).unwrap()],
+            entities: vec![Entity::new(Point { x: 230.0, y: 210.0 }, 0.0, 20.0, 0.0, 2, renderer_data).unwrap()],
             map: Map::new_test_map().unwrap(), // TODO remove unwrap
         }
     }

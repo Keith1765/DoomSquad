@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         SURFACE_DEFAULT_COLOR,
     );
 
-    let mut game = game::Game::new_test(&renderer_data);
+    let mut game = game::Game::new_test_game(&renderer_data);
 
     let mut audio: Option<Audio> = None;
     if AUDIO_ENABLED {
