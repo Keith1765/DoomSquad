@@ -69,8 +69,7 @@ impl Add for Point {
         }
     }
 }
-
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq,Debug)]
 pub enum ShapeType {
     Wall,  // walls are ray-terminating
     Block, // blocks are not

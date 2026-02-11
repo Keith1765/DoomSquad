@@ -24,6 +24,7 @@ pub struct GeogebraPolygonElement {
     pub height: f64,
     pub surface_color: u32,
     texture_id: usize,
+    pub shape_type: ShapeType,
 }
 
 pub struct GeogebraPolygone {
@@ -53,7 +54,7 @@ impl Default for GeogebraPolygone {
 }
 
 pub fn parse_map() -> Result<map::Map> {
-    let ggb_path = "src/parser/geogebra_only_polygone.xml";
+    let ggb_path = "src/parser/geogebra-export-with-textures.xml";
     let map = reading_attr_from_ggb(ggb_path);
     map
 }
@@ -141,24 +142,16 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
         buf.clear();
     }
     //TODO Points und Segmente kombinieren
-    // println!("Found {} polygons", polygon_command_list.len());
-    // for x in polygon_command_list {
-    //     println!("Polygon: Label: {}, Vertices: {:?}, Segments: {:?}", x.label, x.vertices, x.segments);
-    // }
-    // println!("Found {} points", point_list.len());
-    // for x in point_list {
-    //     println!("Point: Label: {}, X: {}, Y: {}", x.label, x.x, x.y);
-    // }
     for p in &polygon_command_list {
         let mut input_list_of_points: Vec<Point> = Vec::new();
         // TODO remove the printlns
         for vertex in &p.vertices {
             if let Some(point) = point_list.iter().find(|p| p.label == *vertex) {
                 input_list_of_points.push(Point {
-                    x: point.x * 100.0,
-                    y: point.y * 100.0,
+                    x: point.x * SCALING_FACTOR,
+                    y: point.y * SCALING_FACTOR,
                 });
-            } 
+            }
         }
         // let shape_type = match map.shape_count {
         //     0 => ShapeType::Wall,
@@ -175,11 +168,11 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
         // );
     }
     for e in &polygon_element_list {
-        for c in &polygon_command_list{
+        for c in &polygon_command_list {
             if c.label == e.label {
                 let geogebra_polygon = GeogebraPolygone {
                     label: e.label.clone(),
-                    shape_type: ShapeType::Block,
+                    shape_type: e.shape_type,
                     bottom: e.bottom,
                     height: e.height,
                     surface_color: e.surface_color,
@@ -192,14 +185,41 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
         }
     }
     for p in geogebra_polygone_list {
+        println!(
+            "Polygon:
+    Label: {} (type: {})
+    ShapeType: {:?} (type: {})
+    Bottom: {} (type: {})
+    Height: {} (type: {})
+    SurfaceColor: {} (type: {})
+    TextureID: {} (type: {})
+    Vertices: {:?} (type: {})
+    Segments: {:?} (type: {})",
+            p.label,
+            std::any::type_name_of_val(&p.label),
+            p.shape_type,
+            std::any::type_name_of_val(&p.shape_type),
+            p.bottom,
+            std::any::type_name_of_val(&p.bottom),
+            p.height,
+            std::any::type_name_of_val(&p.height),
+            p.surface_color,
+            std::any::type_name_of_val(&p.surface_color),
+            p.texture_id,
+            std::any::type_name_of_val(&p.texture_id),
+            p.vertices,
+            std::any::type_name_of_val(&p.vertices),
+            p.segments,
+            std::any::type_name_of_val(&p.segments),
+        );
         let mut input_list_of_points: Vec<Point> = Vec::new();
         for vertex in &p.vertices {
-            if let Some(point) = point_list.iter().find(|p| p.label == *vertex) {
+            if let Some(point) = point_list.iter().find(|pt| pt.label == *vertex) {
                 input_list_of_points.push(Point {
                     x: point.x * SCALING_FACTOR,
                     y: point.y * SCALING_FACTOR,
                 });
-            } 
+            }
         }
         map.add_shape_from_points(
             input_list_of_points.clone(),
@@ -208,7 +228,7 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
             p.height,
             p.surface_color,
             0xAAAAAA,
-            vec![0; input_list_of_points.len()],
+            vec![p.texture_id; input_list_of_points.len()],
         );
     }
     Ok(map)
@@ -350,12 +370,27 @@ fn read_polygon_element(
     let mut height: f64 = 0.0;
     let mut surface_color: f64 = 16711680.0; //default red
     let mut texture_id: f64 = 0.0;
+    let mut shape_type = ShapeType::Block;
     loop {
         match reader.read_event_into(buf)? {
+            Event::Empty(ref e) if e.name().as_ref() == b"show" => {
+                for attr in e.attributes() {
+                    let attr = attr?;
+                    match attr.key.as_ref() {
+                        b"object" => {
+                            if attr.unescape_value()?.as_ref() == "true" {
+                                shape_type = ShapeType::Block;
+                            } else {
+                                shape_type = ShapeType::Wall;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
             Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
                 for attr in e.attributes() {
                     let attr = attr?;
-
                     match attr.key.as_ref() {
                         b"r" => bottom = attr.unescape_value()?.parse::<u8>()? as f64,
                         b"g" => height = attr.unescape_value()?.parse::<u8>()? as f64,
@@ -364,16 +399,13 @@ fn read_polygon_element(
                         _ => {}
                     }
                 }
-                // println!(
-                //     "Polygon: {},Farbe: bottom: {} height: {} texture_id: {} surface_color: {})",
-                //     &name, &bottom, &height, &texture_id, &surface_color
-                // );
                 let geogebrapolygon = GeogebraPolygonElement {
                     label: name.clone(),
                     bottom,
                     height,
                     surface_color: surface_color as u32,
                     texture_id: texture_id as usize,
+                    shape_type,
                 };
                 polygon_element_list.push(geogebrapolygon);
             }
