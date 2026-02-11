@@ -99,9 +99,7 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
                 match element_type.as_deref() {
                     Some("point") => read_point(&mut reader, &mut buf, &label, &mut point_list)?,
                     Some("segment") => read_segment(&mut reader, &mut buf, &label)?,
-                    Some("polygon") => {
-                        read_polygon_element(&mut reader, &mut buf, &label, &mut polygon_element_list)?
-                    }
+                    Some("polygon") => read_polygon_element(&mut reader, &mut buf, &label, &mut polygon_element_list)?,
                     _ => {}
                 }
             }
@@ -302,6 +300,37 @@ fn read_polygon_command(reader: &mut Reader<&[u8]>,buf: &mut Vec<u8>,name: &str,
 }
 
 fn read_polygon_element(reader: &mut Reader<&[u8]>,buf: &mut Vec<u8>,name: &str,polygon_element_list: &mut Vec<GeogebraPolygonElement>,) -> Result<()> {
-    //TODO
+    let mut name = name.to_string();
+    let mut bottom: f64 = 0.0;
+    let mut height: f64 = 0.0;
+    let mut surface_color: f64 = 16711680.0; //default red
+    let mut texture_id: f64 = 0.0;
+    loop {
+            match reader.read_event_into(buf)? {
+            Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
+                for attr in e.attributes() {
+                    let attr = attr?;
+
+                    match attr.key.as_ref() {
+                        b"r" => bottom = attr.unescape_value()?.parse::<u8>()? as f64,
+                        b"g" => height = attr.unescape_value()?.parse::<u8>()? as f64,
+                        b"b" => texture_id = attr.unescape_value()?.parse::<u8>()? as f64,
+                        b"alpha" => surface_color = attr.unescape_value()?.parse::<f64>()?,
+                        _ => {}
+                    }
+                }
+                println!(
+                    "Polygon: {},Farbe: bottom: {} height: {} texture_id: {} surface_color: {})",
+                    name,
+                    bottom,
+                    height,
+                    texture_id,
+                    surface_color
+                );
+            }
+            Event::End(ref e) if e.name().as_ref() == b"element" => break,
+            _ => {}
+        }
+    }
     Ok(())
 }

@@ -153,7 +153,7 @@
 <element type="polygon" label="v1">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="21" g="101" b="192" alpha="0.10000000149011612"/>
+	<objColor r="21" g="101" b="192" alpha="0.16777215"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
