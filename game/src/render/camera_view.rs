@@ -113,8 +113,10 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     }
     draw_camera_view(buffer, &renderer_data, game);
     //draw grid of reference points spaced each 50 pixels for debugging
-    draw_reference_points(buffer);
-    //draw_texture_bottom_left(buffer, renderer_data.textures.get(&0).unwrap()); // ! TODO remove unwrap
+    if game.player.godmode {
+        draw_reference_points(buffer);
+    }
+    //draw_texture_bottom_left(buffer, renderer_data.textures.get(&0).unwrap());
 }
 
 fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
@@ -128,7 +130,11 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
             .atan();
 
         map_slices_and_angles[x] = Some((
-            raycast(game, angle_relative_to_player, game.player.view_angle),
+            raycast(
+                game,
+                angle_relative_to_player,
+                game.player.mover.facing_direction,
+            ),
             angle_relative_to_player,
         ));
     }
@@ -147,7 +153,7 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     }
 
     // create entity (sprite) tasks, put them into the taskings
-    for e in &game.map.entities {
+    for e in &game.entities {
         if let Some(instruction) = task_sprite(game, e, renderer_data) {
             for x in instruction.sprite_left_screen_x..instruction.sprite_right_screen_x {
                 if x < 0 || x > SCREEN_WIDTH - 1 {
@@ -233,7 +239,6 @@ fn draw_tasks(
                 .onscreen_top
                 .clamp(0, renderer_data.screen_height_as_isize)
         {
-
             // 2. Extract channels
             let a = (task.color >> 24) & 0xFF;
             let r = (task.color >> 16) & 0xFF;
