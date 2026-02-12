@@ -108,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             frame_count = 0;
             last_time = Instant::now();
 
-            window.set_title(&format!("My Window | FPS: {:.1}", fps_value));
+            window.set_title(&format!("My Window | Movement Speed: {:.1}", game.player.move_speed));
         }
         //show buffer safely
         if let Err(e) = window.update_with_buffer(&buffer, SCREEN_WIDTH, SCREEN_HEIGHT) {

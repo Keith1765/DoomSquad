@@ -3,20 +3,32 @@ use crate::{
     SCREEN_HEIGHT, SCREEN_WIDTH,
     game::{
         map::{LEVEL_HEIGHT, Point},
-        movement::Mover,
+        movement::Mover, player,
     },
 };
 use minifb::{Key, MouseMode, Window};
 use std::f64::consts::PI;
+use crate::game::player::Slide_Direction::*;
 
 const ROTATION_SPEED: f64 = 2.0;
-const MOVE_SPEED: f64 = 1.0;
+//const MOVE_SPEED: f64 = 1.0;
 const FLY_UP_DOWN_SPEED: f64 = 1.0;
 const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 pub const MAX_STEP_UP_HEIGHT: f64 = 5.0;
 const PLAYER_HEAD_HEIGHT: f64 = 15.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
+const SPRINT_SPEED: f64 = 3.0;
+const CROUCH_Distance: f64 = 7.5; 
+const SLIDE_COOLDOWN_TIME: i32 = 15;
 
+#[derive(Clone,PartialEq, Eq)]
+pub enum Slide_Direction {
+    W,
+    A,
+    S,
+    D,
+    No,
+}
 #[derive(Clone)]
 pub struct Player {
     pub mover: Mover,
@@ -24,6 +36,10 @@ pub struct Player {
     pub velocity_y: f64,
     pub last_mouse_x: f32,
     pub godmode: bool,
+    pub move_speed: f64,
+    pub is_sliding: bool,
+    pub slide_dir: Slide_Direction,
+    pub slice_cooldown: i32,
 }
 
 impl Player {
@@ -37,11 +53,16 @@ impl Player {
                 view_level: PLAYER_VIEW_HEIGHT,
                 height: PLAYER_HEAD_HEIGHT,
                 facing_direction: pa,
+                
             },
             velocity_x: pa.cos() * ROTATION_SPEED,
             velocity_y: pa.sin() * ROTATION_SPEED,
             last_mouse_x: SCREEN_WIDTH as f32 / 2.0,
             godmode: false, // allows flying up and down, no collision (when those are implemented)
+            move_speed: 1.0,
+            is_sliding: false,
+            slide_dir: No,
+            slice_cooldown: 0,
         }
     }
 
@@ -60,25 +81,86 @@ impl Player {
             self.update_dir();
         }
 
+        if window.is_key_down(Key::Left) && !self.is_sliding {
+            self.check_angle();
+            self.mover.facing_direction -= 0.1;
+            self.update_dir();
+        }
+
         if window.is_key_down(Key::E) {
             self.check_angle();
             self.mover.facing_direction += 0.1;
             self.update_dir();
         }
 
-        if window.is_key_down(Key::W) {
-            self.mover.step(MOVE_SPEED, 0.0, map, self.godmode);
+        if window.is_key_down(Key::Right) && !self.is_sliding {
+            self.check_angle();
+            self.mover.facing_direction += 0.1;
+            self.update_dir();
         }
 
-        if window.is_key_down(Key::A) {
-            self.mover.step(MOVE_SPEED, -PI / 2.0, map, self.godmode);
-        }
-        if window.is_key_down(Key::D) {
-            self.mover.step(MOVE_SPEED, PI / 2.0, map, self.godmode);
+        if window.is_key_down(Key::W) && (!self.is_sliding || self.slide_dir==W) {
+            self.mover.step(self.move_speed, 0.0, map, self.godmode);
+            
         }
 
-        if window.is_key_down(Key::S) {
-            self.mover.step(MOVE_SPEED, PI, map, self.godmode);
+        //slowdown movespeed if not sprinting and sliding anymore
+        if !window.is_key_down(Key::LeftShift) && !window.is_key_down(Key::Down){
+            self.move_speed=1.0;
+        }
+
+        //implementing Sprint that gradually increases movement speed
+        if window.is_key_down(Key::LeftShift) && !self.godmode{
+            if self.move_speed < SPRINT_SPEED-0.1 {
+                self.move_speed += 0.1;
+            }
+            if self.move_speed <SPRINT_SPEED {
+                self.move_speed = SPRINT_SPEED;
+            }
+
+            if self.move_speed > SPRINT_SPEED && !self.is_sliding {
+                self.move_speed = SPRINT_SPEED;
+            }
+        }
+        if self.slice_cooldown > 0 {
+            self.slice_cooldown -= 1;
+        } 
+        //init slide gives speed boost
+        if window.is_key_down(Key::Down) && !self.is_sliding && !self.godmode && self.slice_cooldown == 0{
+            if self.move_speed > 1.5 {
+                self.move_speed += 5.0;
+                self.is_sliding = true;
+                self.mover.foot_level -=CROUCH_Distance;
+                if window.is_key_down(Key::D) {self.slide_dir = D};
+                if window.is_key_down(Key::A) {self.slide_dir = A};
+                if window.is_key_down(Key::S) {self.slide_dir = S};
+                if window.is_key_down(Key::W) {self.slide_dir = W};
+            }
+            
+        }
+        
+        //during slide speed decreases
+        if self.is_sliding {
+            self.move_speed -= 0.2;
+        }
+
+        //ending slide
+        if !window.is_key_down(Key::Down) && self.is_sliding{
+            self.is_sliding = false;
+            self.mover.foot_level +=CROUCH_Distance;
+            self.slide_dir=No;
+            self.slice_cooldown = SLIDE_COOLDOWN_TIME;
+        }
+
+        if window.is_key_down(Key::A) && (!self.is_sliding || self.slide_dir==A) {
+            self.mover.step(self.move_speed, -PI / 2.0, map, self.godmode);
+        }
+        if window.is_key_down(Key::D) && (!self.is_sliding || self.slide_dir==D){
+            self.mover.step(self.move_speed, PI / 2.0, map, self.godmode);
+        }
+
+        if window.is_key_down(Key::S) && (!self.is_sliding || self.slide_dir==S) {
+            self.mover.step(self.move_speed, PI, map, self.godmode);
         }
 
         if window.is_key_down(Key::Space) && self.godmode {
