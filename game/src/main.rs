@@ -56,7 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut game = game::Game::new();
 
     //TODo TEST
-    let map = parse_map(); // TODO remove unwrap
+    let map = parse_map("assets/maps/first-test-map-from-geogebra.xml".to_string()); // TODO remove unwrap
     if let Ok(map) = map {
         game.map = map;
     } else {

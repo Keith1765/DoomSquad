@@ -53,9 +53,8 @@ impl Default for GeogebraPolygone {
     }
 }
 
-pub fn parse_map() -> Result<map::Map> {
-    let ggb_path = "src/parser/geogebra-export-with-textures.xml";
-    let map = reading_attr_from_ggb(ggb_path);
+pub fn parse_map(path: String) -> Result<map::Map> {
+    let map = reading_attr_from_ggb(&path);
     map
 }
 
@@ -144,7 +143,6 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
     //TODO Points und Segmente kombinieren
     for p in &polygon_command_list {
         let mut input_list_of_points: Vec<Point> = Vec::new();
-        // TODO remove the printlns
         for vertex in &p.vertices {
             if let Some(point) = point_list.iter().find(|p| p.label == *vertex) {
                 input_list_of_points.push(Point {
@@ -172,33 +170,6 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
         }
     }
     for p in geogebra_polygone_list {
-        println!(
-            "Polygon:
-    Label: {} (type: {})
-    ShapeType: {:?} (type: {})
-    Bottom: {} (type: {})
-    Height: {} (type: {})
-    SurfaceColor: {} (type: {})
-    TextureID: {} (type: {})
-    Vertices: {:?} (type: {})
-    Segments: {:?} (type: {})",
-            p.label,
-            std::any::type_name_of_val(&p.label),
-            p.shape_type,
-            std::any::type_name_of_val(&p.shape_type),
-            p.bottom,
-            std::any::type_name_of_val(&p.bottom),
-            p.height,
-            std::any::type_name_of_val(&p.height),
-            p.surface_color,
-            std::any::type_name_of_val(&p.surface_color),
-            p.texture_id,
-            std::any::type_name_of_val(&p.texture_id),
-            p.vertices,
-            std::any::type_name_of_val(&p.vertices),
-            p.segments,
-            std::any::type_name_of_val(&p.segments),
-        );
         let mut input_list_of_points: Vec<Point> = Vec::new();
         for vertex in &p.vertices {
             if let Some(point) = point_list.iter().find(|pt| pt.label == *vertex) {
@@ -280,14 +251,6 @@ fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
                         _ => {}
                     }
                 }
-                // println!(
-                //     "Segment: {},Farbe: rgba({}, {}, {}, {})",
-                //     name,
-                //     r.unwrap_or(0),
-                //     g.unwrap_or(0),
-                //     b.unwrap_or(0),
-                //     alpha.unwrap_or(255)
-                // );
             }
 
             Event::End(ref e) if e.name().as_ref() == b"element" => break,
@@ -399,12 +362,6 @@ fn read_polygon_element(
             Event::End(ref e) if e.name().as_ref() == b"element" => break,
             _ => {}
         }
-    }
-    for x in polygon_element_list {
-        println!(
-            "Polygon: {},Farbe: bottom: {} height: {} texture_id: {} surface_color: {})",
-            &x.label, &x.bottom, &x.height, &x.texture_id, &x.surface_color
-        );
     }
     Ok(())
 }
