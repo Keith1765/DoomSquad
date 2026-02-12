@@ -153,7 +153,7 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     }
 
     // create entity (sprite) tasks, put them into the taskings
-    for e in &game.map.entities {
+    for e in &game.entities {
         if let Some(instruction) = task_sprite(game, e, renderer_data) {
             for x in instruction.sprite_left_screen_x..instruction.sprite_right_screen_x {
                 if x < 0 || x > SCREEN_WIDTH - 1 {
@@ -215,6 +215,9 @@ fn draw_tasks(
                     let r = (pixel_color >> 16) & 0xFF;
                     let g = (pixel_color >> 8) & 0xFF;
                     let b = pixel_color & 0xFF;
+
+                    // if we have transparency at this pixel, we dont draw it; partial transparency not supported
+                    if a != 255 {continue;}
 
                     // 3. Scale each channel with brightness
                     let r = (r as f64 * task.brightness) as u32;

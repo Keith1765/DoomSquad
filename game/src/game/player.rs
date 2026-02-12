@@ -11,7 +11,7 @@ use std::f64::consts::PI;
 use crate::game::player::Slide_Direction::*;
 
 const ROTATION_SPEED: f64 = 2.0;
-//const MOVE_SPEED: f64 = 1.0;
+pub const MOVE_SPEED: f64 = 1.0;
 const FLY_UP_DOWN_SPEED: f64 = 1.0;
 const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 pub const MAX_STEP_UP_HEIGHT: f64 = 5.0;
@@ -179,14 +179,13 @@ impl Player {
         //adjust feet_level to fit floor_level
         // smoothing: only "catch up" foot level with floor level at s smooting speed
         if !self.godmode {
-            if (self.mover.foot_level-self.mover.floor_level).abs() < MOVEMENT_SMOOTHING_SPEED {
+            if (self.mover.foot_level - self.mover.floor_level).abs() < MOVEMENT_SMOOTHING_SPEED {
                 self.mover.foot_level = self.mover.floor_level;
             } else if self.mover.foot_level < self.mover.floor_level {
                 self.mover.foot_level += MOVEMENT_SMOOTHING_SPEED;
             } else {
                 self.mover.foot_level -= MOVEMENT_SMOOTHING_SPEED;
             }
-            
         }
         self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
     }

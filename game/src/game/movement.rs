@@ -1,11 +1,17 @@
+use crate::game::player::MAX_STEP_UP_HEIGHT;
 use crate::game::{
     Game,
-    map::{Map, Point, Shape, ShapeID, Side}, player::PLAYER_VIEW_HEIGHT,
+    map::{Map, Point, Shape, ShapeID, Side},
+    player::PLAYER_VIEW_HEIGHT,
 };
 use core::f64;
-use std::{collections::{HashSet, hash_set::{IntoIter, Iter}}, rc::Rc};
-use crate::game::player::MAX_STEP_UP_HEIGHT;
-
+use std::{
+    collections::{
+        HashSet,
+        hash_set::{IntoIter, Iter},
+    },
+    rc::Rc,
+};
 
 #[derive(Clone)]
 pub struct Mover {
@@ -18,11 +24,9 @@ pub struct Mover {
 }
 
 impl Mover {
-
     // TODO test this properly
     pub fn step(&mut self, step_size: f64, relative_direction: f64, map: &Map, godmode: bool) {
-
-        //println!("{}", self.floor_level);        
+        //println!("{}", self.floor_level);
 
         let absolute_direction = self.facing_direction + relative_direction;
 
@@ -54,19 +58,23 @@ impl Mover {
         for block in &blocks_were_stepping_inside {
             let block_bottom = block.bottom;
             let block_top = block.bottom + block.height;
-            let head_level = self.foot_level+self.height;
+            let head_level = self.foot_level + self.height;
 
             // we check if the current side blocks our path completely; if so, we dont make a step at all
             if block_bottom <= head_level // bottom is below our head
-                && block_top > self.floor_level + MAX_STEP_UP_HEIGHT // cant step up the side
+                && block_top > self.floor_level + MAX_STEP_UP_HEIGHT
+            // cant step up the side
             {
                 //println!("blocked completely");
-                if !godmode {return;} // if we are in godmode, we dont let ourselves get blocked
+                if !godmode {
+                    return;
+                } // if we are in godmode, we dont let ourselves get blocked
                 continue;
             }
 
             if block_bottom < lowest_ceiling_level // lower thn lowest previously found ceiling level
-                && block_top > self.floor_level + MAX_STEP_UP_HEIGHT // block cant be stepped up onto
+                && block_top > self.floor_level + MAX_STEP_UP_HEIGHT
+            // block cant be stepped up onto
             {
                 lowest_ceiling_level = block_bottom;
             }
@@ -74,15 +82,14 @@ impl Mover {
             // checks for steps up ledges
             if block_bottom <= head_level // bottom below our head (not totally out of way)
                 && block_top <= self.floor_level + MAX_STEP_UP_HEIGHT // can step up the side
-                && block_top > height_to_step_to // would be a higher step than any previous steps up; if not, irrelevant, do nothing
+                && block_top > height_to_step_to
+            // would be a higher step than any previous steps up; if not, irrelevant, do nothing
             {
                 //println!("up {}", block.id);
                 height_to_step_to = block_top;
                 continue;
             }
         }
-
-        
 
         // if our new floor level would result in us bumping our head into the ceiling, we dont make a step
         if height_to_step_to + self.height >= lowest_ceiling_level {
@@ -91,10 +98,8 @@ impl Mover {
 
         self.position = new_position;
         self.floor_level = height_to_step_to;
-        
     }
 }
-
 
 // finds all block we are currently staning inside of in 2d space
 // if we intersect a blocks sides an even number of times, we are outside of it, if odd, we are inside
@@ -103,10 +108,10 @@ fn find_blocks_were_currently_in(position: Point, map: &Map) -> Vec<Rc<Shape>> {
     for side in &map.block_sides {
         if step_intersect(position, 0.0, Rc::clone(side), f64::MAX).is_some() {
             // if its already in set, this was an even-numbered inteersect and we want to remove again
-            if blocks_currently_inside.contains(&Rc::clone(&side.shape)) { 
+            if blocks_currently_inside.contains(&Rc::clone(&side.shape)) {
                 blocks_currently_inside.remove(&Rc::clone(&side.shape));
             // if its not in set, we conversely need to add it (back) in
-            } else {    
+            } else {
                 blocks_currently_inside.insert(Rc::clone(&side.shape));
             }
         }
