@@ -18,10 +18,13 @@ const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 pub const MAX_STEP_UP_HEIGHT: f64 = 5.0;
 const PLAYER_HEAD_HEIGHT: f64 = 15.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
-const SPRINT_SPEED: f64 = 3.5;
+const SPRINT_SPEED: f64 = 4.0;
 const CROUCH_Distance: f64 = 7.5; 
 const SLIDE_COOLDOWN_TIME: i32 = 15;
-const STRAIFING_SPEED: f64 = 0.02;
+const STRAIFING_SPEED: f64 = 0.025;
+const JUMP_STRENGTH: f64 = 5.0;
+const GRAVITY_CONST: f64 = -1.0;
+
 
 #[derive(Clone,PartialEq, Eq)]
 pub enum LastInputDirection {
@@ -41,8 +44,10 @@ pub struct Player {
     pub move_speed: f64,
     pub is_sliding: bool,
     pub last_input: LastInputDirection,
-    pub slice_cooldown: i32,
+    pub slide_cooldown: i32,
     pub is_jumping: bool,
+    pub vertical_velocity: f64,
+    pub gravity: f64,
     
 }
 
@@ -66,8 +71,11 @@ impl Player {
             move_speed: 1.0,
             is_sliding: false,
             last_input: No,
-            slice_cooldown: 0,
+            slide_cooldown: 0,
             is_jumping: false,
+            vertical_velocity: 0.0,
+            gravity: -1.0,
+            
         }
     }
 
@@ -83,7 +91,7 @@ impl Player {
 
         if window.is_key_down(Key::Left) {
             //during slide heavily restricted rotation
-            let rotation_factor = match self.is_sliding {
+            let rotation_factor = match self.is_sliding || self.is_jumping{
                 true => STRAIFING_SPEED,
                 false => ROTATION_SPEED_KEYS,
             };
@@ -95,7 +103,7 @@ impl Player {
 
         if window.is_key_down(Key::Right) {
             //during slide heavily restricted rotation
-            let rotation_factor = match self.is_sliding {
+            let rotation_factor = match self.is_sliding || self.is_jumping {
                 true => STRAIFING_SPEED,
                 false => ROTATION_SPEED_KEYS,
             };
@@ -104,18 +112,18 @@ impl Player {
             self.update_dir();
         }
 
-        if window.is_key_down(Key::W) && ((!self.is_sliding && !self.is_jumping) || self.last_input==W) {
+        if (window.is_key_down(Key::W) && ((!self.is_sliding && !self.is_jumping) || self.last_input==W)) || (self.is_jumping && (self.last_input == W)) {
             self.mover.step(self.move_speed, 0.0, map, self.godmode);
             
         }
-        if window.is_key_down(Key::A) && ((!self.is_sliding && !self.is_jumping)|| self.last_input==A) {
+        if (window.is_key_down(Key::A) && ((!self.is_sliding && !self.is_jumping)|| self.last_input==A)) || (self.is_jumping && (self.last_input == A)) {
             self.mover.step(self.move_speed, -PI / 2.0, map, self.godmode);
         }
-        if window.is_key_down(Key::D) && ((!self.is_sliding && !self.is_jumping) || self.last_input==D){
+        if (window.is_key_down(Key::D) && ((!self.is_sliding && !self.is_jumping) || self.last_input==D)) || (self.is_jumping && (self.last_input == D)) {
             self.mover.step(self.move_speed, PI / 2.0, map, self.godmode);
         }
 
-        if window.is_key_down(Key::S) && ((!self.is_sliding && !self.is_jumping) || self.last_input==S) {
+        if (window.is_key_down(Key::S) && ((!self.is_sliding && !self.is_jumping) || self.last_input==S)) || (self.is_jumping && (self.last_input == S)) {
             self.mover.step(self.move_speed, PI, map, self.godmode);
         }
 
@@ -128,7 +136,7 @@ impl Player {
         }
 
         //slowdown movespeed if not sprinting and sliding anymore
-        if !window.is_key_down(Key::LeftShift) && !window.is_key_down(Key::Down){
+        if !window.is_key_down(Key::LeftShift) && !window.is_key_down(Key::Down) && !self.is_jumping{
             self.move_speed=1.0;
         }
 
@@ -146,19 +154,16 @@ impl Player {
             }
         }
 
-        if (self.slice_cooldown > 0) && !window.is_key_down(Key::Down) {
-            self.slice_cooldown -= 1;
+        if (self.slide_cooldown > 0) && !window.is_key_down(Key::Down) {
+            self.slide_cooldown -= 1;
         } 
         //init slide gives speed boost
-        if window.is_key_down(Key::Down) && !self.is_sliding && !self.godmode && self.slice_cooldown == 0{
+        if window.is_key_down(Key::C) && !self.is_sliding && !self.godmode && self.slide_cooldown == 0{
             if self.move_speed > 1.5 {
                 self.move_speed += 5.0;
                 self.is_sliding = true;
                 self.mover.foot_level -=CROUCH_Distance;
-                if window.is_key_down(Key::D) {self.last_input = D};
-                if window.is_key_down(Key::A) {self.last_input = A};
-                if window.is_key_down(Key::S) {self.last_input = S};
-                if window.is_key_down(Key::W) {self.last_input = W};
+                self.save_input(window);
             }
             
         }
@@ -169,14 +174,50 @@ impl Player {
         }
 
         //ending slide (either cause not pressed or slowed down)
-        if (!window.is_key_down(Key::Down) && self.is_sliding) || ((self.move_speed <= SPRINT_SPEED) && self.is_sliding){
+        if (!window.is_key_down(Key::C) && self.is_sliding) || ((self.move_speed <= SPRINT_SPEED) && self.is_sliding){
             self.is_sliding = false;
             self.mover.foot_level +=CROUCH_Distance;
             self.last_input=No;
-            self.slice_cooldown = SLIDE_COOLDOWN_TIME;
+            self.slide_cooldown = SLIDE_COOLDOWN_TIME;
         }
 
-        
+        //jumping init
+        if window.is_key_pressed(Key::Space, KeyRepeat::No) && !self.is_jumping &&
+        (self.mover.foot_level-self.mover.floor_level).abs() < 0.01
+            {
+                self.gravity = GRAVITY_CONST;
+                self.is_jumping = true;
+                if self.is_sliding {
+                    self.is_sliding = false;
+                    self.mover.foot_level += CROUCH_Distance;
+                    self.slide_cooldown = SLIDE_COOLDOWN_TIME;
+
+                }
+                self.move_speed += self.move_speed*0.75;
+                let speed_bonus = self.move_speed * 0.8;
+                self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
+                self.save_input(window);
+
+                self.gravity += self.gravity*(self.move_speed*0.08)
+
+        }
+
+        //height during jump
+        if self.is_jumping {
+            //adjust for gravity
+            self.vertical_velocity += self.gravity;
+
+            //vertical movement after gravity adjustment
+            self.mover.foot_level += self.vertical_velocity;
+
+            //landing
+            if self.mover.foot_level <= self.mover.floor_level{
+                self.mover.foot_level = self.mover.floor_level;
+                self.vertical_velocity= 0.0;
+                self.is_jumping = false;
+            }
+
+        }
 
         if window.is_key_pressed(Key::G,KeyRepeat::No) {
             self.godmode = !self.godmode;
@@ -184,7 +225,7 @@ impl Player {
 
         //adjust feet_level to fit floor_level
         // smoothing: only "catch up" foot level with floor level at s smooting speed
-        if !self.godmode || window.is_key_down(Key::Y) {
+        if !self.godmode && !self.is_jumping {
             if (self.mover.foot_level - self.mover.floor_level).abs() < MOVEMENT_SMOOTHING_SPEED {
                 self.mover.foot_level = self.mover.floor_level;
             } else if self.mover.foot_level < self.mover.floor_level {
@@ -194,6 +235,13 @@ impl Player {
             }
         }
         self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
+    }
+
+    fn save_input (&mut self, window: &Window){
+        if window.is_key_down(Key::D) {self.last_input = D};
+        if window.is_key_down(Key::A) {self.last_input = A};
+        if window.is_key_down(Key::S) {self.last_input = S};
+        if window.is_key_down(Key::W) {self.last_input = W};
     }
 
     fn check_angle(&mut self) {
