@@ -20,9 +20,9 @@ const PLAYER_HEAD_HEIGHT: f64 = 15.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 const SPRINT_SPEED: f64 = 4.0;
 const CROUCH_Distance: f64 = 7.5; 
-const SLIDE_COOLDOWN_TIME: i32 = 15;
+const SLIDE_COOLDOWN_TIME: i32 = 10;
 const STRAIFING_SPEED: f64 = 0.025;
-const JUMP_STRENGTH: f64 = 5.0;
+const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -1.0;
 
 
@@ -154,7 +154,7 @@ impl Player {
             }
         }
 
-        if (self.slide_cooldown > 0) && !window.is_key_down(Key::Down) {
+        if (self.slide_cooldown > 0) && !window.is_key_down(Key::C) {
             self.slide_cooldown -= 1;
         } 
         //init slide gives speed boost
@@ -182,8 +182,8 @@ impl Player {
         }
 
         //jumping init
-        if window.is_key_pressed(Key::Space, KeyRepeat::No) && !self.is_jumping &&
-        (self.mover.foot_level-self.mover.floor_level).abs() < 0.01
+        if (window.is_key_pressed(Key::Space, KeyRepeat::No) || window.is_key_pressed(Key::R, KeyRepeat::No))
+        && !self.is_jumping && (self.mover.foot_level-self.mover.floor_level).abs() < 0.01
             {
                 self.gravity = GRAVITY_CONST;
                 self.is_jumping = true;
@@ -193,12 +193,25 @@ impl Player {
                     self.slide_cooldown = SLIDE_COOLDOWN_TIME;
 
                 }
-                self.move_speed += self.move_speed*0.75;
-                let speed_bonus = self.move_speed * 0.8;
-                self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
+                //normal jump init
+                if window.is_key_pressed(Key::Space, KeyRepeat::No) {
+                    self.move_speed += self.move_speed*0.75;
+                    let speed_bonus = self.move_speed * 0.8;
+                    self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
+                    self.gravity += self.gravity*(self.move_speed*0.08)
+                }
+
+                //rocketlauncher
+                if window.is_key_pressed(Key::R, KeyRepeat::No) {
+                    self.move_speed += self.move_speed*0.75 + 10.0;
+                    let speed_bonus = self.move_speed * 0.8;
+                    self.vertical_velocity = JUMP_STRENGTH + speed_bonus + 3.0;
+                    self.gravity += self.gravity*(self.move_speed*0.04)
+                }
+
                 self.save_input(window);
 
-                self.gravity += self.gravity*(self.move_speed*0.08)
+                
 
         }
 
