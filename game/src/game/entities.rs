@@ -49,11 +49,11 @@ impl Entity {
     // test for entity movement; simply makes it walk in a circle
     fn movement_ai_test(self: &mut Self, map: &Map, player_position: Point) {
         self.mover.facing_direction = self.mover.position.angle_to(&player_position);
-        self.mover.step(MOVE_SPEED / 4.0, 0.0, map, false);
+        self.mover.step(MOVE_SPEED, 0.0, map, false);
     }
 
     pub fn update(self: &mut Self, window: &Window, map: &Map, player_mover: &Mover) {
-        if window.is_key_down(Key::L) {
+        if window.is_key_pressed(Key::L,minifb::KeyRepeat::No) {
             self.movement_locked = !self.movement_locked;
         }
         if self.movement_locked {return;}

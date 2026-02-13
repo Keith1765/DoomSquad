@@ -127,6 +127,7 @@ impl Player {
             self.mover.step(self.move_speed, PI, map, self.godmode);
         }
 
+
         if window.is_key_down(Key::Space) && self.godmode {
             self.mover.foot_level += FLY_UP_DOWN_SPEED;
         }
@@ -137,7 +138,7 @@ impl Player {
 
         //slowdown movespeed if not sprinting and sliding anymore
         if !window.is_key_down(Key::LeftShift) && !window.is_key_down(Key::Down) && !self.is_jumping{
-            self.move_speed=1.0;
+            self.move_speed=MOVE_SPEED;
         }
 
         //implementing Sprint that gradually increases movement speed
