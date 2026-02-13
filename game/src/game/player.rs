@@ -182,8 +182,9 @@ impl Player {
         }
 
         //jumping init
-        if (window.is_key_pressed(Key::Space, KeyRepeat::No) || window.is_key_pressed(Key::R, KeyRepeat::No))
-        && !self.is_jumping && (self.mover.foot_level-self.mover.floor_level).abs() < 0.01
+        if (window.is_key_pressed(Key::Space, KeyRepeat::No)
+        && !self.is_jumping && (self.mover.foot_level-self.mover.floor_level).abs() < 0.01 )
+        || window.is_key_pressed(Key::R, KeyRepeat::No)
             {
                 self.gravity = GRAVITY_CONST;
                 self.is_jumping = true;
