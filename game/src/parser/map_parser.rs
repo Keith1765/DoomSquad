@@ -230,13 +230,14 @@ fn read_point(
     Ok(())
 }
 
-//TODO Segment struc erstellen und in vec speichern
+//TODO creating Segment struc 
+//left to implemt diffrent texture for each segment, but for now we will use the same texture for all segments
 fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Result<()> {
     loop {
-        let mut r = None;
-        let mut g = None;
-        let mut b = None;
-        let mut alpha = None;
+        let mut r = None; //left for later use
+        let mut g = None; //left for later use
+        let mut b = None; //left for later use
+        let mut alpha = None; //left for later use
 
         match reader.read_event_into(buf)? {
             Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
@@ -244,10 +245,10 @@ fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Re
                     let attr = attr?;
 
                     match attr.key.as_ref() {
-                        b"r" => r = Some(attr.unescape_value()?.parse::<u8>()?),
-                        b"g" => g = Some(attr.unescape_value()?.parse::<u8>()?),
-                        b"b" => b = Some(attr.unescape_value()?.parse::<u8>()?),
-                        b"alpha" => alpha = Some(attr.unescape_value()?.parse::<u8>()?),
+                        b"r" => r = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
+                        b"g" => g = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
+                        b"b" => b = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
+                        b"alpha" => alpha = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
                         _ => {}
                     }
                 }
