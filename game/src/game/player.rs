@@ -6,19 +6,19 @@ use crate::{
         movement::Mover, player,
     },
 };
-use minifb::{Key, MouseMode, Window};
+use minifb::{Key, KeyRepeat, MouseMode, Window};
 use std::f64::consts::PI;
 use crate::game::player::LastInputDirection::*;
 
 const ROTATION_SPEED_MOUSE: f64 = 2.0;
-const ROTATION_SPEED_KEYS: f64 = 0.1;
-pub const MOVE_SPEED: f64 = 1.0;
+const ROTATION_SPEED_KEYS: f64 = 0.15;
+pub const MOVE_SPEED: f64 = 1.5;
 const FLY_UP_DOWN_SPEED: f64 = 1.0;
 const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 pub const MAX_STEP_UP_HEIGHT: f64 = 5.0;
 const PLAYER_HEAD_HEIGHT: f64 = 15.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
-const SPRINT_SPEED: f64 = 3.0;
+const SPRINT_SPEED: f64 = 3.5;
 const CROUCH_Distance: f64 = 7.5; 
 const SLIDE_COOLDOWN_TIME: i32 = 15;
 const STRAIFING_SPEED: f64 = 0.02;
@@ -178,14 +178,13 @@ impl Player {
 
         
 
-        // TODO make not fiddly (currently switches every tick)
-        if window.is_key_down(Key::G) {
+        if window.is_key_pressed(Key::G,KeyRepeat::No) {
             self.godmode = !self.godmode;
         }
 
         //adjust feet_level to fit floor_level
         // smoothing: only "catch up" foot level with floor level at s smooting speed
-        if !self.godmode {
+        if !self.godmode || window.is_key_down(Key::Y) {
             if (self.mover.foot_level - self.mover.floor_level).abs() < MOVEMENT_SMOOTHING_SPEED {
                 self.mover.foot_level = self.mover.floor_level;
             } else if self.mover.foot_level < self.mover.floor_level {
