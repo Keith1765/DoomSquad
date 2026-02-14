@@ -1,15 +1,14 @@
-use crate::game::map::{self, Point, ShapeType};
 use anyhow::Result;
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
 use std::io::Read;
 
-pub fn parse_entitties(path: String) -> Result<String> {
+pub fn parse_entitties(path: String) -> Result<()> {
     read_entitties_from_file(path)
 }
 
-pub fn read_entitties_from_file(path: String) -> Result<String> {
+pub fn read_entitties_from_file(path: String) -> Result<()> {
     let mut file = File::open(path)?;
     let mut xml_contents = String::new();
     file.read_to_string(&mut xml_contents)?;
@@ -32,7 +31,7 @@ pub fn read_entitties_from_file(path: String) -> Result<String> {
                 }
 
                 match element_type.as_deref() {
-                    Some("point") => read_point(&mut reader, &mut buf, &label, &mut point_list)?,
+                    Some("point") => read_point(&mut reader, &mut buf, &label)?,
                     _ => {}
                 }
             }
@@ -43,13 +42,13 @@ pub fn read_entitties_from_file(path: String) -> Result<String> {
 
         buf.clear();
     }
+    Ok(())
 }
 
 fn read_point(
     reader: &mut Reader<&[u8]>,
     buf: &mut Vec<u8>,
     name: &str,
-    point_list: &mut Vec<GeogebraPoint>,
 ) -> Result<()> {
     let mut x = None;
     let mut y = None;
