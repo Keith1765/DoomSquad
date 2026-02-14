@@ -19,12 +19,12 @@ pub const MAX_STEP_UP_HEIGHT: f64 = 5.0;
 const PLAYER_HEAD_HEIGHT: f64 = 15.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 const SPRINT_SPEED: f64 = 4.0;
-const CROUCH_Distance: f64 = 7.5; 
+const CROUCH_HEIGHT_DIFF: f64 = 5.0; 
 const SLIDE_COOLDOWN_TIME: i32 = 10;
 const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 300;
 const STRAIFING_SPEED: f64 = 0.025;
 const JUMP_STRENGTH: f64 = 3.0;
-const GRAVITY_CONST: f64 = -1.0;
+const GRAVITY_CONST: f64 = -0.9;
 
 
 #[derive(Clone,PartialEq, Eq)]
@@ -165,7 +165,6 @@ impl Player {
             if self.move_speed > 1.5 {
                 self.move_speed += 5.0;
                 self.is_sliding = true;
-                self.mover.foot_level -=CROUCH_Distance;
                 self.save_input(window);
             }
             
@@ -179,7 +178,6 @@ impl Player {
         //ending slide (either cause not pressed or slowed down)
         if (!window.is_key_down(Key::C) && self.is_sliding) || ((self.move_speed <= SPRINT_SPEED) && self.is_sliding){
             self.is_sliding = false;
-            self.mover.foot_level +=CROUCH_Distance;
             self.last_input=No;
             self.slide_cooldown = SLIDE_COOLDOWN_TIME;
         }
@@ -193,7 +191,7 @@ impl Player {
                 self.is_jumping = true;
                 if self.is_sliding {
                     self.is_sliding = false;
-                    self.mover.foot_level += CROUCH_Distance;
+                    self.mover.foot_level += CROUCH_HEIGHT_DIFF;
                     self.slide_cooldown = SLIDE_COOLDOWN_TIME;
 
                 }
@@ -265,7 +263,13 @@ impl Player {
 
         
         }
-        self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
+        if self.is_sliding {
+            self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT - CROUCH_HEIGHT_DIFF;
+        }
+        else{
+            self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
+        }
+
     }
 
     fn save_input (&mut self, window: &Window){
