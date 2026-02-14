@@ -78,7 +78,6 @@ fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
         wall_shapes: Vec::new(),
         block_sides: Vec::new(),
         block_shapes: Vec::new(),
-        entities: Vec::new(),
         side_count: 0,
         shape_count: 0,
     };

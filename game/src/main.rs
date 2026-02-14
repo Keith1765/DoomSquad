@@ -53,15 +53,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut buffer: Vec<u32> = vec![0; SCREEN_WIDTH * SCREEN_HEIGHT];
 
-
-    //TODO TEST
-    let map = parse_map("assets/maps/first-test-map-from-geogebra.xml".to_string()); // TODO remove unwrap
-    if let Ok(map) = map {
-        game.map = map;
-    } else {
-        return Err("Error parsing map".into());
-    }
-
     let renderer_data: RendererData = render_init(
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
@@ -72,8 +63,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         BLOCK_DEFAULT_COLOR,
         SURFACE_DEFAULT_COLOR,
     );
-
     let mut game = game::Game::new_test_game(&renderer_data);
+
+    //TODO TEST
+    let map = parse_map("assets/maps/first-test-map-from-geogebra.xml".to_string()); // TODO remove unwrap
+    if let Ok(map) = map {
+        game.map = map;
+    } else {
+        return Err("Error parsing map".into());
+    }
+
 
     let mut audio: Option<Audio> = None;
     if AUDIO_ENABLED {
