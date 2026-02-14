@@ -21,6 +21,7 @@ pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 const SPRINT_SPEED: f64 = 4.0;
 const CROUCH_Distance: f64 = 7.5; 
 const SLIDE_COOLDOWN_TIME: i32 = 10;
+const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 300;
 const STRAIFING_SPEED: f64 = 0.025;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -1.0;
@@ -48,6 +49,7 @@ pub struct Player {
     pub is_jumping: bool,
     pub vertical_velocity: f64,
     pub gravity: f64,
+    pub rocketlauncher_Cooldown: i32,
     
 }
 
@@ -75,7 +77,7 @@ impl Player {
             is_jumping: false,
             vertical_velocity: 0.0,
             gravity: -1.0,
-            
+            rocketlauncher_Cooldown: 0,
         }
     }
 
@@ -204,17 +206,23 @@ impl Player {
                 }
 
                 //rocketlauncher
-                if window.is_key_pressed(Key::R, KeyRepeat::No) {
+                if window.is_key_pressed(Key::R, KeyRepeat::No) && (self.rocketlauncher_Cooldown == 0){
                     self.move_speed += self.move_speed*0.75 + 10.0;
                     let speed_bonus = self.move_speed * 0.8;
                     self.vertical_velocity = JUMP_STRENGTH + speed_bonus + 3.0;
-                    self.gravity += self.gravity*(self.move_speed*0.04)
+                    self.gravity += self.gravity*(self.move_speed*0.04);
+                    self.rocketlauncher_Cooldown = ROCKETLAUNCHER_COOLDOWN_TIME;
                 }
 
                 self.save_input(window);
 
                 
 
+        }
+
+        //Rocketlauncher cooldwon
+        if self.rocketlauncher_Cooldown != 0{
+            self.rocketlauncher_Cooldown -= 1;
         }
 
         //height during jump
@@ -241,13 +249,21 @@ impl Player {
         //adjust feet_level to fit floor_level
         // smoothing: only "catch up" foot level with floor level at s smooting speed
         if !self.godmode && !self.is_jumping {
-            if (self.mover.foot_level - self.mover.floor_level).abs() < MOVEMENT_SMOOTHING_SPEED {
+            
+            //adjust for gravity
+            self.vertical_velocity += self.gravity;
+
+            //vertical movement after gravity adjustment
+            self.mover.foot_level += self.vertical_velocity;
+
+            //landing
+            if self.mover.foot_level <= self.mover.floor_level{
                 self.mover.foot_level = self.mover.floor_level;
-            } else if self.mover.foot_level < self.mover.floor_level {
-                self.mover.foot_level += MOVEMENT_SMOOTHING_SPEED;
-            } else {
-                self.mover.foot_level -= MOVEMENT_SMOOTHING_SPEED;
+                self.vertical_velocity= 0.0;
+                self.is_jumping = false;
             }
+
+        
         }
         self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
     }
