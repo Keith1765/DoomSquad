@@ -6,13 +6,12 @@ use std::io::Read;
 use std::str;
 
 pub struct Entity {
-    pub x: f64, //pos from the point
-    pub y: f64, //pos from the point
-    floor_level: f64, //r from rgba-value
-    facing_direction: f64,//g from rgba-value
-    enemy_type: i32,//b from rgba-value
+    pub x: f64,            //pos from the point
+    pub y: f64,            //pos from the point
+    floor_level: f64,      //r from rgba-value
+    facing_direction: f64, //g from rgba-value
+    enemy_type: i32,       //b from rgba-value
 }
-
 
 pub fn parse_entitties(path: String) -> Result<()> {
     read_entitties_from_file(path)
@@ -40,12 +39,16 @@ pub fn read_entitties_from_file(path: String) -> Result<()> {
                     }
                 }
 
-                match element_type.as_deref() {
-                    Some("point") => read_point(&mut reader, &mut buf, &label)?,
+                match (element_type.as_deref(), label.as_str()) {
+                    (Some("point"), label) if label.starts_with("Player") => {
+                        read_point(&mut reader, &mut buf, label)?
+                    }
+                    (Some("point"), label) if label.starts_with("Enemy") => {
+                        read_point(&mut reader, &mut buf, label)?
+                    }
                     _ => {}
                 }
             }
-
             Event::Eof => break,
             _ => {}
         }
@@ -55,11 +58,7 @@ pub fn read_entitties_from_file(path: String) -> Result<()> {
     Ok(())
 }
 
-fn read_point(
-    reader: &mut Reader<&[u8]>,
-    buf: &mut Vec<u8>,
-    name: &str,
-) -> Result<()> {
+fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Result<()> {
     let mut x = None;
     let mut y = None;
 
