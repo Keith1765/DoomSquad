@@ -5,10 +5,10 @@ use std::{
     rc::Rc,
 };
 
-use crate::game::entities::Entity;
+use crate::game::{entities::Entity, movement::Mover};
 use crate::render::sprites::Sprite;
 
-pub const LEVEL_HEIGHT: f64 = 25.0; // TODO different for every map
+pub const LEVEL_HEIGHT: f64 = 50.0; // TODO different for every map
 
 pub type ShapeID = usize;
 type SideID = usize;
@@ -128,14 +128,14 @@ impl Hash for Shape {
     }
 }
 
+#[derive(Clone)]
 pub struct Map {
     pub id: usize,
     //pub border: Shape, // mainly for topdown renderer (maybe change to rectangle?)
     pub wall_sides: Vec<Rc<Side>>,
     pub wall_shapes: Vec<Rc<Shape>>,
     pub block_sides: Vec<Rc<Side>>,
-    pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed?
-    pub entities: Vec<Entity>,
+    pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed
     pub side_count: usize,
     pub shape_count: usize,
 }
@@ -148,7 +148,6 @@ impl Map {
             wall_shapes: Vec::new(),
             block_sides: Vec::new(),
             block_shapes: Vec::new(),
-            entities: Vec::new(),
             side_count: 0,
             shape_count: 0,
             //points_in_border: Vec::new(),
@@ -187,12 +186,12 @@ impl Map {
             10.0,
             0x0000ff,
             0xffff00,
-            vec![0; bottom_block_points.len()],
+            vec![0, 0, 1], // demonstrates separate textures for different sides
         )?;
 
         let bottom_block_points_2: Vec<Point> = vec![
             Point { x: 200.0, y: 215.0 },
-            Point { x: 180.0, y: 205.0 },
+            Point { x: 185.0, y: 210.0 },
             Point { x: 175.0, y: 215.0 },
             Point { x: 175.0, y: 200.0 },
             Point { x: 185.0, y: 200.0 },
@@ -240,17 +239,149 @@ impl Map {
             vec![0; small_block_points.len()],
         )?;
 
-        let test_entity = Entity {
-            position: Point { x: 230.0, y: 210.0 },
-            vertical_position: 0.0,
-            facing_angle: 0.0,
-            sprite: Sprite {
-                texture_id: 2,
-                height: 20.0,
-                width: 16.0,
-            },
-        };
-        map.entities.push(test_entity);
+        let floor_block_points: Vec<Point> = vec![
+            Point { x: 205.0, y: 250.0 },
+            Point { x: 205.0, y: 170.0 },
+            Point { x: 170.0, y: 170.0 },
+            Point { x: 170.0, y: 250.0 },
+        ];
+        map.add_shape_from_points(
+            floor_block_points.clone(),
+            ShapeType::Block,
+            0.0,
+            0.0,
+            0xffffff,
+            0x000000,
+            vec![0; floor_block_points.len()],
+        )?;
+
+        let mvmttest_block_points_1: Vec<Point> = vec![
+            Point { x: 200.0, y: 240.0 },
+            Point { x: 175.0, y: 240.0 },
+            Point { x: 175.0, y: 250.0 },
+            Point { x: 200.0, y: 250.0 },
+        ];
+        map.add_shape_from_points(
+            mvmttest_block_points_1.clone(),
+            ShapeType::Block,
+            0.0,
+            5.0,
+            0xffffff,
+            0x00ff00,
+            vec![0; floor_block_points.len()],
+        )?;
+
+        let mvmttest_block_points_2: Vec<Point> = vec![
+            Point { x: 200.0, y: 250.0 },
+            Point { x: 175.0, y: 250.0 },
+            Point { x: 175.0, y: 260.0 },
+            Point { x: 200.0, y: 260.0 },
+        ];
+        map.add_shape_from_points(
+            mvmttest_block_points_2.clone(),
+            ShapeType::Block,
+            5.0,
+            5.0,
+            0xffffff,
+            0x00ff00,
+            vec![0; floor_block_points.len()],
+        )?;
+
+        let mvmttest_block_points_3: Vec<Point> = vec![
+            Point { x: 180.0, y: 250.0 },
+            Point { x: 175.0, y: 250.0 },
+            Point { x: 175.0, y: 260.0 },
+            Point { x: 180.0, y: 260.0 },
+        ];
+        map.add_shape_from_points(
+            mvmttest_block_points_3.clone(),
+            ShapeType::Block,
+            15.0,
+            5.0,
+            0xffffff,
+            0x00ff00,
+            vec![0; floor_block_points.len()],
+        )?;
+
+        let mvmttest_block_points_4: Vec<Point> = vec![
+            Point { x: 200.0, y: 240.0 },
+            Point { x: 210.0, y: 240.0 },
+            Point { x: 210.0, y: 250.0 },
+            Point { x: 200.0, y: 250.0 },
+        ];
+        map.add_shape_from_points(
+            mvmttest_block_points_4.clone(),
+            ShapeType::Block,
+            2.5,
+            2.0,
+            0xffffff,
+            0x00ff00,
+            vec![0; floor_block_points.len()],
+        )?;
+
+        let mvmttest_block_points_5: Vec<Point> = vec![
+            Point { x: 200.0, y: 240.0 },
+            Point { x: 210.0, y: 240.0 },
+            Point { x: 210.0, y: 250.0 },
+            Point { x: 200.0, y: 250.0 },
+        ];
+        map.add_shape_from_points(
+            mvmttest_block_points_5.clone(),
+            ShapeType::Block,
+            6.0,
+            0.0,
+            0xffffff,
+            0x00ff00,
+            vec![0; floor_block_points.len()],
+        )?;
+
+        let mvmttest_block_points_6: Vec<Point> = vec![
+            Point { x: 200.0, y: 240.0 },
+            Point { x: 210.0, y: 240.0 },
+            Point { x: 210.0, y: 250.0 },
+            Point { x: 200.0, y: 250.0 },
+        ];
+        map.add_shape_from_points(
+            mvmttest_block_points_6.clone(),
+            ShapeType::Block,
+            25.0,
+            2.0,
+            0xffffff,
+            0x00ff00,
+            vec![0; floor_block_points.len()],
+        )?;
+
+        let mvmttest_block_points_7: Vec<Point> = vec![
+            Point { x: 210.0, y: 250.0 },
+            Point { x: 200.0, y: 250.0 },
+            Point { x: 200.0, y: 260.0 },
+            Point { x: 210.0, y: 260.0 },
+        ];
+        map.add_shape_from_points(
+            mvmttest_block_points_7.clone(),
+            ShapeType::Block,
+            10.0,
+            5.0,
+            0xffffff,
+            0x00ff00,
+            vec![0; floor_block_points.len()],
+        )?;
+
+        let mvmttest_block_points_8: Vec<Point> = vec![
+            Point { x: 210.0, y: 250.0 },
+            Point { x: 200.0, y: 250.0 },
+            Point { x: 200.0, y: 260.0 },
+            Point { x: 210.0, y: 260.0 },
+        ];
+        map.add_shape_from_points(
+            mvmttest_block_points_8.clone(),
+            ShapeType::Block,
+            27.5,
+            5.0,
+            0xffffff,
+            0x00ff00,
+            vec![0; floor_block_points.len()],
+        )?;
 
         Some(map)
     }

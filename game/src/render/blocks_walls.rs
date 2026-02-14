@@ -147,10 +147,10 @@ pub fn task_surface(
 
     let onscreen_dimensions: Option<(isize, isize)> = match &slice.entry_hit.side.shape.shape_type {
         ShapeType::Block => {
-            if &slice.entry_hit.side.shape.bottom > &game.player.view_height {
+            if &slice.entry_hit.side.shape.bottom > &game.player.mover.view_level {
                 Some((exit_bottom_onscreen, entry_bottom_onscreen))
             } else if (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height)
-                < game.player.view_height
+                < game.player.mover.view_level
             {
                 Some((entry_top_onscreen, exit_top_onscreen))
             } else {
@@ -164,14 +164,14 @@ pub fn task_surface(
     {
         ShapeType::Block => {
             // case ceiling
-            if &slice.entry_hit.side.shape.bottom > &game.player.view_height {
-                Some(&slice.entry_hit.side.shape.bottom - &game.player.view_height)
+            if &slice.entry_hit.side.shape.bottom > &game.player.mover.view_level {
+                Some(&slice.entry_hit.side.shape.bottom - &game.player.mover.view_level)
             //case floor
             } else if (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height)
-                < game.player.view_height
+                < game.player.mover.view_level
             {
                 Some(
-                    game.player.view_height
+                    game.player.mover.view_level
                         - (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height),
                 )
             } else {
@@ -199,10 +199,10 @@ pub fn task_surface(
 
         let task_type: RenderTaskType = match &slice.entry_hit.side.shape.shape_type {
             ShapeType::Block => {
-                if &slice.entry_hit.side.shape.bottom > &game.player.view_height {
+                if &slice.entry_hit.side.shape.bottom > &game.player.mover.view_level {
                     RenderTaskType::Ceiling(vertical_distance_value)
                 } else if (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height)
-                    < game.player.view_height
+                    < game.player.mover.view_level
                 {
                     RenderTaskType::Floor(vertical_distance_value)
                 } else {
@@ -233,8 +233,8 @@ pub fn task_partial_surface(
     game: &Game,
 ) -> Option<RenderTaskOrderer> {
     // if we are inside the block (no just horizontalll, but also vertically)
-    if exit_hit.side.shape.bottom < game.player.view_height
-        && exit_hit.side.shape.bottom + exit_hit.side.shape.height > game.player.view_height
+    if exit_hit.side.shape.bottom < game.player.mover.view_level
+        && exit_hit.side.shape.bottom + exit_hit.side.shape.height > game.player.mover.view_level
     {
         return None;
     }
@@ -245,9 +245,9 @@ pub fn task_partial_surface(
     let brightness = 0.5 + (&exit_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
 
     // if we are above the block (case floor)
-    if exit_hit.side.shape.bottom + exit_hit.side.shape.height < game.player.view_height {
+    if exit_hit.side.shape.bottom + exit_hit.side.shape.height < game.player.mover.view_level {
         let vert_dist =
-            game.player.view_height - exit_hit.side.shape.bottom + exit_hit.side.shape.height;
+            game.player.mover.view_level - exit_hit.side.shape.bottom + exit_hit.side.shape.height;
         let task: RenderTask = RenderTask {
             texture_column: None,
             color: exit_hit.side.shape.surface_color,
@@ -262,7 +262,7 @@ pub fn task_partial_surface(
         });
     } else {
         // otherwise we are below the block (case ceiling)
-        let vert_dist = exit_hit.side.shape.bottom - game.player.view_height;
+        let vert_dist = exit_hit.side.shape.bottom - game.player.mover.view_level;
         let task: RenderTask = RenderTask {
             texture_column: None,
             color: exit_hit.side.shape.surface_color,
@@ -291,7 +291,7 @@ pub fn calculate_side_bottom_top(
 
     let side_bottom_onscreen: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
         + ((rh.side.shape.bottom / normalized_distance_to_side)
-        - (game.player.view_height / normalized_distance_to_side)) // adjust for view hieght
+        - (game.player.mover.view_level / normalized_distance_to_side)) // adjust for view hieght
         * renderer_data.render_scale_coefficient) // scale correctly
         as isize;
 

@@ -11,6 +11,7 @@ use crate::{
     },
 };
 
+#[derive(Clone)]
 pub struct Sprite {
     pub texture_id: usize,
     pub height: f64,
@@ -37,9 +38,13 @@ pub fn task_sprite(
     renderer_data: &RendererData,
 ) -> Option<SpriteInstruction> {
     // return the leftmost x of the sprite, and all the tasks to be rendered right of that
-    let angle_off_player_view =
-        game.player.position.angle_to(&entity.position) - game.player.view_angle; // TODO abort if sprite out of FOV
-    let distance: f64 = game.player.position.distance_to(&entity.position);
+    let angle_off_player_view = game.player.mover.position.angle_to(&entity.mover.position)
+        - game.player.mover.facing_direction; // TODO abort if sprite out of FOV
+    let distance: f64 = game
+        .player
+        .mover
+        .position
+        .distance_to(&entity.mover.position);
     let normalized_distance = distance * angle_off_player_view.cos();
 
     // TODO temporary, find cleaner solution ?
@@ -52,8 +57,8 @@ pub fn task_sprite(
     let onscreen_height = ((entity.sprite.height / normalized_distance)
         * renderer_data.render_scale_coefficient) as isize;
     let onscreen_bottom: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
-        + ((entity.vertical_position / normalized_distance)
-        - (game.player.view_height / normalized_distance)) // adjust for view hieght
+        + ((entity.mover.foot_level / normalized_distance)
+        - (game.player.mover.view_level / normalized_distance)) // adjust for view hieght
         * renderer_data.render_scale_coefficient) // scale correctly
         as isize;
 
@@ -63,7 +68,7 @@ pub fn task_sprite(
 
     let left_screen_x = center_screen_x - (onscreen_width / 2);
 
-    let angle_in_world = game.player.position.angle_to(&entity.position) - 0.5 * PI; // straight line to player +90deg
+    let angle_in_world = game.player.mover.position.angle_to(&entity.mover.position) - 0.5 * PI; // straight line to player +90deg
     // analogous to shading for sides
     let brightness = ((angle_in_world.cos() * 0.5 + 0.75)
         / (distance * renderer_data.distance_darkness_coefficient)
