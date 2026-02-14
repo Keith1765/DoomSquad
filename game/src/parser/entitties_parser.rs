@@ -3,6 +3,16 @@ use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
 use std::io::Read;
+use std::str;
+
+pub struct Entity {
+    pub x: f64, //pos from the point
+    pub y: f64, //pos from the point
+    floor_level: f64, //r from rgba-value
+    facing_direction: f64,//g from rgba-value
+    enemy_type: i32,//b from rgba-value
+}
+
 
 pub fn parse_entitties(path: String) -> Result<()> {
     read_entitties_from_file(path)
@@ -68,9 +78,8 @@ fn read_point(
             Event::End(ref e) if e.name().as_ref() == b"element" => break,
             _ => {}
         }
-        println!("Read point: {} with x: {:?}, y: {:?}", name, x, y);
         buf.clear();
     }
-
+    println!("Read point: {} with x: {:?}, y: {:?}", name, x, y);
     Ok(())
 }
