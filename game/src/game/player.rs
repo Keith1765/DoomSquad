@@ -31,7 +31,7 @@ impl Player {
         let pa: f64 = 4.0;
         Self {
             mover: Mover {
-                position: Point { x: 187.5, y: 225.0 },
+                position: Point { x: 1.0, y: 1.0 },
                 floor_level: 0.0,
                 foot_level: 0.0,
                 view_level: PLAYER_VIEW_HEIGHT,

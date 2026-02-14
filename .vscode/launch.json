@@ -4,11 +4,13 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
+
         {
             "name": "Launch",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/<your program>",
+            "program": "${workspaceRoot}/game/target/debug/game.exe",
             "args": [],
             "cwd": "${workspaceRoot}"
         }

@@ -69,8 +69,7 @@ impl Add for Point {
         }
     }
 }
-
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq,Debug)]
 pub enum ShapeType {
     Wall,  // walls are ray-terminating
     Block, // blocks are not
@@ -136,9 +135,9 @@ pub struct Map {
     pub wall_sides: Vec<Rc<Side>>,
     pub wall_shapes: Vec<Rc<Shape>>,
     pub block_sides: Vec<Rc<Side>>,
-    pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed?
-    side_count: usize,
-    shape_count: usize,
+    pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed
+    pub side_count: usize,
+    pub shape_count: usize,
 }
 
 impl Map {
