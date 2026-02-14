@@ -2,13 +2,17 @@
 
 mod audio;
 mod game;
+mod parser;
 mod render;
 
 use crate::audio::Audio;
 use crate::render::{RendererData, render_init};
+use std::error::Error;
 use minifb::{Key, Window, WindowOptions};
 use std::f64::consts::PI;
 use std::time::Instant;
+
+use crate::parser::map_parser::*;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
@@ -22,6 +26,8 @@ const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
 const AUDIO_ENABLED: bool = false;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    //I commented game init to test parser first
     //for fps count
     let mut last_time = Instant::now();
     let mut frame_count = 0;
@@ -57,8 +63,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         BLOCK_DEFAULT_COLOR,
         SURFACE_DEFAULT_COLOR,
     );
-
     let mut game = game::Game::new_test_game(&renderer_data);
+
+    //TODO TEST
+    let map = parse_map("assets/maps/first-test-map-from-geogebra.xml".to_string()); // TODO remove unwrap
+    if let Ok(map) = map {
+        game.map = map;
+    } else {
+        return Err("Error parsing map".into());
+    }
+
 
     let mut audio: Option<Audio> = None;
     if AUDIO_ENABLED {
@@ -107,9 +121,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             fps_value = frame_count as f32 / elapsed;
             frame_count = 0;
             last_time = Instant::now();
-
-            window.set_title(&format!("My Window | Movement Speed: {:.1}", game.player.move_speed));
+            window.set_title(&format!("My Window | FPS: {:.1}", fps_value));
         }
+
         //show buffer safely
         if let Err(e) = window.update_with_buffer(&buffer, SCREEN_WIDTH, SCREEN_HEIGHT) {
             eprintln!("failed to update the window: {e}");
