@@ -65,13 +65,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let mut game = game::Game::new_test_game(&renderer_data);
 
-    //TODO TEST
-    let map = parse_map("assets/maps/first-test-map-from-geogebra.xml".to_string()); // TODO remove unwrap
-    if let Ok(map) = map {
-        game.map = map;
-    } else {
-        return Err("Error parsing map".into());
-    }
+    // //TODO TEST
+    // let map = parse_map("assets/maps/first-test-map-from-geogebra.xml".to_string()); // TODO remove unwrap
+    // if let Ok(map) = map {
+    //     game.map = map;
+    // } else {
+    //     return Err("Error parsing map".into());
+    // }
 
 
     let mut audio: Option<Audio> = None;

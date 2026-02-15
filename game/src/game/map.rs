@@ -153,12 +153,12 @@ impl Map {
             //points_in_border: Vec::new(),
         };
         let wall_points: Vec<Point> = vec![
-            Point { x: 800.0, y: 100.0 },
-            Point { x: 850.0, y: 200.0 },
-            Point { x: 950.0, y: 200.0 },
-            Point { x: 875.0, y: 250.0 },
-            Point { x: 900.0, y: 350.0 },
-            Point { x: 800.0, y: 300.0 },
+            Point { x: 200.0, y: 100.0 },
+            Point { x: 250.0, y: 200.0 },
+            Point { x: 350.0, y: 200.0 },
+            Point { x: 275.0, y: 250.0 },
+            Point { x: 300.0, y: 350.0 },
+            Point { x: 200.0, y: 300.0 },
             Point { x: 100.0, y: 350.0 },
             Point { x: 125.0, y: 250.0 },
             Point { x: 50.0, y: 200.0 },
