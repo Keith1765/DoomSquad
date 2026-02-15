@@ -62,7 +62,7 @@ impl Mover {
 
             // we check if the current side blocks our path completely; if so, we dont make a step at all
             if block_bottom <= head_level // bottom is below our head
-                && block_top > self.floor_level + MAX_STEP_UP_HEIGHT
+                && block_top > self.foot_level + MAX_STEP_UP_HEIGHT
             // cant step up the side
             {
                 //println!("blocked completely");
@@ -73,7 +73,7 @@ impl Mover {
             }
 
             if block_bottom < lowest_ceiling_level // lower thn lowest previously found ceiling level
-                && block_top > self.floor_level + MAX_STEP_UP_HEIGHT
+                && block_top > self.foot_level + MAX_STEP_UP_HEIGHT
             // block cant be stepped up onto
             {
                 lowest_ceiling_level = block_bottom;
@@ -81,7 +81,7 @@ impl Mover {
 
             // checks for steps up ledges
             if block_bottom <= head_level // bottom below our head (not totally out of way)
-                && block_top <= self.floor_level + MAX_STEP_UP_HEIGHT // can step up the side
+                && block_top <= self.foot_level + MAX_STEP_UP_HEIGHT // can step up the side
                 && block_top > height_to_step_to
             // would be a higher step than any previous steps up; if not, irrelevant, do nothing
             {
