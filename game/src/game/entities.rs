@@ -18,6 +18,7 @@ const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 const GRAVITY_CONST: f64 = -0.8;
 const BULLET_SPEED: f64 =  20.0;
 const SHOOTING_COOLDOWN: i32 = 30;
+const BULLET_HP: f64 = 30.0;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType{
@@ -43,6 +44,7 @@ pub struct Entity {
     pub entity_type: EntityType,
     pub orientation_lock: bool,
     pub cooldown: i32,
+    pub hp: f64,
 }
 
 impl Entity {
@@ -53,7 +55,8 @@ impl Entity {
         facing_direction: f64,
         sprite_texture_id: usize,
         renderer_data: &RendererData,
-        entity_type: EntityType
+        entity_type: EntityType,
+        hp: f64,
     ) -> Option<Self> {
         let entity = Entity {
             mover: Mover {
@@ -75,6 +78,7 @@ impl Entity {
             entity_type: entity_type,
             orientation_lock: false,
             cooldown: 0,
+            hp: hp,
         };
         Some(entity)
     }
@@ -117,11 +121,13 @@ impl Entity {
         self.gravity(map);
     }
     fn bullet_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
+        self.hp -= 0.25;
         self.mover.step(BULLET_SPEED, 0.0, map, false);
     }
     fn red_barrel_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.gravity(map);
     }
+
     fn ranged_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point, renderer_data: &RendererData, events: &mut Vec<EntityEvent>) {
         self.gravity(map);
 
@@ -132,7 +138,7 @@ impl Entity {
         else{
             let direction_to_player = self.mover.position.angle_to(&player_position);
             self.cooldown = SHOOTING_COOLDOWN;
-            let bullet = Entity::new(self.mover.position, self.mover.floor_level, 1.0, direction_to_player, 1, renderer_data, Bullet).unwrap();
+            let bullet = Entity::new(self.mover.position, self.mover.floor_level, 1.0, direction_to_player, 1, renderer_data, Bullet, BULLET_HP).unwrap();
             events.push(Spawn(bullet));
         }
     }

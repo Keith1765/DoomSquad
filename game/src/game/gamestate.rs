@@ -25,7 +25,7 @@ impl Game {
         
         Self {
             player: Player::new(),
-            entities: vec![Entity::new(Point { x: 230.0, y: 210.0 }, 100.0, 20.0, 0.0, 3, renderer_data, MeleeEnemy).unwrap()],
+            entities: vec![Entity::new(Point { x: 230.0, y: 210.0 }, 100.0, 20.0, 0.0, 3, renderer_data, RangedEnemy, 100.0).unwrap()],
             map: Map::new_test_map().unwrap(), // TODO remove unwrap
             despawn_timer: DESPAWN_TIME,
         }
@@ -33,15 +33,8 @@ impl Game {
 
     pub fn update(&mut self, window: &Window, renderer_data: &RendererData) {
 
-        //TODO this is a despawn timer that despawns all bullets each time, because rn we dont know how old bullets are
-        // if self.despawn_timer != 0 {
-        //     self.despawn_timer -= 1;
-        // }
-        // //despawn all bullets after timer
-        // if self.despawn_timer == 0 {
-        //     self.despawn_timer = DESPAWN_TIME;
-        //     self.entities.retain(|entity|entity.entity_type != Bullet);
-        // }
+        //despawn all bullets after timer
+        self.entities.retain(|entity|entity.hp > 0.0);
         
         self.player.update(window, &self.map);
 
