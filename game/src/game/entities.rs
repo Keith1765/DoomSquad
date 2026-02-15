@@ -92,7 +92,7 @@ impl Entity {
             Bullet   => self.bullet_behaviour(map,player_mover.position, &mut events),
             RedBarrel   => self.red_barrel_behaviour(map, player_mover.position, &mut events),
             RangedEnemy   => self.ranged_enemy_behaviour(map, player_mover.position, renderer_data, &mut events),
-            MeleeEnemy   => self.melee_enemy_behaviour(map, player_mover.position, &mut events),
+            MeleeEnemy   => self.melee_enemy_behaviour(window, map, player_mover.position, &mut events),
             _       => self.dummy_behaviour(map, player_mover.position, &mut events),
         }
 
@@ -107,7 +107,9 @@ impl Entity {
     }
 
     fn normal_enemy_movement(self: &mut Self, map: &Map, player_position: Point) {
-        self.mover.facing_direction = self.mover.position.angle_to(&player_position);
+        if !self.orientation_lock{
+            self.mover.facing_direction = self.mover.position.angle_to(&player_position);
+        }
         self.mover.step(MOVE_SPEED, 0.0, map, false);
     }
 
@@ -134,8 +136,14 @@ impl Entity {
             events.push(Spawn(bullet));
         }
     }
-    fn melee_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
+    fn melee_enemy_behaviour (self: & mut Self, window: &Window, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.gravity(map);
+        if window.is_key_down(Key::B){
+            self.orientation_lock= true;
+        }
+        else{
+            self.orientation_lock = false;
+        }
         self.normal_enemy_movement(map, player_position);
     }
 

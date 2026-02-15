@@ -25,7 +25,7 @@ impl Game {
         
         Self {
             player: Player::new(),
-            entities: vec![Entity::new(Point { x: 230.0, y: 210.0 }, 100.0, 20.0, 0.0, 3, renderer_data, RangedEnemy).unwrap()],
+            entities: vec![Entity::new(Point { x: 230.0, y: 210.0 }, 100.0, 20.0, 0.0, 3, renderer_data, MeleeEnemy).unwrap()],
             map: Map::new_test_map().unwrap(), // TODO remove unwrap
             despawn_timer: DESPAWN_TIME,
         }
