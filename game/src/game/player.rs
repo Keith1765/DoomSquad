@@ -24,7 +24,7 @@ const SLIDE_COOLDOWN_TIME: i32 = 10;
 const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 300;
 const STRAIFING_SPEED: f64 = 0.025;
 const JUMP_STRENGTH: f64 = 3.0;
-const GRAVITY_CONST: f64 = -0.9;
+const GRAVITY_CONST: f64 = -0.8;
 
 
 #[derive(Clone,PartialEq, Eq)]
@@ -193,7 +193,7 @@ impl Player {
                     self.is_sliding = false;
                     self.mover.foot_level += CROUCH_HEIGHT_DIFF;
                     self.slide_cooldown = SLIDE_COOLDOWN_TIME;
-
+                    self.move_speed += 3.0;
                 }
                 //normal jump init
                 if window.is_key_pressed(Key::Space, KeyRepeat::No) {
