@@ -1,33 +1,35 @@
 use super::map::Map;
+use crate::game::movement::find_blocks_were_currently_in;
+use crate::game::player::LastInputDirection::*;
 use crate::{
     SCREEN_HEIGHT, SCREEN_WIDTH,
     game::{
         map::{LEVEL_HEIGHT, Point},
-        movement::Mover, player,
+        movement::Mover,
+        player,
     },
 };
 use minifb::{Key, KeyRepeat, MouseMode, Window};
 use std::f64::consts::PI;
-use crate::game::player::LastInputDirection::*;
 
 const ROTATION_SPEED_MOUSE: f64 = 2.0;
 const ROTATION_SPEED_KEYS: f64 = 0.15;
 pub const MOVE_SPEED: f64 = 1.5;
 const FLY_UP_DOWN_SPEED: f64 = 1.0;
-const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
+const MOVEMENT_SMOOTHING_SPEED: f64 = 4.0;
 pub const MAX_STEP_UP_HEIGHT: f64 = 5.0;
 const PLAYER_HEAD_HEIGHT: f64 = 15.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 const SPRINT_SPEED: f64 = 4.0;
-const CROUCH_HEIGHT_DIFF: f64 = 5.0; 
+const CROUCH_HEIGHT_DIFF: f64 = 5.0;
 const SLIDE_COOLDOWN_TIME: i32 = 10;
-const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 300;
+const ROCKETLAUNCHER_COOLDOWN_TIME: i32 = 100;
 const STRAIFING_SPEED: f64 = 0.025;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
+const PLAYER_HP: i32 = 100;
 
-
-#[derive(Clone,PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum LastInputDirection {
     W,
     A,
@@ -49,8 +51,8 @@ pub struct Player {
     pub is_jumping: bool,
     pub vertical_velocity: f64,
     pub gravity: f64,
-    pub rocketlauncher_Cooldown: i32,
-    
+    pub rocketlauncher_cooldown: i32,
+    pub hp: i32,
 }
 
 impl Player {
@@ -64,7 +66,6 @@ impl Player {
                 view_level: PLAYER_VIEW_HEIGHT,
                 height: PLAYER_HEAD_HEIGHT,
                 facing_direction: pa,
-                
             },
             velocity_x: pa.cos() * ROTATION_SPEED_MOUSE,
             velocity_y: pa.sin() * ROTATION_SPEED_MOUSE,
@@ -77,7 +78,8 @@ impl Player {
             is_jumping: false,
             vertical_velocity: 0.0,
             gravity: -1.0,
-            rocketlauncher_Cooldown: 0,
+            rocketlauncher_cooldown: 0,
+            hp: PLAYER_HP,
         }
     }
 
@@ -93,7 +95,7 @@ impl Player {
 
         if window.is_key_down(Key::Left) {
             //during slide heavily restricted rotation
-            let rotation_factor = match self.is_sliding || self.is_jumping{
+            let rotation_factor = match self.is_sliding || self.is_jumping {
                 true => STRAIFING_SPEED,
                 false => ROTATION_SPEED_KEYS,
             };
@@ -114,21 +116,33 @@ impl Player {
             self.update_dir();
         }
 
-        if (window.is_key_down(Key::W) && ((!self.is_sliding && !self.is_jumping) || self.last_input==W)) || (self.is_jumping && (self.last_input == W)) {
+        if (window.is_key_down(Key::W)
+            && ((!self.is_sliding && !self.is_jumping) || self.last_input == W))
+            || (self.is_jumping && (self.last_input == W))
+        {
             self.mover.step(self.move_speed, 0.0, map, self.godmode);
-            
         }
-        if (window.is_key_down(Key::A) && ((!self.is_sliding && !self.is_jumping)|| self.last_input==A)) || (self.is_jumping && (self.last_input == A)) {
-            self.mover.step(self.move_speed, -PI / 2.0, map, self.godmode);
+        if (window.is_key_down(Key::A)
+            && ((!self.is_sliding && !self.is_jumping) || self.last_input == A))
+            || (self.is_jumping && (self.last_input == A))
+        {
+            self.mover
+                .step(self.move_speed, -PI / 2.0, map, self.godmode);
         }
-        if (window.is_key_down(Key::D) && ((!self.is_sliding && !self.is_jumping) || self.last_input==D)) || (self.is_jumping && (self.last_input == D)) {
-            self.mover.step(self.move_speed, PI / 2.0, map, self.godmode);
+        if (window.is_key_down(Key::D)
+            && ((!self.is_sliding && !self.is_jumping) || self.last_input == D))
+            || (self.is_jumping && (self.last_input == D))
+        {
+            self.mover
+                .step(self.move_speed, PI / 2.0, map, self.godmode);
         }
 
-        if (window.is_key_down(Key::S) && ((!self.is_sliding && !self.is_jumping) || self.last_input==S)) || (self.is_jumping && (self.last_input == S)) {
+        if (window.is_key_down(Key::S)
+            && ((!self.is_sliding && !self.is_jumping) || self.last_input == S))
+            || (self.is_jumping && (self.last_input == S))
+        {
             self.mover.step(self.move_speed, PI, map, self.godmode);
         }
-
 
         if window.is_key_down(Key::Space) && self.godmode {
             self.mover.foot_level += FLY_UP_DOWN_SPEED;
@@ -139,16 +153,17 @@ impl Player {
         }
 
         //slowdown movespeed if not sprinting and sliding anymore
-        if !window.is_key_down(Key::LeftShift) && !window.is_key_down(Key::Down) && !self.is_jumping{
-            self.move_speed=MOVE_SPEED;
+        if !window.is_key_down(Key::LeftShift) && !window.is_key_down(Key::Down) && !self.is_jumping
+        {
+            self.move_speed = MOVE_SPEED;
         }
 
         //implementing Sprint that gradually increases movement speed
-        if window.is_key_down(Key::LeftShift) && !self.godmode{
-            if self.move_speed < SPRINT_SPEED-0.1 {
+        if window.is_key_down(Key::LeftShift) && !self.godmode {
+            if self.move_speed < SPRINT_SPEED - 0.1 {
                 self.move_speed += 0.1;
             }
-            if self.move_speed <SPRINT_SPEED {
+            if self.move_speed < SPRINT_SPEED {
                 self.move_speed = SPRINT_SPEED;
             }
 
@@ -159,124 +174,134 @@ impl Player {
 
         if (self.slide_cooldown > 0) && !window.is_key_down(Key::C) {
             self.slide_cooldown -= 1;
-        } 
+        }
         //init slide gives speed boost
-        if window.is_key_down(Key::C) && !self.is_sliding && !self.godmode && self.slide_cooldown == 0{
+        if window.is_key_down(Key::C)
+            && !self.is_sliding
+            && !self.godmode
+            && self.slide_cooldown == 0
+        {
             if self.move_speed > 1.5 {
                 self.move_speed += 5.0;
                 self.is_sliding = true;
                 self.save_input(window);
             }
-            
         }
-        
+
         //during slide speed decreases
         if self.is_sliding {
             self.move_speed -= 0.2;
         }
 
         //ending slide (either cause not pressed or slowed down)
-        if (!window.is_key_down(Key::C) && self.is_sliding) || ((self.move_speed <= SPRINT_SPEED) && self.is_sliding){
+        if (!window.is_key_down(Key::C) && self.is_sliding)
+            || ((self.move_speed <= SPRINT_SPEED) && self.is_sliding)
+        {
             self.is_sliding = false;
-            self.last_input=No;
+            self.last_input = No;
             self.slide_cooldown = SLIDE_COOLDOWN_TIME;
         }
 
         //jumping init
         if (window.is_key_pressed(Key::Space, KeyRepeat::No)
-        && !self.is_jumping && (self.mover.foot_level-self.mover.floor_level).abs() < 0.01 )
-        || window.is_key_pressed(Key::R, KeyRepeat::No)
-            {
-                self.gravity = GRAVITY_CONST;
-                self.is_jumping = true;
-                if self.is_sliding {
-                    self.is_sliding = false;
-                    self.mover.foot_level += CROUCH_HEIGHT_DIFF;
-                    self.slide_cooldown = SLIDE_COOLDOWN_TIME;
-                    self.move_speed += 3.0;
-                }
-                //normal jump init
-                if window.is_key_pressed(Key::Space, KeyRepeat::No) {
-                    self.move_speed += self.move_speed*0.75;
-                    let speed_bonus = self.move_speed * 0.8;
-                    self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
-                    self.gravity += self.gravity*(self.move_speed*0.08)
-                }
+            && !self.is_jumping
+            && (self.mover.foot_level - self.mover.floor_level).abs() < 0.01)
+            || window.is_key_pressed(Key::R, KeyRepeat::No)
+        {
+            self.gravity = GRAVITY_CONST;
+            self.is_jumping = true;
+            if self.is_sliding {
+                self.is_sliding = false;
+                self.mover.foot_level += CROUCH_HEIGHT_DIFF;
+                self.slide_cooldown = SLIDE_COOLDOWN_TIME;
+                self.move_speed += 3.0;
+            }
+            //normal jump init
+            if window.is_key_pressed(Key::Space, KeyRepeat::No) {
+                self.move_speed += self.move_speed * 0.75;
+                let speed_bonus = self.move_speed * 0.8;
+                self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
+                self.gravity += self.gravity * (self.move_speed * 0.08) //special Relativity (kidding, just wanted to decrease height scalling on big jumps)
+            }
 
-                //rocketlauncher
-                if window.is_key_pressed(Key::R, KeyRepeat::No) && (self.rocketlauncher_Cooldown == 0){
-                    self.move_speed += self.move_speed*0.75 + 10.0;
-                    let speed_bonus = self.move_speed * 0.8;
-                    self.vertical_velocity = JUMP_STRENGTH + speed_bonus + 3.0;
-                    self.gravity += self.gravity*(self.move_speed*0.04);
-                    self.rocketlauncher_Cooldown = ROCKETLAUNCHER_COOLDOWN_TIME;
-                }
+            //rocketlauncher
+            if window.is_key_pressed(Key::R, KeyRepeat::No) && (self.rocketlauncher_cooldown == 0) {
+                self.move_speed += self.move_speed * 0.75 + 10.0;
+                let speed_bonus = self.move_speed * 0.8;
+                self.vertical_velocity = JUMP_STRENGTH + speed_bonus + 3.0;
+                self.gravity += self.gravity * (self.move_speed * 0.04);
+                self.rocketlauncher_cooldown = ROCKETLAUNCHER_COOLDOWN_TIME;
+            }
 
-                self.save_input(window);
-
-                
-
+            self.save_input(window);
         }
 
         //Rocketlauncher cooldwon
-        if self.rocketlauncher_Cooldown != 0{
-            self.rocketlauncher_Cooldown -= 1;
+        if self.rocketlauncher_cooldown != 0 {
+            self.rocketlauncher_cooldown -= 1;
         }
 
-        //height during jump
-        if self.is_jumping {
-            //adjust for gravity
-            self.vertical_velocity += self.gravity;
-
-            //vertical movement after gravity adjustment
-            self.mover.foot_level += self.vertical_velocity;
-
-            //landing
-            if self.mover.foot_level <= self.mover.floor_level{
-                self.mover.foot_level = self.mover.floor_level;
-                self.vertical_velocity= 0.0;
-                self.is_jumping = false;
-            }
-
-        }
-
-        if window.is_key_pressed(Key::G,KeyRepeat::No) {
+        if window.is_key_pressed(Key::G, KeyRepeat::No) {
             self.godmode = !self.godmode;
         }
 
-        //adjust feet_level to fit floor_level
-        // smoothing: only "catch up" foot level with floor level at s smooting speed
-        if !self.godmode && !self.is_jumping {
-            
+        // apply vertical movement + gravity
+        if !self.godmode {
             //adjust for gravity
             self.vertical_velocity += self.gravity;
 
             //vertical movement after gravity adjustment
-            self.mover.foot_level += self.vertical_velocity;
-
-            //landing
-            if self.mover.foot_level <= self.mover.floor_level{
-                self.mover.foot_level = self.mover.floor_level;
-                self.vertical_velocity= 0.0;
-                self.is_jumping = false;
+            // for that, we need to find if we'd bump our head into a block when moving up
+            let blocks_were_stepping_inside =
+                find_blocks_were_currently_in(self.mover.position, map);
+            let mut lowest_ceiling_level = f64::MAX;
+            let head_level = self.mover.foot_level + self.mover.height;
+            for block in &blocks_were_stepping_inside {
+                if block.bottom < lowest_ceiling_level// lower thn lowest previously found ceiling level
+                && block.bottom > head_level-self.vertical_velocity
+                // not totally below out head anyway
+                {
+                    lowest_ceiling_level = block.bottom;
+                }
             }
 
-        
+            if (self.mover.foot_level + self.vertical_velocity) <= (lowest_ceiling_level - self.mover.height) {
+                // if we didnt bump our head, we just go up normally
+                self.mover.foot_level = self.mover.foot_level + self.vertical_velocity;
+            } else {
+                // if we bumped our head, we only go up to the ceiling and lose vertical velocity
+                self.mover.foot_level = lowest_ceiling_level - self.mover.height;
+                self.vertical_velocity = 0.0;
+            }
+            //landing
+            if self.mover.foot_level <= self.mover.floor_level {
+                self.mover.foot_level = (self.mover.foot_level + MOVEMENT_SMOOTHING_SPEED).min(self.mover.floor_level);
+                self.vertical_velocity = 0.0;
+                self.is_jumping = false;
+            }
+            
         }
+
         if self.is_sliding {
             self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT - CROUCH_HEIGHT_DIFF;
-        }
-        else{
+        } else {
             self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
         }
-
     }
 
-    fn save_input (&mut self, window: &Window){
-        if window.is_key_down(Key::D) {self.last_input = D};
-        if window.is_key_down(Key::A) {self.last_input = A};
-        if window.is_key_down(Key::S) {self.last_input = S};
-        if window.is_key_down(Key::W) {self.last_input = W};
+    fn save_input(&mut self, window: &Window) {
+        if window.is_key_down(Key::D) {
+            self.last_input = D
+        };
+        if window.is_key_down(Key::A) {
+            self.last_input = A
+        };
+        if window.is_key_down(Key::S) {
+            self.last_input = S
+        };
+        if window.is_key_down(Key::W) {
+            self.last_input = W
+        };
     }
 
     fn check_angle(&mut self) {
