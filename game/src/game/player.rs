@@ -25,6 +25,7 @@ const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 300;
 const STRAIFING_SPEED: f64 = 0.025;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
+const PLAYER_HP: i32 = 100;
 
 
 #[derive(Clone,PartialEq, Eq)]
@@ -50,6 +51,7 @@ pub struct Player {
     pub vertical_velocity: f64,
     pub gravity: f64,
     pub rocketlauncher_Cooldown: i32,
+    pub hp: i32,
     
 }
 
@@ -78,6 +80,7 @@ impl Player {
             vertical_velocity: 0.0,
             gravity: -1.0,
             rocketlauncher_Cooldown: 0,
+            hp: PLAYER_HP,
         }
     }
 
@@ -200,7 +203,7 @@ impl Player {
                     self.move_speed += self.move_speed*0.75;
                     let speed_bonus = self.move_speed * 0.8;
                     self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
-                    self.gravity += self.gravity*(self.move_speed*0.08)
+                    self.gravity += self.gravity*(self.move_speed*0.08) //special Relativity (kidding, just wanted to decrease height scalling on big jumps)
                 }
 
                 //rocketlauncher
@@ -229,6 +232,7 @@ impl Player {
             self.vertical_velocity += self.gravity;
 
             //vertical movement after gravity adjustment
+            //TODO check if block is above
             self.mover.foot_level += self.vertical_velocity;
 
             //landing
@@ -245,7 +249,7 @@ impl Player {
         }
 
         //adjust feet_level to fit floor_level
-        // smoothing: only "catch up" foot level with floor level at s smooting speed
+        // GRAVITY
         if !self.godmode && !self.is_jumping {
             
             //adjust for gravity

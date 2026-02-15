@@ -13,6 +13,7 @@ use std::f64::consts::PI;
 use std::time::Instant;
 
 use crate::parser::map_parser::*;
+use crate::parser::entitties_parser::*;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
@@ -110,7 +111,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
 
-        game.update(&window);
+        game.update(&window, &renderer_data);
         render::draw_screen(&mut buffer, &renderer_data, &game);
 
         //fps calc
