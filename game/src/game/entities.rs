@@ -14,6 +14,7 @@ use crate::game::entities::EntityType::*;
 const ENTITY_DEFAULT_VIEW_HEIGHT: f64 = 15.0;
 const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 const GRAVITY_CONST: f64 = -0.8;
+const BULLET_SPEED: f64 =  20.0;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType{
@@ -66,10 +67,7 @@ impl Entity {
         Some(entity)
     }
 
-
-   
-    // test for entity movement; simply makes it walk in a circle
-    fn movement_ai_test(self: &mut Self, map: &Map, player_position: Point) {
+    fn normal_enemy_movement(self: &mut Self, map: &Map, player_position: Point) {
         self.mover.facing_direction = self.mover.position.angle_to(&player_position);
         self.mover.step(MOVE_SPEED, 0.0, map, false);
     }
@@ -85,8 +83,43 @@ impl Entity {
 
         if self.movement_locked {return;}
 
-        if self.entity_type != Bullet {
-            // GRAVITY
+        match self.entity_type {
+            Dummy   => self.dummy_behaviour(map, player_mover.position),
+            Bullet   => self.bullet_behaviour(map,player_mover.position),
+            RedBarrel   => self.red_barrel_behaviour(map, player_mover.position),
+            RangedEnemy   => self.ranged_enemy_behaviour(map, player_mover.position),
+            MeleeEnemy   => self.melee_enemy_behaviour(map, player_mover.position),
+            _       => self.dummy_behaviour(map, player_mover.position),
+        }
+
+       
+
+        //set view level correctly
+        self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
+        // // move testwise
+        // self.normal_enemy_movement(map, player_mover.position);
+    }
+
+
+    fn dummy_behaviour (self: & mut Self, map: &Map, player_position: Point) {
+        self.gravity(map);
+    }
+    fn bullet_behaviour (self: & mut Self, map: &Map, player_position: Point) {
+        
+    }
+    fn red_barrel_behaviour (self: & mut Self, map: &Map, player_position: Point) {
+        self.gravity(map);
+    }
+    fn ranged_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point) {
+        self.gravity(map);
+    }
+    fn melee_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point) {
+        self.gravity(map);
+        self.normal_enemy_movement(map, player_position);
+    }
+
+    fn gravity (self: & mut Self, map: &Map){
+        // GRAVITY
             //adjust for gravity
             self.vertical_velocity += self.gravity;
     
@@ -98,14 +131,10 @@ impl Entity {
                 self.mover.foot_level = self.mover.floor_level;
                 self.vertical_velocity= 0.0;
             }
-
-        }
-
-        //set view level correctly
-        self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
-        // move testwise
-        self.movement_ai_test(map, player_mover.position);
+        self.mover.step(0.0, 0.0, map, false);
     }
+
+
 }
 
  fn entity_type_from_id(id: i32) -> EntityType {
