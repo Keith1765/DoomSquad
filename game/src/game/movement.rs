@@ -103,7 +103,7 @@ impl Mover {
 
 // finds all block we are currently staning inside of in 2d space
 // if we intersect a blocks sides an even number of times, we are outside of it, if odd, we are inside
-fn find_blocks_were_currently_in(position: Point, map: &Map) -> Vec<Rc<Shape>> {
+pub fn find_blocks_were_currently_in(position: Point, map: &Map) -> Vec<Rc<Shape>> {
     let mut blocks_currently_inside: HashSet<Rc<Shape>> = HashSet::new();
     for side in &map.block_sides {
         if step_intersect(position, 0.0, Rc::clone(side), f64::MAX).is_some() {

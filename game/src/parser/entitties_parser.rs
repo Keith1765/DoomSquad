@@ -6,16 +6,13 @@ use std::io::Read;
 use std::str;
 
 pub struct Entity {
-    pub if_player: bool,     //true if player, false if enemy
+    pub if_player: bool,   //true if player, false if enemy
     pub x: f64,            //pos from the point
     pub y: f64,            //pos from the point
     floor_level: f64,      //r from rgba-value
     facing_direction: f64, //g from rgba-value
     enemy_type: i32,       //b from rgba-value
 }
-
-
-
 
 pub fn parse_entitties(path: String) -> Result<()> {
     read_entitties_from_file(path)
@@ -65,13 +62,23 @@ pub fn read_entitties_from_file(path: String) -> Result<()> {
     for entity in entities {
         println!(
             "Entity: if_player = {}, x = {}, y = {}, floor_level = {}, facing_direction = {}, enemy_type = {}",
-            entity.if_player, entity.x, entity.y, entity.floor_level, entity.facing_direction, entity.enemy_type
+            entity.if_player,
+            entity.x,
+            entity.y,
+            entity.floor_level,
+            entity.facing_direction,
+            entity.enemy_type
         );
     }
     Ok(())
 }
 
-fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, entities: &mut Vec<Entity>) -> Result<()> {
+fn read_point(
+    reader: &mut Reader<&[u8]>,
+    buf: &mut Vec<u8>,
+    name: &str,
+    entities: &mut Vec<Entity>,
+) -> Result<()> {
     let mut x = None;
     let mut y = None;
     let mut floor_level = None;
@@ -88,7 +95,7 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, entitie
                         _ => {}
                     }
                 }
-            }   
+            }
             Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
                 for attr in e.attributes() {
                     let attr = attr?;
