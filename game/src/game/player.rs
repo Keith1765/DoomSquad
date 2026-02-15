@@ -200,7 +200,7 @@ impl Player {
                     self.move_speed += self.move_speed*0.75;
                     let speed_bonus = self.move_speed * 0.8;
                     self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
-                    self.gravity += self.gravity*(self.move_speed*0.08)
+                    self.gravity += self.gravity*(self.move_speed*0.08) //special Relativity (kidding, just wanted to decrease height scalling on big jumps)
                 }
 
                 //rocketlauncher
@@ -245,7 +245,7 @@ impl Player {
         }
 
         //adjust feet_level to fit floor_level
-        // smoothing: only "catch up" foot level with floor level at s smooting speed
+        // GRAVITY
         if !self.godmode && !self.is_jumping {
             
             //adjust for gravity

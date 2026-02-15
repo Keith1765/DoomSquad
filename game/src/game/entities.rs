@@ -11,12 +11,15 @@ use crate::render::sprites::Sprite;
 
 const ENTITY_DEFAULT_VIEW_HEIGHT: f64 = 15.0;
 const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
+const GRAVITY_CONST: f64 = -0.8;
 
 #[derive(Clone)]
 pub struct Entity {
     pub mover: Mover,
     pub movement_locked: bool,
     pub sprite: Sprite,
+    pub gravity: f64,
+    pub vertical_velocity: f64,
 }
 
 impl Entity {
@@ -43,6 +46,8 @@ impl Entity {
                 height: renderer_data.textures.get(&sprite_texture_id)?.height as f64,
                 width: renderer_data.textures.get(&sprite_texture_id)?.width as f64,
             },
+            gravity: GRAVITY_CONST,
+            vertical_velocity: 0.0,
         };
         Some(entity)
     }
@@ -59,13 +64,18 @@ impl Entity {
         if self.movement_locked {return;}
 
         // smoothly make foot level catch up with floor level
-        if (self.mover.foot_level - self.mover.floor_level).abs() < ENTITY_MOVEMENT_SMOOTHING_SPEED {
+        //adjust for gravity
+        self.vertical_velocity += self.gravity;
+
+        //vertical movement after gravity adjustment
+        self.mover.foot_level += self.vertical_velocity;
+
+        //landing
+        if self.mover.foot_level <= self.mover.floor_level{
             self.mover.foot_level = self.mover.floor_level;
-        } else if self.mover.foot_level < self.mover.floor_level {
-            self.mover.foot_level += ENTITY_MOVEMENT_SMOOTHING_SPEED;
-        } else {
-            self.mover.foot_level -= ENTITY_MOVEMENT_SMOOTHING_SPEED;
+            self.vertical_velocity= 0.0;
         }
+
         //set view level correctly
         self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
         // move testwise
