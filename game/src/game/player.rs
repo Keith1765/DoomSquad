@@ -264,9 +264,15 @@ impl Player {
                     lowest_ceiling_level = block.bottom;
                 }
             }
-            self.mover.foot_level = (self.mover.foot_level + self.vertical_velocity)
-                .min(lowest_ceiling_level - self.mover.height);
 
+            if (self.mover.foot_level + self.vertical_velocity) <= (lowest_ceiling_level - self.mover.height) {
+                // if we didnt bump our head, we just go up normally
+                self.mover.foot_level = self.mover.foot_level + self.vertical_velocity;
+            } else {
+                // if we bumped our head, we only go up to the ceiling and lose vertical velocity
+                self.mover.foot_level = lowest_ceiling_level - self.mover.height;
+                self.vertical_velocity = 0.0;
+            }
             //landing
             if self.mover.foot_level <= self.mover.floor_level {
                 self.mover.foot_level = (self.mover.foot_level + MOVEMENT_SMOOTHING_SPEED).min(self.mover.floor_level);
