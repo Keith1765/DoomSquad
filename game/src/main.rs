@@ -112,7 +112,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
 
-        game.update(&window);
+        game.update(&window, &renderer_data);
         render::draw_screen(&mut buffer, &renderer_data, &game);
 
         //fps calc

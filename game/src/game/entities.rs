@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use minifb::{Key, Window};
+use quick_xml::events;
 
 use crate::game::map::{Map, Point};
 use crate::game::movement::Mover;
@@ -9,12 +10,14 @@ use crate::game::{Game, map};
 use crate::render::RendererData;
 use crate::render::sprites::Sprite;
 use crate::game::entities::EntityType::*;
+use crate::game::entities::EntityEvent::*;
 
 
 const ENTITY_DEFAULT_VIEW_HEIGHT: f64 = 15.0;
 const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 const GRAVITY_CONST: f64 = -0.8;
 const BULLET_SPEED: f64 =  20.0;
+const SHOOTING_COOLDOWN: i32 = 30;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType{
@@ -23,6 +26,11 @@ pub enum EntityType{
     RedBarrel,
     RangedEnemy,
     MeleeEnemy,
+}
+#[derive(Clone)]
+pub enum EntityEvent{
+    Spawn(Entity),
+    
 }
 
 #[derive(Clone)]
@@ -33,6 +41,8 @@ pub struct Entity {
     pub gravity: f64,
     pub vertical_velocity: f64,
     pub entity_type: EntityType,
+    pub orientation_lock: bool,
+    pub cooldown: i32,
 }
 
 impl Entity {
@@ -43,7 +53,7 @@ impl Entity {
         facing_direction: f64,
         sprite_texture_id: usize,
         renderer_data: &RendererData,
-        type_id: i32,
+        entity_type: EntityType
     ) -> Option<Self> {
         let entity = Entity {
             mover: Mover {
@@ -54,7 +64,7 @@ impl Entity {
                 height: collision_height,
                 facing_direction,
             },
-            movement_locked: true, // TODO change this; for now locked by default
+            movement_locked: false, 
             sprite: Sprite {
                 texture_id: sprite_texture_id,
                 height: renderer_data.textures.get(&sprite_texture_id)?.height as f64,
@@ -62,34 +72,28 @@ impl Entity {
             },
             gravity: GRAVITY_CONST,
             vertical_velocity: 0.0,
-            entity_type: entity_type_from_id(type_id),
+            entity_type: entity_type,
+            orientation_lock: false,
+            cooldown: 0,
         };
         Some(entity)
     }
 
-    fn normal_enemy_movement(self: &mut Self, map: &Map, player_position: Point) {
-        self.mover.facing_direction = self.mover.position.angle_to(&player_position);
-        self.mover.step(MOVE_SPEED, 0.0, map, false);
-    }
-
-
-
-
-
-    pub fn update(self: &mut Self, window: &Window, map: &Map, player_mover: &Mover) {
+    pub fn update(self: &mut Self, window: &Window, map: &Map, player_mover: &Mover, renderer_data: &RendererData) -> Vec<EntityEvent> {
+        let mut events: Vec<EntityEvent> = Vec::new();
         if window.is_key_pressed(Key::L,minifb::KeyRepeat::No) {
             self.movement_locked = !self.movement_locked;
         }
 
-        if self.movement_locked {return;}
+        if self.movement_locked {return events;}
 
         match self.entity_type {
-            Dummy   => self.dummy_behaviour(map, player_mover.position),
-            Bullet   => self.bullet_behaviour(map,player_mover.position),
-            RedBarrel   => self.red_barrel_behaviour(map, player_mover.position),
-            RangedEnemy   => self.ranged_enemy_behaviour(map, player_mover.position),
-            MeleeEnemy   => self.melee_enemy_behaviour(map, player_mover.position),
-            _       => self.dummy_behaviour(map, player_mover.position),
+            Dummy   => self.dummy_behaviour(map, player_mover.position, &mut events),
+            Bullet   => self.bullet_behaviour(map,player_mover.position, &mut events),
+            RedBarrel   => self.red_barrel_behaviour(map, player_mover.position, &mut events),
+            RangedEnemy   => self.ranged_enemy_behaviour(map, player_mover.position, renderer_data, &mut events),
+            MeleeEnemy   => self.melee_enemy_behaviour(map, player_mover.position, &mut events),
+            _       => self.dummy_behaviour(map, player_mover.position, &mut events),
         }
 
        
@@ -98,22 +102,39 @@ impl Entity {
         self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
         // // move testwise
         // self.normal_enemy_movement(map, player_mover.position);
+
+        return events;
     }
 
+    fn normal_enemy_movement(self: &mut Self, map: &Map, player_position: Point) {
+        self.mover.facing_direction = self.mover.position.angle_to(&player_position);
+        self.mover.step(MOVE_SPEED, 0.0, map, false);
+    }
 
-    fn dummy_behaviour (self: & mut Self, map: &Map, player_position: Point) {
+    fn dummy_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.gravity(map);
     }
-    fn bullet_behaviour (self: & mut Self, map: &Map, player_position: Point) {
-        
+    fn bullet_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
+        self.mover.step(BULLET_SPEED, 0.0, map, false);
     }
-    fn red_barrel_behaviour (self: & mut Self, map: &Map, player_position: Point) {
+    fn red_barrel_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.gravity(map);
     }
-    fn ranged_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point) {
+    fn ranged_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point, renderer_data: &RendererData, events: &mut Vec<EntityEvent>) {
         self.gravity(map);
+
+        if self.cooldown != 0 {
+            self.cooldown -= 1;
+        }
+
+        else{
+            let direction_to_player = self.mover.position.angle_to(&player_position);
+            self.cooldown = SHOOTING_COOLDOWN;
+            let bullet = Entity::new(self.mover.position, self.mover.floor_level, 1.0, direction_to_player, 1, renderer_data, Bullet).unwrap();
+            events.push(Spawn(bullet));
+        }
     }
-    fn melee_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point) {
+    fn melee_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.gravity(map);
         self.normal_enemy_movement(map, player_position);
     }
@@ -136,14 +157,14 @@ impl Entity {
 
 
 }
+//This is if we want to go back to id system, butt i dont see the point
+//  fn entity_type_from_id(id: i32) -> EntityType {
+//         match id {
+//             1 => EntityType::Bullet,
+//             2 => EntityType::RedBarrel,
+//             3 => EntityType::MeleeEnemy,
+//             4 => EntityType::RangedEnemy,
+//             _ => EntityType::Dummy,
 
- fn entity_type_from_id(id: i32) -> EntityType {
-        match id {
-            1 => EntityType::Bullet,
-            2 => EntityType::RedBarrel,
-            3 => EntityType::MeleeEnemy,
-            4 => EntityType::RangedEnemy,
-            _ => EntityType::Dummy,
-
-        }
-    }
+//         }
+//     }
