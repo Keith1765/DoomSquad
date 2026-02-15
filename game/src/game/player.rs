@@ -25,6 +25,7 @@ const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 300;
 const STRAIFING_SPEED: f64 = 0.025;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
+const PLAYER_HP: i32 = 100;
 
 
 #[derive(Clone,PartialEq, Eq)]
@@ -50,6 +51,7 @@ pub struct Player {
     pub vertical_velocity: f64,
     pub gravity: f64,
     pub rocketlauncher_Cooldown: i32,
+    pub hp: i32,
     
 }
 
@@ -78,6 +80,7 @@ impl Player {
             vertical_velocity: 0.0,
             gravity: -1.0,
             rocketlauncher_Cooldown: 0,
+            hp: PLAYER_HP,
         }
     }
 
