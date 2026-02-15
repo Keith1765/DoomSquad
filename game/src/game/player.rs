@@ -232,6 +232,7 @@ impl Player {
             self.vertical_velocity += self.gravity;
 
             //vertical movement after gravity adjustment
+            //TODO check if block is above
             self.mover.foot_level += self.vertical_velocity;
 
             //landing
