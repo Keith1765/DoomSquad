@@ -8,10 +8,21 @@ use crate::game::player::MOVE_SPEED;
 use crate::game::{Game, map};
 use crate::render::RendererData;
 use crate::render::sprites::Sprite;
+use crate::game::entities::EntityType::*;
+
 
 const ENTITY_DEFAULT_VIEW_HEIGHT: f64 = 15.0;
 const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 const GRAVITY_CONST: f64 = -0.8;
+
+#[derive(Clone, PartialEq, Eq)]
+pub enum EntityType{
+    Dummy,
+    Bullet,
+    RedBarrel,
+    RangedEnemy,
+    MeleeEnemy,
+}
 
 #[derive(Clone)]
 pub struct Entity {
@@ -20,6 +31,7 @@ pub struct Entity {
     pub sprite: Sprite,
     pub gravity: f64,
     pub vertical_velocity: f64,
+    pub entity_type: EntityType,
 }
 
 impl Entity {
@@ -30,6 +42,7 @@ impl Entity {
         facing_direction: f64,
         sprite_texture_id: usize,
         renderer_data: &RendererData,
+        type_id: i32,
     ) -> Option<Self> {
         let entity = Entity {
             mover: Mover {
@@ -48,32 +61,44 @@ impl Entity {
             },
             gravity: GRAVITY_CONST,
             vertical_velocity: 0.0,
+            entity_type: entity_type_from_id(type_id),
         };
         Some(entity)
     }
+
+
+   
     // test for entity movement; simply makes it walk in a circle
     fn movement_ai_test(self: &mut Self, map: &Map, player_position: Point) {
         self.mover.facing_direction = self.mover.position.angle_to(&player_position);
         self.mover.step(MOVE_SPEED, 0.0, map, false);
     }
 
+
+
+
+
     pub fn update(self: &mut Self, window: &Window, map: &Map, player_mover: &Mover) {
         if window.is_key_pressed(Key::L,minifb::KeyRepeat::No) {
             self.movement_locked = !self.movement_locked;
         }
+
         if self.movement_locked {return;}
 
-        // smoothly make foot level catch up with floor level
-        //adjust for gravity
-        self.vertical_velocity += self.gravity;
+        if self.entity_type != Bullet {
+            // GRAVITY
+            //adjust for gravity
+            self.vertical_velocity += self.gravity;
+    
+            //vertical movement after gravity adjustment
+            self.mover.foot_level += self.vertical_velocity;
+    
+            //landing
+            if self.mover.foot_level <= self.mover.floor_level{
+                self.mover.foot_level = self.mover.floor_level;
+                self.vertical_velocity= 0.0;
+            }
 
-        //vertical movement after gravity adjustment
-        self.mover.foot_level += self.vertical_velocity;
-
-        //landing
-        if self.mover.foot_level <= self.mover.floor_level{
-            self.mover.foot_level = self.mover.floor_level;
-            self.vertical_velocity= 0.0;
         }
 
         //set view level correctly
@@ -82,3 +107,14 @@ impl Entity {
         self.movement_ai_test(map, player_mover.position);
     }
 }
+
+ fn entity_type_from_id(id: i32) -> EntityType {
+        match id {
+            1 => EntityType::Bullet,
+            2 => EntityType::RedBarrel,
+            3 => EntityType::MeleeEnemy,
+            4 => EntityType::RangedEnemy,
+            _ => EntityType::Dummy,
+
+        }
+    }
