@@ -21,6 +21,8 @@ const SHOOTING_COOLDOWN: i32 = 50;
 const SUMMONING_COOLDOWN: i32 = 500;
 pub const BULLET_HP: f64 = 30.0;
 const ENEMY_HP: f64 = 50.0;
+pub const ENEMY_SIZE: f64 = 10.0;
+pub const BULLET_DMG: f64 = 20.0;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType{
@@ -49,6 +51,7 @@ pub struct Entity {
     pub orientation_lock: bool,
     pub cooldown: i32,
     pub hp: f64,
+    pub size: f64,
 }
 
 impl Entity {
@@ -61,6 +64,7 @@ impl Entity {
         renderer_data: &RendererData,
         entity_type: EntityType,
         hp: f64,
+        size: f64,
     ) -> Option<Self> {
         let entity = Entity {
             mover: Mover {
@@ -83,6 +87,7 @@ impl Entity {
             orientation_lock: false,
             cooldown: 0,
             hp: hp,
+            size: size,
         };
         Some(entity)
     }
@@ -144,7 +149,7 @@ impl Entity {
         else{
             let direction_to_player = self.mover.position.angle_to(&player_position);
             self.cooldown = SHOOTING_COOLDOWN;
-            let bullet = Entity::new(self.mover.position, self.mover.floor_level, 1.0, direction_to_player, 1, renderer_data, Bullet, BULLET_HP).unwrap();
+            let bullet = Entity::new(self.mover.position, self.mover.floor_level, 1.0, direction_to_player, 1, renderer_data, Bullet, BULLET_HP, 1.0).unwrap();
             events.push(Spawn(bullet));
         }
     }
@@ -154,20 +159,20 @@ impl Entity {
 
          if self.cooldown == 20 {
             let direction_to_player = self.mover.position.angle_to(&player_position);
-            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP).unwrap();
+            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP, ENEMY_SIZE).unwrap();
             events.push(Spawn(melee_enemy));
         }
 
         if self.cooldown == 10 {
             let direction_to_player = self.mover.position.angle_to(&player_position);
-            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP).unwrap();
+            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP, ENEMY_SIZE).unwrap();
             events.push(Spawn(melee_enemy));
         }
 
         if self.cooldown == 0 {
             let direction_to_player = self.mover.position.angle_to(&player_position);
             self.cooldown = SUMMONING_COOLDOWN;
-            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP).unwrap();
+            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP, ENEMY_SIZE).unwrap();
             events.push(Spawn(melee_enemy));
         }
 
@@ -208,9 +213,7 @@ impl Entity {
         self.mover.step(0.0, 0.0, map, false);
     }
 
-    fn damage_check (self: &mut Self) {
-        
-    }
+    
 
 }
 //This is if we want to go back to id system, butt i dont see the point

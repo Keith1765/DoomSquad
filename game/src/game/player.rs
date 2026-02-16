@@ -95,7 +95,7 @@ impl Player {
         let mut events: Vec<EntityEvent> = Vec::new();
 
         if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No){
-            let bullet = Entity::new(self.mover.position, self.mover.floor_level, 1.0, self.mover.facing_direction, 1, renderer_data, Bullet, BULLET_HP).unwrap();
+            let bullet = Entity::new(self.mover.position, self.mover.floor_level, 1.0, self.mover.facing_direction, 1, renderer_data, Bullet, BULLET_HP, 1.0).unwrap();
             events.push(Spawn(bullet));
         }
 
