@@ -13,7 +13,7 @@ use crate::game::entities::{
     Entity,
     EntityEvent,
     EntityEvent::Spawn,
-    EntityType::{PlayerBullet, PlayerArrow}, PROJECTILE_HP,
+    EntityType::{PlayerBullet, PlayerArrow}, PROJECTILE_HP, ARROW_COOLDOWN,
 };
 use crate::game::generate_entities::generate_entities;
 
@@ -59,6 +59,7 @@ pub struct Player {
     pub gravity: f64,
     pub rocketlauncher_Cooldown: i32,
     pub hp: f64,
+    pub arrow_cooldown: i32,
     
 }
 
@@ -88,20 +89,26 @@ impl Player {
             gravity: -1.0,
             rocketlauncher_Cooldown: 0,
             hp: PLAYER_HP,
+            arrow_cooldown: 0,
         }
     }
 
     pub fn update(&mut self, window: &Window, map: &Map,renderer_data: &RendererData) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
 
-        if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No){
+        if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) {
             let bullet = generate_entities(PlayerBullet, self.mover.position, self.mover.height, self.mover.facing_direction, renderer_data);
             events.push(Spawn(bullet));
         }
 
-        if window.is_key_pressed(Key::RightShift, KeyRepeat::No){
+        if window.is_key_pressed(Key::RightShift, KeyRepeat::No) && self.arrow_cooldown == 0 {
             let arrow = generate_entities(PlayerArrow, self.mover.position, self.mover.height, self.mover.facing_direction, renderer_data);
             events.push(Spawn(arrow));
+            self.arrow_cooldown = ARROW_COOLDOWN;
+        }
+
+        if self.arrow_cooldown > 0 {
+            self.arrow_cooldown -= 1;
         }
 
         if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {

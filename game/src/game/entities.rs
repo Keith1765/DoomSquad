@@ -20,7 +20,7 @@ const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 const GRAVITY_CONST: f64 = -0.8;
 pub const BULLET_SPEED: f64 =  30.0;
 const SHOOTING_COOLDOWN: i32 = 50;
-const ARROW_COOLDOWN: i32 = 75;
+pub const ARROW_COOLDOWN: i32 = 75;
 const SUMMONING_COOLDOWN: i32 = 500;
 pub const PROJECTILE_HP: f64 = 30.0;
 pub const ENEMY_HP: f64 = 50.0;
@@ -183,12 +183,20 @@ impl Entity {
         self.hp -= 0.25;
         self.mover.step(ARROW_SPEED, 0.0, map, false);
         self.gravity(map, 0.1);
+        //terminate arrow when hits the floor
+        if self.mover.foot_level <= self.mover.floor_level{
+            self.hp=0.0;
+        }  
     }
     //atm the same as player bullets
     fn enemy_arrow_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.hp -= 0.25;
         self.mover.step(ARROW_SPEED, 0.0, map, false);
         self.gravity(map, 0.1);
+        //terminate arrow when hits the floor
+        if self.mover.foot_level <= self.mover.floor_level{
+            self.hp=0.0;
+        }  
     }
 
     fn red_barrel_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
@@ -285,7 +293,7 @@ impl Entity {
         self.mover.step(0.0, 0.0, map, false);
     }
 
-    //TODO creat spawning functions
+    
     
 
 }
