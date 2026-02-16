@@ -26,11 +26,11 @@ pub const BULLET_DMG: f64 = 20.0;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType{
-    Dummy,
-    Bullet,
-    RedBarrel,
+    Dummy, //sprite done
+    Bullet,//sprite done
+    RedBarrel, //sprite done
     RangedEnemy,
-    MeleeEnemy,
+    MeleeEnemy,//sprite done
     SummonerEnemy,
     SummonedEnemy,
 }
@@ -159,20 +159,20 @@ impl Entity {
 
          if self.cooldown == 20 {
             let direction_to_player = self.mover.position.angle_to(&player_position);
-            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP, ENEMY_SIZE).unwrap();
+            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 7, renderer_data, MeleeEnemy, ENEMY_HP, ENEMY_SIZE).unwrap();
             events.push(Spawn(melee_enemy));
         }
 
         if self.cooldown == 10 {
             let direction_to_player = self.mover.position.angle_to(&player_position);
-            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP, ENEMY_SIZE).unwrap();
+            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 7, renderer_data, MeleeEnemy, ENEMY_HP, ENEMY_SIZE).unwrap();
             events.push(Spawn(melee_enemy));
         }
 
         if self.cooldown == 0 {
             let direction_to_player = self.mover.position.angle_to(&player_position);
             self.cooldown = SUMMONING_COOLDOWN;
-            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP, ENEMY_SIZE).unwrap();
+            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 7, renderer_data, MeleeEnemy, ENEMY_HP, ENEMY_SIZE).unwrap();
             events.push(Spawn(melee_enemy));
         }
 

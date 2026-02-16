@@ -197,7 +197,7 @@
 <element type="polygon" label="Vieleck1">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="false" label="false" ev="4"/>
-	<objColor r="0" g="100" b="2" alpha="0.1"/>
+	<objColor r="0" g="100" b="9" alpha="0.1"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
@@ -456,7 +456,7 @@
 <element type="polygon" label="Vieleck2">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="16" b="1" alpha="0.1"/>
+	<objColor r="0" g="16" b="10" alpha="0.1"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
@@ -619,7 +619,7 @@
 <element type="polygon" label="v1">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="100" b="0" alpha="0.1"/>
+	<objColor r="0" g="100" b="11" alpha="0.1"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
@@ -726,7 +726,7 @@
 <element type="polygon" label="v2">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="55" g="55" b="1" alpha="0.1"/>
+	<objColor r="55" g="55" b="12" alpha="0.1"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
