@@ -788,30 +788,30 @@
 </element>
 <element type="point" label="Enemy_{2}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="0" b="1" alpha="0"/>
+	<objColor r="0" g="0" b="4" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
-	<animation step="0.1" type="1" playing="false"/>
+	<animation step="0.1" type="0" playing="false"/>
 	<pointSize val="5"/>
 	<pointStyle val="0"/>
 	<coords x="3.7799578829845357" y="1.9904480356797083" z="1"/>
 </element>
 <element type="point" label="Enemy">
 	<show object="true" label="true"/>
-	<objColor r="0" g="0" b="1" alpha="0"/>
+	<objColor r="0" g="0" b="0" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
-	<animation step="0.1" type="1" playing="false"/>
+	<animation step="0.1" type="3" playing="false"/>
 	<pointSize val="5"/>
 	<pointStyle val="0"/>
 	<coords x="1.376267167449991" y="3.52519891508203" z="1"/>
 </element>
 <element type="point" label="Enemy_{1}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="0" b="1" alpha="0"/>
+	<objColor r="0" g="0" b="5" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
-	<animation step="0.1" type="1" playing="false"/>
+	<animation step="0.1" type="6" playing="false"/>
 	<pointSize val="5"/>
 	<pointStyle val="0"/>
 	<coords x="3.2269961690822226" y="5.443637514334933" z="1"/>

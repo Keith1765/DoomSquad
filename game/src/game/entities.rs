@@ -12,6 +12,7 @@ use crate::render::sprites::Sprite;
 use crate::game::entities::EntityType::*;
 use crate::game::entities::EntityEvent::*;
 
+use std::fmt;
 
 const ENTITY_DEFAULT_VIEW_HEIGHT: f64 = 15.0;
 const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
@@ -33,6 +34,21 @@ pub enum EntityType{
     MeleeEnemy,//sprite done
     SummonerEnemy,
     SummonedEnemy,
+}
+impl fmt::Display for EntityType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let text = match self {
+            EntityType::Dummy => "Dummy",
+            EntityType::Bullet => "Bullet",
+            EntityType::RedBarrel => "RedBarrel",
+            EntityType::RangedEnemy => "RangedEnemy",
+            EntityType::MeleeEnemy => "MeleeEnemy",
+            EntityType::SummonerEnemy => "SummonerEnemy",
+            EntityType::SummonedEnemy => "SummonedEnemy",
+        };
+
+        write!(f, "{}", text)
+    }
 }
 #[derive(Clone)]
 pub enum EntityEvent{
@@ -216,13 +232,4 @@ impl Entity {
     
 
 }
-//This is if we want to go back to id system, butt i dont see the point
-//  fn entity_type_from_id(id: i32) -> EntityType {
-//         match id {
-//             1 => EntityType::Bullet,
-//             2 => EntityType::RedBarrel,
-//             3 => EntityType::MeleeEnemy,
-//             4 => EntityType::RangedEnemy,
-//             _ => EntityType::Dummy,
-//         }
-//     }
+
