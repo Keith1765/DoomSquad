@@ -1,6 +1,6 @@
 use core::f64;
 
-use crate::{game::{entities::{Entity, EntityType, PROJECTILE_HP, DUMMY_HP, DUMMY_SIZE, ENEMY_SIZE, ENEMY_HP, WEAK_ENEMY_MULTIPLICATOR, RED_BARREL_HP, RED_BARREL_SIZE}, map::Point}, render::RendererData};
+use crate::{game::{entities::{DUMMY_HP, DUMMY_SIZE, ENEMY_HP, ENEMY_SIZE, EXPLODED_RED_BARREL_SIZE, Entity, EntityType, PROJECTILE_HP, RED_BARREL_HP, RED_BARREL_SIZE, WEAK_ENEMY_MULTIPLICATOR}, map::Point}, render::RendererData};
 
 pub fn generate_entities (entity_type: EntityType, position: Point, height: f64, facing_direction: f64, renderer_data: &RendererData) -> Entity {
     match entity_type {
@@ -15,6 +15,7 @@ pub fn generate_entities (entity_type: EntityType, position: Point, height: f64,
         EntityType::SummonerEnemy => Entity::new(position, height, ENEMY_SIZE, facing_direction, 6, renderer_data, EntityType::SummonerEnemy, ENEMY_HP, ENEMY_SIZE).unwrap(),
         EntityType::WeakEnemy => Entity::new(position, height, ENEMY_SIZE*WEAK_ENEMY_MULTIPLICATOR, facing_direction, 7, renderer_data, EntityType::WeakEnemy, ENEMY_HP*WEAK_ENEMY_MULTIPLICATOR, ENEMY_SIZE*WEAK_ENEMY_MULTIPLICATOR).unwrap(),
         EntityType::RedBarrel => Entity::new(position, height, RED_BARREL_SIZE, facing_direction, 2, renderer_data, EntityType::RedBarrel, RED_BARREL_HP, RED_BARREL_SIZE).unwrap(),
+        EntityType::ExplodedRedBarrel => Entity::new(position, height, RED_BARREL_SIZE, facing_direction, 12, renderer_data, EntityType::ExplodedRedBarrel, RED_BARREL_HP, EXPLODED_RED_BARREL_SIZE).unwrap(),
         _ => Entity::new(position, height, 1.0, facing_direction, 0, renderer_data, EntityType::Dummy, DUMMY_HP, DUMMY_SIZE).unwrap(),
     }
 

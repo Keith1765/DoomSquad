@@ -24,16 +24,19 @@ pub const ARROW_COOLDOWN: i32 = 75;
 const SUMMONING_COOLDOWN: i32 = 500;
 pub const PROJECTILE_HP: f64 = 30.0;
 pub const ENEMY_HP: f64 = 50.0;
-pub const ENEMY_SIZE: f64 = 10.0;
+pub const ENEMY_SIZE: f64 = 30.0;
 pub const BULLET_DMG: f64 = 20.0;
 pub const DUMMY_HP: f64 = 100.0;
 pub const DUMMY_SIZE: f64 = 15.0;
 pub const WEAK_ENEMY_MULTIPLICATOR: f64 = 0.5;
 pub const RED_BARREL_HP: f64 = 1.0;
-pub const RED_BARREL_SIZE: f64 = 5.0;
+pub const RED_BARREL_SIZE: f64 = 30.0;
 pub const BULLET_TRAVEL_COUNTDOWN: i32 = 2;
 pub const ARROW_SPEED: f64 = 15.0;
 pub const ARROW_DMG: f64 = 40.0;
+pub const EXPLODED_RED_BARREL_HP: f64 = 30.0;
+pub const RED_BARREL_DMG: f64 = 1000.0;
+pub const EXPLODED_RED_BARREL_SIZE: f64 = 20000.0;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType{
@@ -41,6 +44,7 @@ pub enum EntityType{
     PlayerBullet,//sprite done
     EnemyBullet,//sprites done
     RedBarrel, //sprite done
+    ExplodedRedBarrel,
     RangedEnemy,
     MeleeEnemy,//sprite done
     SummonerEnemy,
@@ -56,6 +60,7 @@ impl fmt::Display for EntityType {
             EntityType::PlayerBullet => "PlayerBullet",
             EntityType::EnemyBullet => "EnemyBullet",
             EntityType::RedBarrel => "RedBarrel",
+            EntityType::ExplodedRedBarrel => "ExplodedRedBarrel",
             EntityType::RangedEnemy => "RangedEnemy",
             EntityType::MeleeEnemy => "MeleeEnemy",
             EntityType::SummonerEnemy => "SummonerEnemy",
@@ -86,6 +91,7 @@ pub struct Entity {
     pub cooldown: i32,
     pub hp: f64,
     pub size: f64,
+    pub did_damage: bool,
 }
 
 impl Entity {
@@ -122,6 +128,7 @@ impl Entity {
             cooldown: 0,
             hp: hp,
             size: size,
+            did_damage: false,
         };
         Some(entity)
     }
@@ -138,7 +145,8 @@ impl Entity {
             Dummy   => self.dummy_behaviour(map, player_mover.position, &mut events),
             PlayerBullet   => self.player_bullet_behaviour(map,player_mover.position, &mut events),
             EnemyBullet   => self.enemy_bullet_behaviour(map,player_mover.position, &mut events),
-            RedBarrel   => self.red_barrel_behaviour(map, player_mover.position, &mut events),
+            RedBarrel   => self.red_barrel_behaviour(map, player_mover.position, &mut events, renderer_data),
+            ExplodedRedBarrel   => self.exploded_red_barrel_behaviour(map, player_mover.position, &mut events),
             RangedEnemy   => self.ranged_enemy_behaviour(map, player_mover.position, renderer_data, &mut events),
             Archer   => self.archer_behaviour(map, player_mover.position, renderer_data, &mut events),
             MeleeEnemy   => self.melee_enemy_behaviour(window, map, player_mover.position, &mut events),
@@ -199,8 +207,12 @@ impl Entity {
         }  
     }
 
-    fn red_barrel_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
+    fn red_barrel_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>, renderer_data: &RendererData) {
         self.gravity(map, 1.0);
+    }
+
+    fn exploded_red_barrel_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
+        self.hp -= 1.0;
     }
 
     fn ranged_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point, renderer_data: &RendererData, events: &mut Vec<EntityEvent>) {
@@ -293,7 +305,22 @@ impl Entity {
         self.mover.step(0.0, 0.0, map, false);
     }
 
-    
+    pub fn death_behaviour (&mut self, renderer_data: &RendererData) -> Vec<EntityEvent> {
+        let mut events = Vec::new();
+        match self.entity_type {
+
+            RedBarrel => {
+                let explosion = generate_entities(ExplodedRedBarrel, self.mover.position, self.mover.height, 0.0, renderer_data);
+                events.push(Spawn(explosion));
+
+            }
+
+            _ => {}
+            
+        };
+
+        events
+    }
     
 
 }

@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    game::{entities::{self, BULLET_DMG,ARROW_DMG, ENEMY_SIZE, Entity, EntityEvent::{self, *}, EntityType::*}, generate_entities::generate_entities, map::Point, map_grid::MapGrid, movement::Mover},
+    game::{entities::{self, BULLET_DMG,ARROW_DMG, ENEMY_SIZE, RED_BARREL_DMG, Entity, EntityEvent::{self, *}, EntityType::*}, generate_entities::generate_entities, map::Point, map_grid::MapGrid, movement::Mover},
     render::{RendererData, sprites::Sprite},
 };
 
@@ -20,6 +20,7 @@ pub struct Game {
     pub map: Map,
     pub despawn_timer: i32,
     pub map_grid: MapGrid,
+    pub projectile_that_hit: Vec<usize>,
 }
 
 impl Game {
@@ -28,37 +29,54 @@ impl Game {
         Self {
             player: Player::new(),
             entities: vec![
-                generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 500.0, 0.0,renderer_data ),
-                // generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 500.0, 0.0, renderer_data),
-                // generate_entities(RangedEnemy, Point { x: 280.0, y: 200.0 }, 500.0, 0.0, renderer_data),
-                // generate_entities(MeleeEnemy, Point { x: 320.0, y: 200.0 }, 500.0, 0.0, renderer_data),
-                // generate_entities(SummonerEnemy, Point { x: 360.0, y: 200.0 }, 500.0, 0.0, renderer_data),
-                // generate_entities(RedBarrel, Point { x: 400.0, y: 300.0 }, 500.0, 0.0, renderer_data),
+                //generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 0.0, 0.0,renderer_data ),
+                generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+                //generate_entities(RangedEnemy, Point { x: 280.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+                generate_entities(MeleeEnemy, Point { x: 320.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+                generate_entities(MeleeEnemy, Point { x: 300.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+                generate_entities(MeleeEnemy, Point { x: 360.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+                generate_entities(MeleeEnemy, Point { x: 280.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+                generate_entities(MeleeEnemy, Point { x: 260.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+                //generate_entities(SummonerEnemy, Point { x: 360.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+                generate_entities(RedBarrel, Point { x: 400.0, y: 300.0 }, 0.0, 0.0, renderer_data),
                 ],
             map: Map::new_test_map().unwrap(), // TODO remove unwrap
             despawn_timer: DESPAWN_TIME,
             map_grid: MapGrid::new(MAP_GRID_CELL_SIZE), 
+            projectile_that_hit: Vec::new(),
         }
     }
 
     pub fn update(&mut self, window: &Window, renderer_data: &RendererData) {
-
-        self.damage_check();
-
-        //despawn everything that has 0 hp
-        self.entities.retain(|entity|entity.hp > 0.0);
         
         let mut spawns = Vec::new();
+        
         //update player
         let event = self.player.update(window, &self.map,renderer_data);
         //add possible spawn events
         spawns.extend(event);
 
         //update all entites and add possible spawn events
-        for e in &mut self.entities {
-            let event = e.update(window, &self.map, &self.player.mover, renderer_data);
+        for entity in &mut self.entities {
+            let event = entity.update(window, &self.map, &self.player.mover, renderer_data);
             spawns.extend(event);
         }
+
+        //deal damage
+        self.damage_check();
+
+
+        //on death behaviour
+        for entity in &mut self.entities {
+            if entity.hp <= 0.0 {
+                spawns.extend(entity.death_behaviour(renderer_data));
+            }
+        }
+
+        //despawn everything that has 0 hp
+        self.entities.retain(|entity|entity.hp > 0.0);
+        
+
 
         //spawn new entities
         for event in spawns{
@@ -67,17 +85,19 @@ impl Game {
                 
             }
         }
+        
     }
 
      fn damage_check (self: &mut Self) {
         //update grid
         self.map_grid.update(&self.entities);
 
-        let mut projectile_that_hit = Vec::new();
+        //let mut projectile_that_hit = Vec::new();
+        self.projectile_that_hit.clear();
 
         //damage calc for enemies
-        for i in 1..self.entities.len() {
-            if (self.entities[i].entity_type != PlayerBullet)&&( self.entities[i].entity_type !=PlayerArrow ){
+        for i in 0..self.entities.len() {
+            if (self.entities[i].entity_type != PlayerBullet)&&( self.entities[i].entity_type !=PlayerArrow )&&( self.entities[i].entity_type !=ExplodedRedBarrel ){
                 continue;
             }
 
@@ -87,28 +107,38 @@ impl Game {
             let neighbours = self.map_grid.get_neighbours(projectile_position);
 
             for j in neighbours {
+
+                let entities_immune_to_damage = matches!(
+                    self.entities[j].entity_type,
+                    PlayerBullet | PlayerArrow | ExplodedRedBarrel
+                );
+
                 //no self collision
                 if i == j {continue;}
-                //no bullet on bullet collision
-                if self.entities[j].entity_type == PlayerBullet {continue;}
+                //no dmg calc for immune entities
+                if entities_immune_to_damage {continue;}
 
                 let distance_to_bullet = projectile_position.distance_to(&self.entities[j].mover.position);
 
                 //if bullet in range of entity size
-                if distance_to_bullet <= self.entities[j].size {
+                if distance_to_bullet <= self.entities[j].size + self.entities[i].size {
                     
                     let damage = match self.entities[i].entity_type {
                         PlayerBullet => BULLET_DMG,
                         PlayerArrow => ARROW_DMG,
+                        ExplodedRedBarrel => RED_BARREL_DMG,
                         _ => 0.0,
                     };
                     //DAMAGE THAT BITCH
                     self.entities[j].hp -= damage;
 
-                    //bullet go brr
-                    projectile_that_hit.push(i);
-
-                    break; //cause no entity penetration
+                    //projectiles go brr
+                    if (self.entities[i].entity_type != ExplodedRedBarrel){
+                        self.projectile_that_hit.push(i);
+                    }
+                    if (self.entities[i].entity_type != ExplodedRedBarrel){
+                        break; //cause no entity penetration
+                    }
                 }
             }
         }
@@ -125,24 +155,30 @@ impl Game {
 
                 //if player size in range of entity size
                 if distance_to_player <= self.entities[j].size + self.player.size{
-                    
+
                     let damage = match self.entities[j].entity_type {
                         EnemyBullet => BULLET_DMG,
                         EnemyArrow => ARROW_DMG,
+                        ExplodedRedBarrel => match self.entities[j].did_damage {
+                                                        true => 0.0,
+                                                        false => RED_BARREL_DMG,
+                                                    },
                         _ => 0.0,
                     };
                     //DAMAGE THAT BITCH
                     self.player.hp -= damage;
 
                     //bullet go brr
-                    projectile_that_hit.push(j);
+                    if matches!(self.entities[j].entity_type, EnemyArrow | EnemyBullet) {
+                        self.projectile_that_hit.push(j);
+                    }
 
                     break; //cause no entity penetration
                 }
             }
 
         //delete all bullets that hit
-        for i in projectile_that_hit{
+        for i in self.projectile_that_hit.clone(){
             self.entities[i].hp = 0.0; //o7
         }
 

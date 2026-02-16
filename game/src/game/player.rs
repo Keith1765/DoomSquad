@@ -32,7 +32,7 @@ const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 300;
 const STRAIFING_SPEED: f64 = 0.025;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
-const PLAYER_HP: f64 = 100.0;
+const PLAYER_HP: f64 = 1000.0; //for testing higher, should be 100
 const PLAYER_SIZE: f64 = 3.0;
 
 
