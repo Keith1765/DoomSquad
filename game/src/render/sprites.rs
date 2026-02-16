@@ -48,7 +48,8 @@ pub fn task_sprite(
     let normalized_distance = distance * angle_off_player_view.cos();
 
     // TODO temporary, find cleaner solution ?
-    if normalized_distance < 0.0 {
+    //idk what u mean by cleaner, but i had to change 0.0 to 0.1, because spamming bullets was crashing game, now its fine
+    if normalized_distance < 0.1 {
         return None;
     }
 

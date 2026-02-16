@@ -16,9 +16,11 @@ use crate::game::entities::EntityEvent::*;
 const ENTITY_DEFAULT_VIEW_HEIGHT: f64 = 15.0;
 const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 const GRAVITY_CONST: f64 = -0.8;
-const BULLET_SPEED: f64 =  20.0;
-const SHOOTING_COOLDOWN: i32 = 30;
-const BULLET_HP: f64 = 30.0;
+pub const BULLET_SPEED: f64 =  20.0;
+const SHOOTING_COOLDOWN: i32 = 50;
+const SUMMONING_COOLDOWN: i32 = 500;
+pub const BULLET_HP: f64 = 30.0;
+const ENEMY_HP: f64 = 50.0;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType{
@@ -27,6 +29,8 @@ pub enum EntityType{
     RedBarrel,
     RangedEnemy,
     MeleeEnemy,
+    SummonerEnemy,
+    SummonedEnemy,
 }
 #[derive(Clone)]
 pub enum EntityEvent{
@@ -97,6 +101,8 @@ impl Entity {
             RedBarrel   => self.red_barrel_behaviour(map, player_mover.position, &mut events),
             RangedEnemy   => self.ranged_enemy_behaviour(map, player_mover.position, renderer_data, &mut events),
             MeleeEnemy   => self.melee_enemy_behaviour(window, map, player_mover.position, &mut events),
+            SummonerEnemy   => self.summoner_enemy_behaviour(map, player_mover.position, renderer_data, &mut events),
+            SummonedEnemy   => self.summoned_enemy_behaviour(map, player_mover.position, &mut events),
             _       => self.dummy_behaviour(map, player_mover.position, &mut events),
         }
 
@@ -110,11 +116,11 @@ impl Entity {
         return events;
     }
 
-    fn normal_enemy_movement(self: &mut Self, map: &Map, player_position: Point) {
+    fn normal_enemy_movement(self: &mut Self, map: &Map, player_position: Point, move_speed: f64) {
         if !self.orientation_lock{
             self.mover.facing_direction = self.mover.position.angle_to(&player_position);
         }
-        self.mover.step(MOVE_SPEED, 0.0, map, false);
+        self.mover.step(move_speed, 0.0, map, false);
     }
 
     fn dummy_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
@@ -142,6 +148,34 @@ impl Entity {
             events.push(Spawn(bullet));
         }
     }
+
+    fn summoner_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point, renderer_data: &RendererData, events: &mut Vec<EntityEvent>) {
+        self.gravity(map);
+
+         if self.cooldown == 20 {
+            let direction_to_player = self.mover.position.angle_to(&player_position);
+            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP).unwrap();
+            events.push(Spawn(melee_enemy));
+        }
+
+        if self.cooldown == 10 {
+            let direction_to_player = self.mover.position.angle_to(&player_position);
+            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP).unwrap();
+            events.push(Spawn(melee_enemy));
+        }
+
+        if self.cooldown == 0 {
+            let direction_to_player = self.mover.position.angle_to(&player_position);
+            self.cooldown = SUMMONING_COOLDOWN;
+            let melee_enemy = Entity::new(self.mover.position, self.mover.floor_level, self.mover.height, direction_to_player, 2, renderer_data, MeleeEnemy, ENEMY_HP).unwrap();
+            events.push(Spawn(melee_enemy));
+        }
+
+        else{
+            self.cooldown -= 1;
+        }
+    }
+
     fn melee_enemy_behaviour (self: & mut Self, window: &Window, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.gravity(map);
         if window.is_key_down(Key::B){
@@ -150,7 +184,12 @@ impl Entity {
         else{
             self.orientation_lock = false;
         }
-        self.normal_enemy_movement(map, player_position);
+        self.normal_enemy_movement(map, player_position, MOVE_SPEED);
+    }
+
+    fn summoned_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
+        self.gravity(map);
+        self.normal_enemy_movement(map, player_position, MOVE_SPEED*0.5);
     }
 
     fn gravity (self: & mut Self, map: &Map){
@@ -169,6 +208,9 @@ impl Entity {
         self.mover.step(0.0, 0.0, map, false);
     }
 
+    fn damage_check (self: &mut Self) {
+        
+    }
 
 }
 //This is if we want to go back to id system, butt i dont see the point
@@ -179,6 +221,5 @@ impl Entity {
 //             3 => EntityType::MeleeEnemy,
 //             4 => EntityType::RangedEnemy,
 //             _ => EntityType::Dummy,
-
 //         }
 //     }

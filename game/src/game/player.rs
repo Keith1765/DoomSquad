@@ -4,11 +4,18 @@ use crate::{
     game::{
         map::{LEVEL_HEIGHT, Point},
         movement::Mover, player,
-    },
+    }, render::RendererData,
 };
 use minifb::{Key, KeyRepeat, MouseMode, Window};
 use std::f64::consts::PI;
 use crate::game::player::LastInputDirection::*;
+use crate::game::entities::{
+    Entity,
+    EntityEvent,
+    EntityEvent::Spawn,
+    EntityType::Bullet,
+    BULLET_HP,
+};
 
 const ROTATION_SPEED_MOUSE: f64 = 2.0;
 const ROTATION_SPEED_KEYS: f64 = 0.15;
@@ -25,7 +32,7 @@ const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 300;
 const STRAIFING_SPEED: f64 = 0.025;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
-const PLAYER_HP: i32 = 100;
+const PLAYER_HP: f64 = 100.0;
 
 
 #[derive(Clone,PartialEq, Eq)]
@@ -51,7 +58,7 @@ pub struct Player {
     pub vertical_velocity: f64,
     pub gravity: f64,
     pub rocketlauncher_Cooldown: i32,
-    pub hp: i32,
+    pub hp: f64,
     
 }
 
@@ -84,7 +91,14 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, window: &Window, map: &Map) {
+    pub fn update(&mut self, window: &Window, map: &Map,renderer_data: &RendererData) -> Vec<EntityEvent> {
+        let mut events: Vec<EntityEvent> = Vec::new();
+
+        if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No){
+            let bullet = Entity::new(self.mover.position, self.mover.floor_level, 1.0, self.mover.facing_direction, 1, renderer_data, Bullet, BULLET_HP).unwrap();
+            events.push(Spawn(bullet));
+        }
+
         if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
             self.check_angle();
             let dx = mx - self.last_mouse_x; // mouse delta
@@ -274,6 +288,7 @@ impl Player {
             self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
         }
 
+        return events;
     }
 
     fn save_input (&mut self, window: &Window){
