@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    game::{entities::{Entity, EntityEvent::{self, *}, EntityType::*, BULLET_DMG, ENEMY_SIZE}, map::Point, map_grid::MapGrid, movement::Mover},
+    game::{entities::{Entity, EntityEvent::{self, *}, EntityType::*, BULLET_DMG, ENEMY_SIZE}, map::Point, map_grid::MapGrid, movement::Mover, generate_entities::generate_entities},
     render::{RendererData, sprites::Sprite},
 };
 
@@ -27,7 +27,14 @@ impl Game {
         
         Self {
             player: Player::new(),
-            entities: vec![Entity::new(Point { x: 230.0, y: 210.0 }, 100.0, 20.0, 0.0, 6, renderer_data, SummonerEnemy, 100.0, ENEMY_SIZE).unwrap()],
+            entities: vec![
+                //generate_entities(Dummy,Point { x: 200.0, y: 200.0 }, 500.0, 0.0,renderer_data ),
+                //generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 500.0, 0.0, renderer_data),
+                generate_entities(RangedEnemy, Point { x: 280.0, y: 200.0 }, 500.0, 0.0, renderer_data),
+                //generate_entities(MeleeEnemy, Point { x: 320.0, y: 200.0 }, 500.0, 0.0, renderer_data),
+                //generate_entities(SummonerEnemy, Point { x: 360.0, y: 200.0 }, 500.0, 0.0, renderer_data),
+                //generate_entities(RedBarrel, Point { x: 400.0, y: 300.0 }, 500.0, 0.0, renderer_data),
+                ],
             map: Map::new_test_map().unwrap(), // TODO remove unwrap
             despawn_timer: DESPAWN_TIME,
             map_grid: MapGrid::new(MAP_GRID_CELL_SIZE), 
@@ -70,7 +77,7 @@ impl Game {
 
         for i in 1..self.entities.len() {
             //currently only for bullet, but extendable
-            if self.entities[i].entity_type != Bullet {
+            if self.entities[i].entity_type != PlayerBullet {
                 continue;
             }
 
@@ -83,7 +90,7 @@ impl Game {
                 //no self collision
                 if i == j {continue;}
                 //no bullet on bullet collision
-                if self.entities[j].entity_type == Bullet {continue;}
+                if self.entities[j].entity_type == PlayerBullet {continue;}
 
                 let distance_to_bullet = bullet_position.distance_to(&self.entities[j].mover.position);
 

@@ -13,7 +13,7 @@ use crate::game::entities::{
     Entity,
     EntityEvent,
     EntityEvent::Spawn,
-    EntityType::Bullet,
+    EntityType::PlayerBullet,
     BULLET_HP,
 };
 
@@ -95,7 +95,7 @@ impl Player {
         let mut events: Vec<EntityEvent> = Vec::new();
 
         if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No){
-            let bullet = Entity::new(self.mover.position, self.mover.floor_level, 1.0, self.mover.facing_direction, 1, renderer_data, Bullet, BULLET_HP, 1.0).unwrap();
+            let bullet = Entity::new(self.mover.position, self.mover.view_level, 1.0, self.mover.facing_direction, 1, renderer_data, PlayerBullet, BULLET_HP, 1.0).unwrap();
             events.push(Spawn(bullet));
         }
 

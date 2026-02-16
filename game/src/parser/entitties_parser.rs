@@ -133,12 +133,12 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, entitie
         facing_direction: facing_direction.unwrap_or(0.0),
         enemy_type: enemy_type_num.map_or(EntityType::Dummy, |id| {
             match id {
-                1 => EntityType::Bullet,
+                1 => EntityType::PlayerBullet,
                 2 => EntityType::RedBarrel,
                 3 => EntityType::MeleeEnemy,
                 4 => EntityType::RangedEnemy,
                 5 => EntityType::SummonerEnemy,
-                6 => EntityType::SummonedEnemy,
+                6 => EntityType::WeakEnemy,
                 _ => EntityType::Dummy,
 
             }

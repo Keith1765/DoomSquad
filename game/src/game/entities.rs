@@ -11,6 +11,7 @@ use crate::render::RendererData;
 use crate::render::sprites::Sprite;
 use crate::game::entities::EntityType::*;
 use crate::game::entities::EntityEvent::*;
+use crate::game::generate_entities::generate_entities;
 
 use std::fmt;
 
@@ -21,30 +22,38 @@ pub const BULLET_SPEED: f64 =  20.0;
 const SHOOTING_COOLDOWN: i32 = 50;
 const SUMMONING_COOLDOWN: i32 = 500;
 pub const BULLET_HP: f64 = 30.0;
-const ENEMY_HP: f64 = 50.0;
+pub const ENEMY_HP: f64 = 50.0;
 pub const ENEMY_SIZE: f64 = 10.0;
 pub const BULLET_DMG: f64 = 20.0;
+pub const DUMMY_HP: f64 = 100.0;
+pub const DUMMY_SIZE: f64 = 15.0;
+pub const WEAK_ENEMY_MULTIPLICATOR: f64 = 0.5;
+pub const RED_BARREL_HP: f64 = 1.0;
+pub const RED_BARREL_SIZE: f64 = 5.0;
+pub const BULLET_TRAVEL_COUNTDOWN: i32 = 2;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType{
     Dummy, //sprite done
-    Bullet,//sprite done
+    PlayerBullet,//sprite done
+    EnemyBullet,//sprites done
     RedBarrel, //sprite done
     RangedEnemy,
     MeleeEnemy,//sprite done
     SummonerEnemy,
-    SummonedEnemy,
+    WeakEnemy,
 }
 impl fmt::Display for EntityType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let text = match self {
             EntityType::Dummy => "Dummy",
-            EntityType::Bullet => "Bullet",
+            EntityType::PlayerBullet => "PlayerBullet",
+            EntityType::EnemyBullet => "EnemyBullet",
             EntityType::RedBarrel => "RedBarrel",
             EntityType::RangedEnemy => "RangedEnemy",
             EntityType::MeleeEnemy => "MeleeEnemy",
             EntityType::SummonerEnemy => "SummonerEnemy",
-            EntityType::SummonedEnemy => "SummonedEnemy",
+            EntityType::WeakEnemy => "WeakEnemy",
         };
 
         write!(f, "{}", text)
@@ -118,12 +127,13 @@ impl Entity {
 
         match self.entity_type {
             Dummy   => self.dummy_behaviour(map, player_mover.position, &mut events),
-            Bullet   => self.bullet_behaviour(map,player_mover.position, &mut events),
+            PlayerBullet   => self.player_bullet_behaviour(map,player_mover.position, &mut events),
+            EnemyBullet   => self.enemy_bullet_behaviour(map,player_mover.position, &mut events),
             RedBarrel   => self.red_barrel_behaviour(map, player_mover.position, &mut events),
             RangedEnemy   => self.ranged_enemy_behaviour(map, player_mover.position, renderer_data, &mut events),
             MeleeEnemy   => self.melee_enemy_behaviour(window, map, player_mover.position, &mut events),
             SummonerEnemy   => self.summoner_enemy_behaviour(map, player_mover.position, renderer_data, &mut events),
-            SummonedEnemy   => self.summoned_enemy_behaviour(map, player_mover.position, &mut events),
+            WeakEnemy   => self.weak_enemy_behaviour(map, player_mover.position, &mut events),
             _       => self.dummy_behaviour(map, player_mover.position, &mut events),
         }
 
@@ -147,7 +157,12 @@ impl Entity {
     fn dummy_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.gravity(map);
     }
-    fn bullet_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
+    fn player_bullet_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
+        self.hp -= 0.25;
+        self.mover.step(BULLET_SPEED, 0.0, map, false);
+    }
+    //atm the same as player bullets
+    fn enemy_bullet_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.hp -= 0.25;
         self.mover.step(BULLET_SPEED, 0.0, map, false);
     }
@@ -165,7 +180,7 @@ impl Entity {
         else{
             let direction_to_player = self.mover.position.angle_to(&player_position);
             self.cooldown = SHOOTING_COOLDOWN;
-            let bullet = Entity::new(self.mover.position, self.mover.floor_level, 1.0, direction_to_player, 1, renderer_data, Bullet, BULLET_HP, 1.0).unwrap();
+            let bullet = generate_entities(EnemyBullet, self.mover.position, self.mover.height, direction_to_player, renderer_data);
             events.push(Spawn(bullet));
         }
     }
@@ -208,7 +223,7 @@ impl Entity {
         self.normal_enemy_movement(map, player_position, MOVE_SPEED);
     }
 
-    fn summoned_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
+    fn weak_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.gravity(map);
         self.normal_enemy_movement(map, player_position, MOVE_SPEED*0.5);
     }
