@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    game::{entities::{Entity, EntityEvent::{self, *}, EntityType::*, BULLET_DMG, ENEMY_SIZE}, map::Point, map_grid::MapGrid, movement::Mover, generate_entities::generate_entities},
+    game::{entities::{self, BULLET_DMG,ARROW_DMG, ENEMY_SIZE, Entity, EntityEvent::{self, *}, EntityType::*}, generate_entities::generate_entities, map::Point, map_grid::MapGrid, movement::Mover},
     render::{RendererData, sprites::Sprite},
 };
 
@@ -28,12 +28,12 @@ impl Game {
         Self {
             player: Player::new(),
             entities: vec![
-                //generate_entities(Dummy,Point { x: 200.0, y: 200.0 }, 500.0, 0.0,renderer_data ),
-                //generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 500.0, 0.0, renderer_data),
-                generate_entities(RangedEnemy, Point { x: 280.0, y: 200.0 }, 500.0, 0.0, renderer_data),
-                //generate_entities(MeleeEnemy, Point { x: 320.0, y: 200.0 }, 500.0, 0.0, renderer_data),
-                //generate_entities(SummonerEnemy, Point { x: 360.0, y: 200.0 }, 500.0, 0.0, renderer_data),
-                //generate_entities(RedBarrel, Point { x: 400.0, y: 300.0 }, 500.0, 0.0, renderer_data),
+                generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 500.0, 0.0,renderer_data ),
+                // generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 500.0, 0.0, renderer_data),
+                // generate_entities(RangedEnemy, Point { x: 280.0, y: 200.0 }, 500.0, 0.0, renderer_data),
+                // generate_entities(MeleeEnemy, Point { x: 320.0, y: 200.0 }, 500.0, 0.0, renderer_data),
+                // generate_entities(SummonerEnemy, Point { x: 360.0, y: 200.0 }, 500.0, 0.0, renderer_data),
+                // generate_entities(RedBarrel, Point { x: 400.0, y: 300.0 }, 500.0, 0.0, renderer_data),
                 ],
             map: Map::new_test_map().unwrap(), // TODO remove unwrap
             despawn_timer: DESPAWN_TIME,
@@ -77,7 +77,7 @@ impl Game {
 
         for i in 1..self.entities.len() {
             //currently only for bullet, but extendable
-            if self.entities[i].entity_type != PlayerBullet {
+            if (self.entities[i].entity_type != PlayerBullet)&&( self.entities[i].entity_type !=PlayerArrow ){
                 continue;
             }
 
@@ -96,8 +96,14 @@ impl Game {
 
                 //if bullet in range of entity size
                 if distance_to_bullet <= self.entities[j].size {
+                    
+                    let damage = match self.entities[i].entity_type {
+                        PlayerBullet => BULLET_DMG,
+                        PlayerArrow => ARROW_DMG,
+                        _ => 0.0,
+                    };
                     //DAMAGE THAT BITCH
-                    self.entities[j].hp -= BULLET_DMG;
+                    self.entities[j].hp -= damage;
 
                     //bullet go brr
                     bullets_that_hit.push(i);

@@ -13,9 +13,9 @@ use crate::game::entities::{
     Entity,
     EntityEvent,
     EntityEvent::Spawn,
-    EntityType::PlayerBullet,
-    BULLET_HP,
+    EntityType::{PlayerBullet, PlayerArrow}, PROJECTILE_HP,
 };
+use crate::game::generate_entities::generate_entities;
 
 const ROTATION_SPEED_MOUSE: f64 = 2.0;
 const ROTATION_SPEED_KEYS: f64 = 0.15;
@@ -95,8 +95,13 @@ impl Player {
         let mut events: Vec<EntityEvent> = Vec::new();
 
         if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No){
-            let bullet = Entity::new(self.mover.position, self.mover.view_level, 1.0, self.mover.facing_direction, 1, renderer_data, PlayerBullet, BULLET_HP, 1.0).unwrap();
+            let bullet = generate_entities(PlayerBullet, self.mover.position, self.mover.height, self.mover.facing_direction, renderer_data);
             events.push(Spawn(bullet));
+        }
+
+        if window.is_key_pressed(Key::RightShift, KeyRepeat::No){
+            let arrow = generate_entities(PlayerArrow, self.mover.position, self.mover.height, self.mover.facing_direction, renderer_data);
+            events.push(Spawn(arrow));
         }
 
         if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
