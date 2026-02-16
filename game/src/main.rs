@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut prev_keys = (false, false, false, false, false); // (W, A, S, D, Space)
 
-    while window.is_open() && !window.is_key_down(Key::Escape) {
+    while window.is_open() && !window.is_key_down(Key::Escape) && (game.player.hp > 0.0) {
         let (_, _, _, _, prev_space) = prev_keys;
 
         let cur_w = window.is_key_down(Key::W);

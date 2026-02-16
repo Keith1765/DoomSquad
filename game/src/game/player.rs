@@ -33,6 +33,7 @@ const STRAIFING_SPEED: f64 = 0.025;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
 const PLAYER_HP: f64 = 100.0;
+const PLAYER_SIZE: f64 = 3.0;
 
 
 #[derive(Clone,PartialEq, Eq)]
@@ -60,6 +61,7 @@ pub struct Player {
     pub rocketlauncher_Cooldown: i32,
     pub hp: f64,
     pub arrow_cooldown: i32,
+    pub size: f64,
     
 }
 
@@ -90,6 +92,7 @@ impl Player {
             rocketlauncher_Cooldown: 0,
             hp: PLAYER_HP,
             arrow_cooldown: 0,
+            size: PLAYER_SIZE,
         }
     }
 

@@ -73,18 +73,18 @@ impl Game {
         //update grid
         self.map_grid.update(&self.entities);
 
-        let mut bullets_that_hit = Vec::new();
+        let mut projectile_that_hit = Vec::new();
 
+        //damage calc for enemies
         for i in 1..self.entities.len() {
-            //currently only for bullet, but extendable
             if (self.entities[i].entity_type != PlayerBullet)&&( self.entities[i].entity_type !=PlayerArrow ){
                 continue;
             }
 
-            let bullet_position = self.entities[i].mover.position;
+            let projectile_position = self.entities[i].mover.position;
 
             //get all entities from neighbouring cells
-            let neighbours = self.map_grid.get_neighbours(bullet_position);
+            let neighbours = self.map_grid.get_neighbours(projectile_position);
 
             for j in neighbours {
                 //no self collision
@@ -92,7 +92,7 @@ impl Game {
                 //no bullet on bullet collision
                 if self.entities[j].entity_type == PlayerBullet {continue;}
 
-                let distance_to_bullet = bullet_position.distance_to(&self.entities[j].mover.position);
+                let distance_to_bullet = projectile_position.distance_to(&self.entities[j].mover.position);
 
                 //if bullet in range of entity size
                 if distance_to_bullet <= self.entities[j].size {
@@ -106,15 +106,43 @@ impl Game {
                     self.entities[j].hp -= damage;
 
                     //bullet go brr
-                    bullets_that_hit.push(i);
+                    projectile_that_hit.push(i);
 
                     break; //cause no entity penetration
                 }
             }
         }
 
+        //calc damage to player
+            let player_position = self.player.mover.position;
+
+            //get all entities from neighbouring cells
+            let neighbours = self.map_grid.get_neighbours(player_position);
+
+            for j in neighbours {
+
+                let distance_to_player = player_position.distance_to(&self.entities[j].mover.position);
+
+                //if player size in range of entity size
+                if distance_to_player <= self.entities[j].size + self.player.size{
+                    
+                    let damage = match self.entities[j].entity_type {
+                        EnemyBullet => BULLET_DMG,
+                        EnemyArrow => ARROW_DMG,
+                        _ => 0.0,
+                    };
+                    //DAMAGE THAT BITCH
+                    self.player.hp -= damage;
+
+                    //bullet go brr
+                    projectile_that_hit.push(j);
+
+                    break; //cause no entity penetration
+                }
+            }
+
         //delete all bullets that hit
-        for i in bullets_that_hit{
+        for i in projectile_that_hit{
             self.entities[i].hp = 0.0; //o7
         }
 
