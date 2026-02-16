@@ -69,7 +69,23 @@ pub struct Entity {
     pub hp: f64,
     pub size: f64,
 }
-
+//TODO defaults for entities
+impl Default for Entity {
+    fn default() -> Self {
+        Self {
+            mover: Mover::new(),
+            movement_locked: false,
+            sprite: Sprite::default(),
+            gravity: 9.81,
+            vertical_velocity: 0.0,
+            entity_type: EntityType::Dummy,
+            orientation_lock: false,
+            cooldown: 0,
+            hp: 10.0,
+            size: 1.0,
+        }
+    }
+}
 impl Entity {
     pub fn new(
         position: Point,
