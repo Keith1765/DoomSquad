@@ -70,6 +70,7 @@ impl Entity {
                 texture_id: sprite_texture_id,
                 height: renderer_data.textures.get(&sprite_texture_id)?.height as f64,
                 width: renderer_data.textures.get(&sprite_texture_id)?.width as f64,
+                sprite_switcher: None,
             },
             gravity: GRAVITY_CONST,
             vertical_velocity: 0.0,
@@ -98,7 +99,7 @@ impl Entity {
         }
 
         match self.entity_type {
-            Dummy => self.dummy_behaviour(map, player_mover.position, &mut events),
+            Dummy => self.dummy_behaviour(map, player_mover.position, &mut events, window),
             Bullet => self.bullet_behaviour(map, player_mover.position, &mut events),
             RedBarrel => self.red_barrel_behaviour(map, player_mover.position, &mut events),
             RangedEnemy => {
@@ -107,13 +108,22 @@ impl Entity {
             MeleeEnemy => {
                 self.melee_enemy_behaviour(window, map, player_mover.position, &mut events)
             }
-            _ => self.dummy_behaviour(map, player_mover.position, &mut events),
+            _ => self.dummy_behaviour(map, player_mover.position, &mut events, window),
         }
 
         //set view level correctly
         self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
         // // move testwise
         // self.normal_enemy_movement(map, player_mover.position);
+
+        if let Some(switcher) = &mut self.sprite.sprite_switcher {
+            if switcher.countdown == 0 {
+                self.sprite.texture_id = switcher.texture_id;
+                self.sprite.sprite_switcher = None;
+            } else {
+                switcher.countdown -= 1;
+            }
+        }
 
         return events;
     }
@@ -130,8 +140,14 @@ impl Entity {
         map: &Map,
         player_position: Point,
         events: &mut Vec<EntityEvent>,
+        window: &Window
     ) {
         self.gravity(map);
+
+        // TODO remove; only for testing of sprite switching
+        if window.is_key_pressed(Key::T, minifb::KeyRepeat::No) {
+            self.sprite.switch_sprite_for_duration(0, 300);
+        }
     }
     fn bullet_behaviour(
         self: &mut Self,

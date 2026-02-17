@@ -12,10 +12,28 @@ use crate::{
 };
 
 #[derive(Clone)]
+pub struct SpriteSwitcher {
+    pub texture_id: usize,
+    pub countdown: usize
+}
+
+#[derive(Clone)]
 pub struct Sprite {
     pub texture_id: usize,
     pub height: f64,
     pub width: f64,
+    pub sprite_switcher: Option<SpriteSwitcher>,
+}
+
+impl Sprite {
+    pub fn switch_sprite_for_duration(&mut self, new_texture_id: usize, time: usize) {
+        let switcher = SpriteSwitcher {
+            texture_id: self.texture_id,
+            countdown: time,
+        };
+        self.texture_id = new_texture_id;
+        self.sprite_switcher = Some(switcher);
+    }
 }
 
 // currently unused

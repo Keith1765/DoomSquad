@@ -40,7 +40,7 @@ impl Game {
                     0.0,
                     3,
                     renderer_data,
-                    RangedEnemy,
+                    Dummy,
                     100.0,
                 )
                 .unwrap(),
