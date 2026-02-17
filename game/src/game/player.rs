@@ -13,26 +13,32 @@ use crate::game::entities::{
     Entity,
     EntityEvent,
     EntityEvent::Spawn,
-    EntityType::Bullet,
-    BULLET_HP,
+    EntityType::{PlayerBullet, PlayerArrow}, PROJECTILE_HP, ARROW_COOLDOWN,
 };
+use crate::game::generate_entities::generate_entities;
 
 const ROTATION_SPEED_MOUSE: f64 = 2.0;
 const ROTATION_SPEED_KEYS: f64 = 0.15;
-pub const MOVE_SPEED: f64 = 1.5;
+pub const MOVE_SPEED: f64 = 3.0;
 const FLY_UP_DOWN_SPEED: f64 = 1.0;
 const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
-pub const MAX_STEP_UP_HEIGHT: f64 = 5.0;
+pub const MAX_STEP_UP_HEIGHT: f64 = 6.0;
 const PLAYER_HEAD_HEIGHT: f64 = 15.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
-const SPRINT_SPEED: f64 = 4.0;
+const SPRINT_SPEED: f64 = 5.0;
 const CROUCH_HEIGHT_DIFF: f64 = 5.0; 
 const SLIDE_COOLDOWN_TIME: i32 = 10;
-const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 300;
-const STRAIFING_SPEED: f64 = 0.025;
+const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 100; //was 300, i set it lower for testing
+const STRAIFING_SPEED: f64 = 0.035;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
-const PLAYER_HP: f64 = 100.0;
+const PLAYER_HP: f64 = 100.0; 
+const PLAYER_SIZE: f64 = 3.0;
+const JUMP_SPEED_BOOST_MULTIPLICATOR: f64 = 0.4;
+const JUMP_SPEED_BOOST: f64 = 0.0;
+const INCREASED_STRAFING_SPEED_RL: f64 = 1.5;
+const ROCKETLAUNCHER_SPEED_BOOST: f64 = 5.0;
+const ROCKETLAUNCHER_HEIGHT_BOOST: f64 = 5.0;
 
 
 #[derive(Clone,PartialEq, Eq)]
@@ -59,6 +65,9 @@ pub struct Player {
     pub gravity: f64,
     pub rocketlauncher_Cooldown: i32,
     pub hp: f64,
+    pub arrow_cooldown: i32,
+    pub size: f64,
+    pub using_rocketlauncher: bool,
     
 }
 
@@ -88,15 +97,28 @@ impl Player {
             gravity: -1.0,
             rocketlauncher_Cooldown: 0,
             hp: PLAYER_HP,
+            arrow_cooldown: 0,
+            size: PLAYER_SIZE,
+            using_rocketlauncher: false,
         }
     }
 
     pub fn update(&mut self, window: &Window, map: &Map,renderer_data: &RendererData) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
 
-        if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No){
-            let bullet = Entity::new(self.mover.position, self.mover.floor_level, 1.0, self.mover.facing_direction, 1, renderer_data, Bullet, BULLET_HP, 1.0).unwrap();
+        if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) {
+            let bullet = generate_entities(PlayerBullet, self.mover.position, self.mover.height, self.mover.facing_direction, renderer_data);
             events.push(Spawn(bullet));
+        }
+
+        if window.is_key_pressed(Key::RightShift, KeyRepeat::No) && self.arrow_cooldown == 0 {
+            let arrow = generate_entities(PlayerArrow, self.mover.position, self.mover.height, self.mover.facing_direction, renderer_data);
+            events.push(Spawn(arrow));
+            self.arrow_cooldown = ARROW_COOLDOWN;
+        }
+
+        if self.arrow_cooldown > 0 {
+            self.arrow_cooldown -= 1;
         }
 
         if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
@@ -111,7 +133,10 @@ impl Player {
         if window.is_key_down(Key::Left) {
             //during slide heavily restricted rotation
             let rotation_factor = match self.is_sliding || self.is_jumping{
-                true => STRAIFING_SPEED,
+                true => match self.using_rocketlauncher{
+                    true => STRAIFING_SPEED *INCREASED_STRAFING_SPEED_RL,
+                    false => STRAIFING_SPEED
+                },
                 false => ROTATION_SPEED_KEYS,
             };
 
@@ -123,7 +148,10 @@ impl Player {
         if window.is_key_down(Key::Right) {
             //during slide heavily restricted rotation
             let rotation_factor = match self.is_sliding || self.is_jumping {
-                true => STRAIFING_SPEED,
+                true => match self.using_rocketlauncher{
+                    true => STRAIFING_SPEED *INCREASED_STRAFING_SPEED_RL,
+                    false => STRAIFING_SPEED
+                },
                 false => ROTATION_SPEED_KEYS,
             };
             self.check_angle();
@@ -169,7 +197,7 @@ impl Player {
                 self.move_speed = SPRINT_SPEED;
             }
 
-            if self.move_speed > SPRINT_SPEED && !self.is_sliding {
+            if self.move_speed > SPRINT_SPEED && !self.is_sliding && !self.is_jumping {
                 self.move_speed = SPRINT_SPEED;
             }
         }
@@ -214,7 +242,7 @@ impl Player {
                 }
                 //normal jump init
                 if window.is_key_pressed(Key::Space, KeyRepeat::No) {
-                    self.move_speed += self.move_speed*0.75;
+                    self.move_speed += self.move_speed*JUMP_SPEED_BOOST_MULTIPLICATOR;
                     let speed_bonus = self.move_speed * 0.8;
                     self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
                     self.gravity += self.gravity*(self.move_speed*0.08) //special Relativity (kidding, just wanted to decrease height scalling on big jumps)
@@ -222,9 +250,10 @@ impl Player {
 
                 //rocketlauncher
                 if window.is_key_pressed(Key::R, KeyRepeat::No) && (self.rocketlauncher_Cooldown == 0){
-                    self.move_speed += self.move_speed*0.75 + 10.0;
+                    self.using_rocketlauncher=true;
+                    self.move_speed += self.move_speed*JUMP_SPEED_BOOST_MULTIPLICATOR + ROCKETLAUNCHER_SPEED_BOOST;
                     let speed_bonus = self.move_speed * 0.8;
-                    self.vertical_velocity = JUMP_STRENGTH + speed_bonus + 3.0;
+                    self.vertical_velocity = JUMP_STRENGTH + speed_bonus + ROCKETLAUNCHER_HEIGHT_BOOST;
                     self.gravity += self.gravity*(self.move_speed*0.04);
                     self.rocketlauncher_Cooldown = ROCKETLAUNCHER_COOLDOWN_TIME;
                 }
@@ -254,6 +283,7 @@ impl Player {
                 self.mover.foot_level = self.mover.floor_level;
                 self.vertical_velocity= 0.0;
                 self.is_jumping = false;
+                if self.using_rocketlauncher {self.using_rocketlauncher=false};
             }
 
         }
