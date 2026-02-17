@@ -146,7 +146,7 @@ impl Entity {
 
         // TODO remove; only for testing of sprite switching
         if window.is_key_pressed(Key::T, minifb::KeyRepeat::No) {
-            self.sprite.switch_sprite_for_duration(0, 300);
+            self.sprite.switch_sprite_for_duration(0, 30);
         }
     }
     fn bullet_behaviour(
