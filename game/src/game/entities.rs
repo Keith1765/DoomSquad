@@ -54,6 +54,7 @@ pub enum EntityType{
     EnemyArrow,  //sprite done
     PlayerArrow,  //sprite done
     Archer,
+    Button,
 }
 impl fmt::Display for EntityType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -70,6 +71,8 @@ impl fmt::Display for EntityType {
             EntityType::EnemyArrow => "EnemyArrow",
             EntityType::PlayerArrow => "PlayerArrow",
             EntityType::Archer => "Archer",
+            //TODO adding button behiaviour and also interect in player
+            EntityType::Button => "Button",
         };
 
         write!(f, "{}", text)
@@ -337,6 +340,11 @@ impl Entity {
             
         };
 
+        events
+    }
+    pub fn button_behaviour (&mut self, renderer_data: &RendererData) -> Vec<EntityEvent> {
+        let mut events = Vec::new();
+        //TODO
         events
     }
     
