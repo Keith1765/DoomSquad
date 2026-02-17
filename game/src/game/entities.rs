@@ -37,6 +37,8 @@ pub const ARROW_DMG: f64 = 40.0;
 pub const EXPLODED_RED_BARREL_HP: f64 = 30.0;
 pub const RED_BARREL_DMG: f64 = 1000.0;
 pub const EXPLODED_RED_BARREL_SIZE: f64 = 20000.0;
+pub const MELEE_ENEMY_ATTACK_OFFSET: i32 = 10;
+pub const MEELE_ENEMY_DMG: f64 = 50.0;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType{
@@ -149,7 +151,7 @@ impl Entity {
             ExplodedRedBarrel   => self.exploded_red_barrel_behaviour(map, player_mover.position, &mut events),
             RangedEnemy   => self.ranged_enemy_behaviour(map, player_mover.position, renderer_data, &mut events),
             Archer   => self.archer_behaviour(map, player_mover.position, renderer_data, &mut events),
-            MeleeEnemy   => self.melee_enemy_behaviour(window, map, player_mover.position, &mut events),
+            MeleeEnemy   => self.melee_enemy_behaviour(map, player_mover.position, &mut events),
             SummonerEnemy   => self.summoner_enemy_behaviour(map, player_mover.position, renderer_data, &mut events),
             WeakEnemy   => self.weak_enemy_behaviour(map, player_mover.position, &mut events),
             EnemyArrow => self.enemy_arrow_behaviour(map, player_mover.position, &mut events),
@@ -194,7 +196,7 @@ impl Entity {
         //terminate arrow when hits the floor
         if self.mover.foot_level <= self.mover.floor_level{
             self.hp=0.0;
-        }  
+        } 
     }
     //atm the same as player bullets
     fn enemy_arrow_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
@@ -272,20 +274,36 @@ impl Entity {
         }
     }
 
-    fn melee_enemy_behaviour (self: & mut Self, window: &Window, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
+    fn melee_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.gravity(map, 1.0);
-        if window.is_key_down(Key::B){
-            self.orientation_lock= true;
-        }
-        else{
-            self.orientation_lock = false;
-        }
+
         self.normal_enemy_movement(map, player_position, MOVE_SPEED);
+
+        if self.cooldown > 0 {
+            self.cooldown -= 1;
+            return;
+        }
+
+        if self.did_damage {
+            self.cooldown = MELEE_ENEMY_ATTACK_OFFSET;
+            self.did_damage = false;
+        }
+        
     }
 
     fn weak_enemy_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
         self.gravity(map,1.0);
         self.normal_enemy_movement(map, player_position, MOVE_SPEED*0.5);
+
+        if self.cooldown > 0 {
+            self.cooldown -= 1;
+            return;
+        }
+
+        if self.did_damage {
+            self.cooldown = MELEE_ENEMY_ATTACK_OFFSET;
+            self.did_damage = false;
+        }
     }
 
     //percentage should be 1.0 per default, lower for small gravity effect
