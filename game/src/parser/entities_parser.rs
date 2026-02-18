@@ -7,15 +7,6 @@ use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
 use std::io::Read;
-use std::str;
-
-pub struct EntityInParser {
-    pub if_player: bool,        //true if player, false if enemy
-    pub point: Point,           //pos from the point
-    pub floor_level: f64,       //r from rgba-value
-    pub facing_direction: f64,  //g from rgba-value
-    pub enemy_type: EntityType, //b from rgba-value
-}
 
 pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
     read_entitties_from_file(path, renderer_data)
@@ -51,7 +42,7 @@ pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> R
                         read_values_for_player_from_point()? //TODO
                     }
                     (Some("point"), label) if label.starts_with("Enemy") => {
-                        read_values_for_enemy_from_point(&mut reader, &mut buf, label, &mut entities, renderer_data)?
+                        read_values_for_enemy_from_point(&mut reader, &mut buf, &mut entities, renderer_data)?
                     }
                     _ => {}
                 }
@@ -79,7 +70,6 @@ pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> R
 fn read_values_for_enemy_from_point(
     reader: &mut Reader<&[u8]>,
     buf: &mut Vec<u8>,
-    name: &str,
     entities: &mut Vec<Entity>,
     renderer_data: &RendererData,
 ) -> Result<()> {
