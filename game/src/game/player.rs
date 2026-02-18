@@ -68,6 +68,7 @@ pub struct Player {
     pub arrow_cooldown: i32,
     pub size: f64,
     pub using_rocketlauncher: bool,
+    pub interacting: bool,
     
 }
 
@@ -100,12 +101,16 @@ impl Player {
             arrow_cooldown: 0,
             size: PLAYER_SIZE,
             using_rocketlauncher: false,
+            interacting: false,
         }
     }
 
     pub fn update(&mut self, window: &Window, map: &Map,renderer_data: &RendererData) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
-
+        if window.is_key_pressed(Key::F, KeyRepeat::No){
+           self.interacting = true; 
+        }
+         
         if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) {
             let bullet = generate_entities(PlayerBullet, self.mover.position, self.mover.height, self.mover.facing_direction, renderer_data);
             events.push(Spawn(bullet));

@@ -139,6 +139,10 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, entitie
                 4 => EntityType::RangedEnemy,
                 5 => EntityType::SummonerEnemy,
                 6 => EntityType::WeakEnemy,
+                7 => EntityType::EnemyArrow,
+                8 => EntityType::PlayerArrow,
+                9 => EntityType::Archer,
+                10 => EntityType::Button,
                 _ => EntityType::Dummy,
 
             }
