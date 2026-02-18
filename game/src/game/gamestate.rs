@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    game::{entities::{self, ARROW_DMG, BULLET_DMG, ENEMY_SIZE, Entity, EntityEvent::{self, *}, EntityType::*, MEELE_ENEMY_DMG, RED_BARREL_DMG, WEAK_ENEMY_MULTIPLICATOR}, generate_entities::generate_entities, map::Point, map_grid::MapGrid, movement::Mover},
+    game::{entities::{self, ARROW_DMG, BULLET_DMG, ENEMY_SIZE, Entity, EntityEvent::{self, *}, EntityType::*, MEELE_ENEMY_DMG, RED_BARREL_DMG, WEAK_ENEMY_MULTIPLICATOR}, generate_entities::generate_entities, interactables::{Interactable, InteractableType}, map::Point, map_grid::MapGrid, movement::Mover},
     render::{RendererData, sprites::Sprite},
 };
 
@@ -18,6 +18,7 @@ const MAP_GRID_CELL_SIZE: f64 = 64.0;
 pub struct Game {
     pub player: Player,
     pub entities: Vec<Entity>,
+    pub interactables: Vec<Interactable>,
     pub map: Map,
     pub despawn_timer: i32,
     pub map_grid: MapGrid,
@@ -30,6 +31,7 @@ impl Game {
         Self {
             player: Player::new(),
             entities:parse_entities("assets/maps/geogebra_test_map_with_jump+run+entities.xml".to_string(), &renderer_data).unwrap(),
+            interactables: vec![Interactable::new(InteractableType::Button, Point { x: 0.0, y: 0.0 }, 0.0,  16.0, 0, &renderer_data).unwrap()],
             // entities: vec![
             //     generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 0.0, 0.0,renderer_data ),
             //     // generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 0.0, 0.0, renderer_data),
@@ -64,7 +66,10 @@ impl Game {
             let event = entity.update(window, &self.map, &self.player.mover, renderer_data);
             spawns.extend(event);
         }
-
+        //update all interactables and add possible spawn events
+        for interactable in &mut self.interactables {
+            interactable.update(window, renderer_data);
+        }
         //deal damage
         self.damage_check();
 
