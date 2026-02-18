@@ -8,7 +8,7 @@ use crate::{
 use super::map::Map;
 use super::player::Player;
 use minifb::{Key, Window};
-use quick_xml::events;
+use crate::parser::entities_parser::*;
 
 const DESPAWN_TIME: i32 = 300;
 const MAP_GRID_CELL_SIZE: f64 = 64.0;
@@ -28,19 +28,20 @@ impl Game {
         
         Self {
             player: Player::new(),
-            entities: vec![
-                generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 0.0, 0.0,renderer_data ),
-                // generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-                // generate_entities(RangedEnemy, Point { x: 280.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-                // generate_entities(MeleeEnemy, Point { x: 320.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-                // generate_entities(MeleeEnemy, Point { x: 300.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-                // generate_entities(MeleeEnemy, Point { x: 360.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-                generate_entities(MeleeEnemy, Point { x: 280.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-                //generate_entities(WeakEnemy, Point { x: 260.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-                generate_entities(SummonerEnemy, Point { x: 360.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-                // generate_entities(RedBarrel, Point { x: 400.0, y: 300.0 }, 0.0, 0.0, renderer_data),
-                //generate_entities(Dummy, Point { x: 400.0, y: 300.0 }, 0.0, 0.0, renderer_data),
-                ],
+            entities:parse_entities("assets/maps/geogebra_test_map_with_jump+run+entities.xml".to_string(), &renderer_data).unwrap(),
+            // entities: vec![
+            //     generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 0.0, 0.0,renderer_data ),
+            //     // generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+            //     // generate_entities(RangedEnemy, Point { x: 280.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+            //     // generate_entities(MeleeEnemy, Point { x: 320.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+            //     // generate_entities(MeleeEnemy, Point { x: 300.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+            //     // generate_entities(MeleeEnemy, Point { x: 360.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+            //     generate_entities(MeleeEnemy, Point { x: 280.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+            //     //generate_entities(WeakEnemy, Point { x: 260.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+            //     generate_entities(SummonerEnemy, Point { x: 360.0, y: 200.0 }, 0.0, 0.0, renderer_data),
+            //     // generate_entities(RedBarrel, Point { x: 400.0, y: 300.0 }, 0.0, 0.0, renderer_data),
+            //     //generate_entities(Dummy, Point { x: 400.0, y: 300.0 }, 0.0, 0.0, renderer_data),
+            //     ],
             map: Map::new_test_map().unwrap(), // TODO remove unwrap
             despawn_timer: DESPAWN_TIME,
             map_grid: MapGrid::new(MAP_GRID_CELL_SIZE), 

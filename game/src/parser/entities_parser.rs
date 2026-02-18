@@ -8,6 +8,8 @@ use quick_xml::events::Event;
 use std::fs::File;
 use std::io::Read;
 
+use crate::parser::map_parser::SCALING_FACTOR;
+
 pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
     read_entitties_from_file(path, renderer_data)
 }
@@ -125,11 +127,11 @@ fn read_values_for_enemy_from_point(
     let entitties_pushing = generate_entities(
         entity_type,
         Point {
-            x: x.unwrap_or(0.0),
-            y: y.unwrap_or(0.0),
+            x: x.unwrap()*SCALING_FACTOR,
+            y: y.unwrap()*SCALING_FACTOR,
         },
-        floor_level.unwrap_or(0.0),
-        facing_direction.unwrap_or(0.0),
+        floor_level.unwrap(),
+        facing_direction.unwrap(),
         renderer_data,
     );
 

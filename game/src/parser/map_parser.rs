@@ -6,7 +6,7 @@ use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
 use std::io::Read;
-const SCALING_FACTOR: f64 = 100.0;
+pub const SCALING_FACTOR: f64 = 100.0;
 
 pub struct GeogebraPoint {
     pub label: String,
