@@ -9,6 +9,7 @@ use super::map::Map;
 use super::player::Player;
 use minifb::{Key, Window};
 use crate::parser::entities_parser::*;
+use crate::parser::interactables_parser::*;
 
 const DESPAWN_TIME: i32 = 300;
 const MAP_GRID_CELL_SIZE: f64 = 64.0;
