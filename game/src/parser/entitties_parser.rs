@@ -1,27 +1,27 @@
+use crate::game::entities::{Entity, EntityType};
+use crate::game::generate_entities::*;
+use crate::game::map::Point;
+use crate::render::RendererData;
 use anyhow::Result;
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
 use std::io::Read;
 use std::str;
-use crate::game::generate_entities::*;
-use crate::game::entities::{Entity, EntityType};
-use crate::game::map::{Point};
-use crate::render::RendererData;
 
 pub struct EntityInParser {
-    pub if_player: bool,     //true if player, false if enemy
-    pub point: Point,        //pos from the point
-    pub floor_level: f64,      //r from rgba-value
-    pub facing_direction: f64, //g from rgba-value
-    pub enemy_type: EntityType,       //b from rgba-value
+    pub if_player: bool,        //true if player, false if enemy
+    pub point: Point,           //pos from the point
+    pub floor_level: f64,       //r from rgba-value
+    pub facing_direction: f64,  //g from rgba-value
+    pub enemy_type: EntityType, //b from rgba-value
 }
-     
-pub fn parse_entitties(path: String, renderer_data: &RendererData) -> Result<()> {
+
+pub fn parse_entitties(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
     read_entitties_from_file(path, renderer_data)
 }
 
-pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> Result<()> {
+pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
     let mut file = File::open(path)?;
     let mut xml_contents = String::new();
     file.read_to_string(&mut xml_contents)?;
@@ -30,7 +30,6 @@ pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> R
     let mut buf = Vec::new();
 
     let mut entities: Vec<Entity> = Vec::new();
-    
 
     loop {
         match reader.read_event_into(&mut buf)? {
@@ -49,10 +48,10 @@ pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> R
 
                 match (element_type.as_deref(), label.as_str()) {
                     (Some("point"), label) if label.starts_with("Player") => {
-                        read_point(&mut reader, &mut buf, label, &mut entities, renderer_data)?
+                        read_values_for_player_from_point()? //TODO
                     }
                     (Some("point"), label) if label.starts_with("Enemy") => {
-                        read_point(&mut reader, &mut buf, label, &mut entities, renderer_data)?
+                        read_values_for_enemy_from_point(&mut reader, &mut buf, label, &mut entities, renderer_data)?
                     }
                     _ => {}
                 }
@@ -63,14 +62,27 @@ pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> R
 
         buf.clear();
     }
-    for entity in entities {
-        println!("Parsed entity: {} at position ({}, {}) with floor level {}, facing direction {}, and type {}", 
-        entity.entity_type, entity.mover.position.x, entity.mover.position.y, entity.mover.height, entity.mover.facing_direction, entity.entity_type);
+    for entity in &entities {
+        println!(
+            "Parsed entity: {} at position ({}, {}) with floor level {}, facing direction {}, and type {}",
+            &entity.entity_type,
+            &entity.mover.position.x,
+            &entity.mover.position.y,
+            &entity.mover.height,
+            &entity.mover.facing_direction,
+            &entity.entity_type
+        );
     }
-    Ok(())
+    Ok(entities)
 }
 
-fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, entities: &mut Vec<Entity>, renderer_data: &RendererData) -> Result<()> {
+fn read_values_for_enemy_from_point(
+    reader: &mut Reader<&[u8]>,
+    buf: &mut Vec<u8>,
+    name: &str,
+    entities: &mut Vec<Entity>,
+    renderer_data: &RendererData,
+) -> Result<()> {
     let mut x = None;
     let mut y = None;
     let mut floor_level = None;
@@ -87,7 +99,7 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, entitie
                         _ => {}
                     }
                 }
-            }   
+            }
             Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
                 for attr in e.attributes() {
                     let attr = attr?;
@@ -106,29 +118,36 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, entitie
         }
         buf.clear();
     }
-     let entity_type = enemy_type_num.map_or(EntityType::Dummy, |id| {
-        match id {
-            1 => EntityType::PlayerBullet,
-            2 => EntityType::RedBarrel,
-            3 => EntityType::MeleeEnemy,
-            4 => EntityType::RangedEnemy,
-            5 => EntityType::SummonerEnemy,
-            6 => EntityType::WeakEnemy,
-            7 => EntityType::EnemyArrow,
-            8 => EntityType::PlayerArrow,
-            9 => EntityType::Archer,
-            10 => EntityType::Button,
-            _ => EntityType::Dummy,
-        }
+    let entity_type = enemy_type_num.map_or(EntityType::Dummy, |id| match id {
+        1 => EntityType::PlayerBullet,
+        2 => EntityType::RedBarrel,
+        3 => EntityType::MeleeEnemy,
+        4 => EntityType::RangedEnemy,
+        5 => EntityType::SummonerEnemy,
+        6 => EntityType::WeakEnemy,
+        7 => EntityType::EnemyArrow,
+        8 => EntityType::PlayerArrow,
+        9 => EntityType::Archer,
+        10 => EntityType::Button,
+        _ => EntityType::Dummy,
     });
-let entitties_pushing = generate_entities(
-    entity_type, 
-    Point { x: x.unwrap_or(0.0), y: y.unwrap_or(0.0) }, 
-    floor_level.unwrap_or(0.0), 
-    facing_direction.unwrap_or(0.0), 
-    renderer_data);
-    
-    
+
+    let entitties_pushing = generate_entities(
+        entity_type,
+        Point {
+            x: x.unwrap_or(0.0),
+            y: y.unwrap_or(0.0),
+        },
+        floor_level.unwrap_or(0.0),
+        facing_direction.unwrap_or(0.0),
+        renderer_data,
+    );
+
     entities.push(entitties_pushing);
+    Ok(())
+}
+
+fn read_values_for_player_from_point() -> Result<()> {
+    //TODO if needed, implement player parsing, but for now we can just spawn player at start pos
     Ok(())
 }
