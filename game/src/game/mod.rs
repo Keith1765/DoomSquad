@@ -1,5 +1,6 @@
 pub mod entities;
 pub mod gamestate;
+pub mod interactables;
 pub mod map;
 pub mod movement;
 pub mod player;

@@ -15,6 +15,8 @@ use std::time::Instant;
 use crate::parser::map_parser::*;
 use crate::parser::entities_parser::*;
 
+use crate::game::interactables::*;
+
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
 const TARGET_FPS: usize = 30;
