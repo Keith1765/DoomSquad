@@ -17,7 +17,7 @@ pub struct EntityInParser {
     pub enemy_type: EntityType, //b from rgba-value
 }
 
-pub fn parse_entitties(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
+pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
     read_entitties_from_file(path, renderer_data)
 }
 

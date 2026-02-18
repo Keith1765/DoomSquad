@@ -13,7 +13,7 @@ use std::f64::consts::PI;
 use std::time::Instant;
 
 use crate::parser::map_parser::*;
-use crate::parser::entitties_parser::*;
+use crate::parser::entities_parser::*;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         return Err("Error parsing map".into());
     }
-    parse_entitties("assets/maps/first-test-map-from-geogebra-for-entitties.xml".to_string(), &renderer_data)?; // TODO remove unwrap
+    parse_entities("assets/maps/first-test-map-from-geogebra-for-entitties.xml".to_string(), &renderer_data)?; // TODO remove unwrap
 
 
     let mut audio: Option<Audio> = None;
