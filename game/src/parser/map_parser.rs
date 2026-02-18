@@ -231,34 +231,34 @@ fn read_point(
 
 //TODO creating Segment struc 
 //left to implemt diffrent texture for each segment, but for now we will use the same texture for all segments
-fn read_segment(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str) -> Result<()> {
-    loop {
-        let mut r = None; //left for later use
-        let mut g = None; //left for later use
-        let mut b = None; //left for later use
-        let mut alpha = None; //left for later use
+fn read_segment(_reader: &mut Reader<&[u8]>, _buf: &mut Vec<u8>, _name: &str) -> Result<()> {
+    // loop {
+    //     let mut r = None; //left for later use
+    //     let mut g = None; //left for later use
+    //     let mut b = None; //left for later use
+    //     let mut alpha = None; //left for later use
 
-        match reader.read_event_into(buf)? {
-            Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
-                for attr in e.attributes() {
-                    let attr = attr?;
+    //     match reader.read_event_into(buf)? {
+    //         Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
+    //             for attr in e.attributes() {
+    //                 let attr = attr?;
 
-                    match attr.key.as_ref() {
-                        b"r" => r = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
-                        b"g" => g = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
-                        b"b" => b = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
-                        b"alpha" => alpha = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
-                        _ => {}
-                    }
-                }
-            }
+    //                 match attr.key.as_ref() {
+    //                     b"r" => r = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
+    //                     b"g" => g = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
+    //                     b"b" => b = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
+    //                     b"alpha" => alpha = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
+    //                     _ => {}
+    //                 }
+    //             }
+    //         }
 
-            Event::End(ref e) if e.name().as_ref() == b"element" => break,
-            _ => {}
-        }
+    //         Event::End(ref e) if e.name().as_ref() == b"element" => break,
+    //         _ => {}
+    //     }
 
-        buf.clear();
-    }
+    //     buf.clear();
+    // }
     Ok(())
 }
 
@@ -268,7 +268,7 @@ fn read_polygon_command(
     name: &str,
     polygon_command_list: &mut Vec<GeogebraPolygonCommand>,
 ) -> Result<()> {
-    let mut name = name.to_string();
+    let _name = name.to_string(); //need for later implementation and for debuging
     let mut vertices: Vec<String> = Vec::new();
     let mut segments: Vec<String> = Vec::new();
 
@@ -315,7 +315,7 @@ fn read_polygon_element(
     name: &str,
     polygon_element_list: &mut Vec<GeogebraPolygonElement>,
 ) -> Result<()> {
-    let mut name = name.to_string();
+    let name = name.to_string();
     let mut bottom: f64 = 0.0;
     let mut height: f64 = 0.0;
     let mut surface_color: f64 = 16711680.0; //default red
