@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         return Err("Error parsing map".into());
     }
-    parse_entitties("assets/maps/first-test-map-from-geogebra-for-entitties.xml".to_string())?; // TODO remove unwrap
+    parse_entitties("assets/maps/first-test-map-from-geogebra-for-entitties.xml".to_string(), &renderer_data)?; // TODO remove unwrap
 
 
     let mut audio: Option<Audio> = None;
