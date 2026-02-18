@@ -28,17 +28,19 @@ pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 const SPRINT_SPEED: f64 = 5.0;
 const CROUCH_HEIGHT_DIFF: f64 = 5.0; 
 const SLIDE_COOLDOWN_TIME: i32 = 10;
-const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 100; //was 300, i set it lower for testing
+const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 100; 
 const STRAIFING_SPEED: f64 = 0.035;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
-const PLAYER_HP: f64 = 100.0; 
+const PLAYER_HP: f64 = 1000.0;  //was 100, set higher for testing
 const PLAYER_SIZE: f64 = 3.0;
 const JUMP_SPEED_BOOST_MULTIPLICATOR: f64 = 0.4;
 const JUMP_SPEED_BOOST: f64 = 0.0;
 const INCREASED_STRAFING_SPEED_RL: f64 = 1.5;
 const ROCKETLAUNCHER_SPEED_BOOST: f64 = 5.0;
 const ROCKETLAUNCHER_HEIGHT_BOOST: f64 = 5.0;
+const JUMPING_ALLOWED_TIMER_AMOUNT: i32 = 10;
+const DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING: f64 = 0.3;
 
 
 #[derive(Clone,PartialEq, Eq)]
@@ -69,6 +71,8 @@ pub struct Player {
     pub size: f64,
     pub using_rocketlauncher: bool,
     pub interacting: bool,
+    pub jumping_allowed: bool,
+    pub jumping_allowed_timer: i32,
     
 }
 
@@ -102,6 +106,8 @@ impl Player {
             size: PLAYER_SIZE,
             using_rocketlauncher: false,
             interacting: false,
+            jumping_allowed: false,
+            jumping_allowed_timer: 0,
         }
     }
 
@@ -232,10 +238,23 @@ impl Player {
             self.slide_cooldown = SLIDE_COOLDOWN_TIME;
         }
 
+        //timer to allow jump slightly after leaving allowed window
+        if (self.mover.foot_level-self.mover.floor_level).abs() < 0.3 {
+            self.jumping_allowed = true;
+            self.jumping_allowed_timer = JUMPING_ALLOWED_TIMER_AMOUNT;
+        }
+
+        if self.jumping_allowed_timer > 0 {
+            self.jumping_allowed_timer -= 1;
+        }
+        else {
+            self.jumping_allowed = false;
+        }
+
         //jumping init
         if (window.is_key_pressed(Key::Space, KeyRepeat::No)
-        && !self.is_jumping && (self.mover.foot_level-self.mover.floor_level).abs() < 0.01 )
-        || window.is_key_pressed(Key::R, KeyRepeat::No)
+        && !self.is_jumping && (self.mover.foot_level-self.mover.floor_level).abs() < DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING )
+        || window.is_key_pressed(Key::R, KeyRepeat::No) || self.jumping_allowed
             {
                 self.gravity = GRAVITY_CONST;
                 self.is_jumping = true;
