@@ -81,10 +81,10 @@ pub fn task_sprite(
 
     if let Some(texture) = texture {
         // will be used often, so makes sense to cast only once
-        let onscreen_width_f64 = onscreen_width.max(0) as f64;
+        let onscreen_width_f64 = onscreen_width as f64;
 
         for x in left_screen_x.clamp(0, renderer_data.screen_width_as_isize)
-            ..(left_screen_x + onscreen_width).clamp(0, renderer_data.screen_width_as_isize - 1)
+            ..(left_screen_x + onscreen_width).clamp(0, renderer_data.screen_width_as_isize)
         {
 
             let texture_u = ((x - left_screen_x) as f64
