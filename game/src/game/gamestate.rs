@@ -125,24 +125,32 @@ impl Game {
 
                 let distance_to_bullet = projectile_position.distance_to(&self.entities[j].mover.position);
 
-                //if bullet in range of entity size
+                //check for verticall hitbox overlap
                 if distance_to_bullet <= self.entities[j].size + self.entities[i].size {
-                    
-                    let damage = match self.entities[i].entity_type {
-                        PlayerBullet => BULLET_DMG,
-                        PlayerArrow => ARROW_DMG,
-                        ExplodedRedBarrel => RED_BARREL_DMG,
-                        _ => 0.0,
-                    };
-                    //DAMAGE THAT BITCH
-                    self.entities[j].hp -= damage;
 
-                    //projectiles go brr
-                    if (self.entities[i].entity_type != ExplodedRedBarrel){
-                        self.projectile_that_hit.push(i);
-                    }
-                    if (self.entities[i].entity_type != ExplodedRedBarrel){
-                        break; //cause no entity penetration
+                //check if horizontal hitbox overlap
+                    let shooting_height = self.player.mover.view_level;
+                    let entity_bottom = self.entities[j].mover.foot_level;
+                    let entity_top = self.entities[j].mover.height;
+
+                    if shooting_height <= entity_top && shooting_height >= entity_bottom{
+
+                        let damage = match self.entities[i].entity_type {
+                            PlayerBullet => BULLET_DMG,
+                            PlayerArrow => ARROW_DMG,
+                            ExplodedRedBarrel => RED_BARREL_DMG,
+                            _ => 0.0,
+                        };
+                        //DAMAGE THAT BITCH
+                        self.entities[j].hp -= damage;
+
+                        //projectiles go brr
+                        if (self.entities[i].entity_type != ExplodedRedBarrel){
+                            self.projectile_that_hit.push(i);
+                        }
+                        if (self.entities[i].entity_type != ExplodedRedBarrel){
+                            break; //cause no entity penetration
+                        }
                     }
                 }
             }
@@ -158,43 +166,53 @@ impl Game {
 
             let distance_to_player = player_position.distance_to(&self.entities[j].mover.position);
 
-            //if player size in range of entity size using pythagoras to calc in height difference
-            if (distance_to_player.powf(2.0)+(self.player.mover.view_level-self.entities[j].mover.view_level).powf(2.0)).sqrt() <= self.entities[j].size + self.player.size{
+            //check if vertical overlap of hitbox
+            if distance_to_player <= self.entities[j].size + self.player.size{
 
-                let damage = match self.entities[j].entity_type {
-                    EnemyBullet => BULLET_DMG,
-                    EnemyArrow => ARROW_DMG,
-                    ExplodedRedBarrel => match self.entities[j].did_damage {
-                                                    true => 0.0,
-                                                    false => RED_BARREL_DMG,
-                                                },
-                    MeleeEnemy => match self.entities[j].did_damage {
-                                                    true => 0.0,
-                                                    false => MEELE_ENEMY_DMG,
-                                                }, 
-                    WeakEnemy => match self.entities[j].did_damage {
-                                                    true => 0.0,
-                                                    false => MEELE_ENEMY_DMG*WEAK_ENEMY_MULTIPLICATOR,
-                                                },                                                  
-                    _ => 0.0,
-                };
-                //DAMAGE THAT BITCH
-                self.player.hp -= damage;
+                //check if horizontal overlap of hitbox
+                let shooting_height = self.entities[j].mover.view_level;
+                let player_bottom = self.player.mover.foot_level;
+                let player_top = self.player.mover.height;
 
-                if damage > 0.0 {
-                    match self.entities[j].entity_type{
-                        MeleeEnemy => self.entities[j].did_damage = true,
-                        WeakEnemy => self.entities[j].did_damage = true,
-                        _ => {},
+                if shooting_height <= player_top && shooting_height >= player_bottom{
+
+
+
+                    let damage = match self.entities[j].entity_type {
+                        EnemyBullet => BULLET_DMG,
+                        EnemyArrow => ARROW_DMG,
+                        ExplodedRedBarrel => match self.entities[j].did_damage {
+                                                        true => 0.0,
+                                                        false => RED_BARREL_DMG,
+                                                    },
+                        MeleeEnemy => match self.entities[j].did_damage {
+                                                        true => 0.0,
+                                                        false => MEELE_ENEMY_DMG,
+                                                    }, 
+                        WeakEnemy => match self.entities[j].did_damage {
+                                                        true => 0.0,
+                                                        false => MEELE_ENEMY_DMG*WEAK_ENEMY_MULTIPLICATOR,
+                                                    },                                                  
+                        _ => 0.0,
+                    };
+                    //DAMAGE THAT BITCH
+                    self.player.hp -= damage;
+
+                    if damage > 0.0 {
+                        match self.entities[j].entity_type{
+                            MeleeEnemy => self.entities[j].did_damage = true,
+                            WeakEnemy => self.entities[j].did_damage = true,
+                            _ => {},
+                        }
                     }
-                }
 
-                //bullet go brr
-                if matches!(self.entities[j].entity_type, EnemyArrow | EnemyBullet) {
-                    self.projectile_that_hit.push(j);
-                }
+                    //bullet go brr
+                    if matches!(self.entities[j].entity_type, EnemyArrow | EnemyBullet) {
+                        self.projectile_that_hit.push(j);
+                    }
 
-                break; //cause no entity penetration
+                    break; //cause no entity penetration
+                    }
             }
         }
 
