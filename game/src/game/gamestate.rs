@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    game::{entities::{self, ARROW_DMG, BULLET_DMG, ENEMY_SIZE, Entity, EntityEvent::{self, *}, EntityType::*, MEELE_ENEMY_DMG, RED_BARREL_DMG, WEAK_ENEMY_MULTIPLICATOR}, generate_entities::generate_entities, map::Point, map_grid::MapGrid, movement::Mover},
+    game::{entities::{self, ARROW_DMG, BULLET_DMG, ENEMY_SIZE, MELEE_ENEMY_RANGE, Entity, EntityEvent::{self, *}, EntityType::*, MEELE_ENEMY_DMG, RED_BARREL_DMG, WEAK_ENEMY_MULTIPLICATOR}, generate_entities::generate_entities, map::Point, map_grid::MapGrid, movement::Mover},
     render::{RendererData, sprites::Sprite},
 };
 
@@ -167,7 +167,7 @@ impl Game {
             let distance_to_player = player_position.distance_to(&self.entities[j].mover.position);
 
             //check if vertical overlap of hitbox
-            if distance_to_player <= self.entities[j].size + self.player.size{
+            if distance_to_player <= self.entities[j].size + self.player.size + MELEE_ENEMY_RANGE{
 
                 //check if horizontal overlap of hitbox
                 let shooting_height = self.entities[j].mover.view_level;

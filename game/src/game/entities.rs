@@ -37,8 +37,9 @@ pub const ARROW_DMG: f64 = 40.0;
 pub const EXPLODED_RED_BARREL_HP: f64 = 30.0;
 pub const RED_BARREL_DMG: f64 = 1000.0;
 pub const EXPLODED_RED_BARREL_SIZE: f64 = 20000.0;
-pub const MELEE_ENEMY_ATTACK_OFFSET: i32 = 10;
-pub const MEELE_ENEMY_DMG: f64 = 50.0;
+pub const MELEE_ENEMY_ATTACK_COOLDOWN: i32 = 20;
+pub const MEELE_ENEMY_DMG: f64 = 25.0;
+pub const MELEE_ENEMY_RANGE: f64 = 5.0;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType{
@@ -176,7 +177,11 @@ impl Entity {
         if !self.orientation_lock{
             self.mover.facing_direction = self.mover.position.angle_to(&player_position);
         }
-        self.mover.step(move_speed, 0.0, map, false);
+        //entities never move when very close to player
+        if self.mover.position.distance_to(&player_position) > self.size+ MELEE_ENEMY_RANGE - 0.1{
+            self.mover.step(move_speed, 0.0, map, false);
+        }
+
     }
 
     fn dummy_behaviour (self: & mut Self, map: &Map, player_position: Point, events: &mut Vec<EntityEvent>) {
@@ -288,7 +293,7 @@ impl Entity {
         }
 
         if self.did_damage {
-            self.cooldown = MELEE_ENEMY_ATTACK_OFFSET;
+            self.cooldown = MELEE_ENEMY_ATTACK_COOLDOWN;
             self.did_damage = false;
         }
         
@@ -304,7 +309,7 @@ impl Entity {
         }
 
         if self.did_damage {
-            self.cooldown = MELEE_ENEMY_ATTACK_OFFSET;
+            self.cooldown = MELEE_ENEMY_ATTACK_COOLDOWN;
             self.did_damage = false;
         }
     }
