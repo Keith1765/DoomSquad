@@ -197,7 +197,7 @@ impl Player {
         }
 
         //slowdown movespeed if not sprinting and sliding anymore
-        if !window.is_key_down(Key::LeftShift) && !window.is_key_down(Key::Down) && !self.is_jumping{
+        if !window.is_key_down(Key::LeftShift) && !self.is_jumping && !self.is_sliding {
             self.move_speed=MOVE_SPEED;
         }
 
@@ -257,8 +257,8 @@ impl Player {
 
         //jumping init
         if (window.is_key_pressed(Key::Space, KeyRepeat::No)
-        && !self.is_jumping && (self.mover.foot_level-self.mover.floor_level).abs() < DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING )
-        || window.is_key_pressed(Key::R, KeyRepeat::No) || self.jumping_allowed
+        && ((!self.is_jumping && (self.mover.foot_level-self.mover.floor_level).abs() < DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING )|| self.jumping_allowed))
+        || window.is_key_pressed(Key::R, KeyRepeat::No) 
             {
                 self.gravity = GRAVITY_CONST;
                 self.is_jumping = true;
@@ -352,10 +352,10 @@ impl Player {
     }
 
     fn save_input (&mut self, window: &Window){
-        if window.is_key_down(Key::D) {self.last_input = D}
-        else if window.is_key_down(Key::A) {self.last_input = A}        
-        else if window.is_key_down(Key::S) {self.last_input = S}
-        else if window.is_key_down(Key::W) {self.last_input = W}
+        if window.is_key_down(Key::D) {self.last_input = D; return;}
+        else if window.is_key_down(Key::A) {self.last_input = A; return;}        
+        else if window.is_key_down(Key::S) {self.last_input = S; return;}
+        else if window.is_key_down(Key::W) {self.last_input = W; return;}
         else {self.last_input = No}
     }
 
