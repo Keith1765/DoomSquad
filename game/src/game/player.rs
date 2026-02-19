@@ -9,7 +9,8 @@ use crate::{
         player,
     },
 };
-use minifb::{Key, KeyRepeat, MouseMode, Window};
+use winit::event::VirtualKeyCode;
+use winit_input_helper::WinitInputHelper;
 use std::f64::consts::PI;
 
 const ROTATION_SPEED_MOUSE: f64 = 2.0;
@@ -83,8 +84,8 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, window: &Window, map: &Map) {
-        if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
+    pub fn update(&mut self, input: &WinitInputHelper, map: &Map) {
+        if let Some((mx, _my)) = input.mouse() {
             self.check_angle();
             let dx = mx - self.last_mouse_x; // mouse delta
             self.mover.facing_direction += dx as f64 * 0.003; // sensitivity
@@ -93,7 +94,7 @@ impl Player {
             self.update_dir();
         }
 
-        if window.is_key_down(Key::Left) {
+        if input.key_held(VirtualKeyCode::Left) {
             //during slide heavily restricted rotation
             let rotation_factor = match self.is_sliding || self.is_jumping {
                 true => STRAIFING_SPEED,
@@ -105,7 +106,7 @@ impl Player {
             self.update_dir();
         }
 
-        if window.is_key_down(Key::Right) {
+        if input.key_held(VirtualKeyCode::Right) {
             //during slide heavily restricted rotation
             let rotation_factor = match self.is_sliding || self.is_jumping {
                 true => STRAIFING_SPEED,
@@ -116,20 +117,20 @@ impl Player {
             self.update_dir();
         }
 
-        if (window.is_key_down(Key::W)
+        if (input.key_held(VirtualKeyCode::W)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == W))
             || (self.is_jumping && (self.last_input == W))
         {
             self.mover.step(self.move_speed, 0.0, map, self.godmode);
         }
-        if (window.is_key_down(Key::A)
+        if (input.key_held(VirtualKeyCode::A)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == A))
             || (self.is_jumping && (self.last_input == A))
         {
             self.mover
                 .step(self.move_speed, -PI / 2.0, map, self.godmode);
         }
-        if (window.is_key_down(Key::D)
+        if (input.key_held(VirtualKeyCode::D)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == D))
             || (self.is_jumping && (self.last_input == D))
         {
@@ -137,29 +138,29 @@ impl Player {
                 .step(self.move_speed, PI / 2.0, map, self.godmode);
         }
 
-        if (window.is_key_down(Key::S)
+        if (input.key_held(VirtualKeyCode::S)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == S))
             || (self.is_jumping && (self.last_input == S))
         {
             self.mover.step(self.move_speed, PI, map, self.godmode);
         }
 
-        if window.is_key_down(Key::Space) && self.godmode {
+        if input.key_held(VirtualKeyCode::Space) && self.godmode {
             self.mover.foot_level += FLY_UP_DOWN_SPEED;
         }
 
-        if window.is_key_down(Key::LeftShift) && self.godmode {
+        if input.key_held(VirtualKeyCode::LShift) && self.godmode {
             self.mover.foot_level -= FLY_UP_DOWN_SPEED;
         }
 
         //slowdown movespeed if not sprinting and sliding anymore
-        if !window.is_key_down(Key::LeftShift) && !window.is_key_down(Key::Down) && !self.is_jumping
+        if !input.key_held(VirtualKeyCode::LShift) && !input.key_held(VirtualKeyCode::Down) && !self.is_jumping
         {
             self.move_speed = MOVE_SPEED;
         }
 
         //implementing Sprint that gradually increases movement speed
-        if window.is_key_down(Key::LeftShift) && !self.godmode {
+        if input.key_held(VirtualKeyCode::LShift) && !self.godmode {
             if self.move_speed < SPRINT_SPEED - 0.1 {
                 self.move_speed += 0.1;
             }
@@ -172,11 +173,11 @@ impl Player {
             }
         }
 
-        if (self.slide_cooldown > 0) && !window.is_key_down(Key::C) {
+        if (self.slide_cooldown > 0) && !input.key_held(VirtualKeyCode::C) {
             self.slide_cooldown -= 1;
         }
         //init slide gives speed boost
-        if window.is_key_down(Key::C)
+        if input.key_held(VirtualKeyCode::C)
             && !self.is_sliding
             && !self.godmode
             && self.slide_cooldown == 0
@@ -184,7 +185,7 @@ impl Player {
             if self.move_speed > 1.5 {
                 self.move_speed += 5.0;
                 self.is_sliding = true;
-                self.save_input(window);
+                self.save_input(input);
             }
         }
 
@@ -194,7 +195,7 @@ impl Player {
         }
 
         //ending slide (either cause not pressed or slowed down)
-        if (!window.is_key_down(Key::C) && self.is_sliding)
+        if (!input.key_held(VirtualKeyCode::C) && self.is_sliding)
             || ((self.move_speed <= SPRINT_SPEED) && self.is_sliding)
         {
             self.is_sliding = false;
@@ -203,10 +204,10 @@ impl Player {
         }
 
         //jumping init
-        if (window.is_key_pressed(Key::Space, KeyRepeat::No)
+        if (input.key_pressed(VirtualKeyCode::Space)
             && !self.is_jumping
             && (self.mover.foot_level - self.mover.floor_level).abs() < 0.01)
-            || window.is_key_pressed(Key::R, KeyRepeat::No)
+            || input.key_pressed(VirtualKeyCode::R)
         {
             self.gravity = GRAVITY_CONST;
             self.is_jumping = true;
@@ -217,15 +218,15 @@ impl Player {
                 self.move_speed += 3.0;
             }
             //normal jump init
-            if window.is_key_pressed(Key::Space, KeyRepeat::No) {
+            if input.key_pressed(VirtualKeyCode::Space) {
                 self.move_speed += self.move_speed * 0.75;
                 let speed_bonus = self.move_speed * 0.8;
                 self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
-                self.gravity += self.gravity * (self.move_speed * 0.08) //special Relativity (kidding, just wanted to decrease height scalling on big jumps)
+                self.gravity += self.gravity * (self.move_speed * 0.08) 
             }
 
             //rocketlauncher
-            if window.is_key_pressed(Key::R, KeyRepeat::No) && (self.rocketlauncher_cooldown == 0) {
+            if input.key_pressed(VirtualKeyCode::R) && (self.rocketlauncher_cooldown == 0) {
                 self.move_speed += self.move_speed * 0.75 + 10.0;
                 let speed_bonus = self.move_speed * 0.8;
                 self.vertical_velocity = JUMP_STRENGTH + speed_bonus + 3.0;
@@ -233,7 +234,7 @@ impl Player {
                 self.rocketlauncher_cooldown = ROCKETLAUNCHER_COOLDOWN_TIME;
             }
 
-            self.save_input(window);
+            self.save_input(input);
         }
 
         //Rocketlauncher cooldwon
@@ -241,7 +242,7 @@ impl Player {
             self.rocketlauncher_cooldown -= 1;
         }
 
-        if window.is_key_pressed(Key::G, KeyRepeat::No) {
+        if input.key_pressed(VirtualKeyCode::G) {
             self.godmode = !self.godmode;
         }
 
@@ -289,17 +290,17 @@ impl Player {
         }
     }
 
-    fn save_input(&mut self, window: &Window) {
-        if window.is_key_down(Key::D) {
+    fn save_input(&mut self, input: &WinitInputHelper) {
+        if input.key_held(VirtualKeyCode::D) {
             self.last_input = D
         };
-        if window.is_key_down(Key::A) {
+        if input.key_held(VirtualKeyCode::A) {
             self.last_input = A
         };
-        if window.is_key_down(Key::S) {
+        if input.key_held(VirtualKeyCode::S) {
             self.last_input = S
         };
-        if window.is_key_down(Key::W) {
+        if input.key_held(VirtualKeyCode::W) {
             self.last_input = W
         };
     }

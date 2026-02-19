@@ -15,7 +15,7 @@ use crate::{
 
 use super::map::Map;
 use super::player::Player;
-use minifb::{Key, Window};
+use winit_input_helper::WinitInputHelper;
 use quick_xml::events;
 
 const DESPAWN_TIME: i32 = 300;
@@ -50,16 +50,16 @@ impl Game {
         }
     }
 
-    pub fn update(&mut self, window: &Window, renderer_data: &RendererData) {
+    pub fn update(&mut self, input: &WinitInputHelper, renderer_data: &RendererData) {
         //despawn all bullets after timer
         self.entities.retain(|entity| entity.hp > 0.0);
 
-        self.player.update(window, &self.map);
+        self.player.update(input, &self.map);
 
         let mut spawns = Vec::new();
 
         for e in &mut self.entities {
-            let event = e.update(window, &self.map, &self.player.mover, renderer_data);
+            let event = e.update(input, &self.map, &self.player.mover, renderer_data);
             spawns.extend(event);
         }
 

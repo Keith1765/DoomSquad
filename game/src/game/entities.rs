@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
-use minifb::{Key, Window};
+use winit::event::VirtualKeyCode;
+use winit_input_helper::WinitInputHelper;
 use quick_xml::events;
 
 use crate::game::entities::EntityEvent::*;
@@ -83,13 +84,13 @@ impl Entity {
 
     pub fn update(
         self: &mut Self,
-        window: &Window,
+        input: &WinitInputHelper,
         map: &Map,
         player_mover: &Mover,
         renderer_data: &RendererData,
     ) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
-        if window.is_key_pressed(Key::L, minifb::KeyRepeat::No) {
+        if input.key_pressed(VirtualKeyCode::L) {
             self.movement_locked = !self.movement_locked;
         }
 
@@ -105,7 +106,7 @@ impl Entity {
                 self.ranged_enemy_behaviour(map, player_mover.position, renderer_data, &mut events)
             }
             MeleeEnemy => {
-                self.melee_enemy_behaviour(window, map, player_mover.position, &mut events)
+                self.melee_enemy_behaviour(input, map, player_mover.position, &mut events)
             }
             _ => self.dummy_behaviour(map, player_mover.position, &mut events),
         }
@@ -181,13 +182,13 @@ impl Entity {
     }
     fn melee_enemy_behaviour(
         self: &mut Self,
-        window: &Window,
+        input: &WinitInputHelper,
         map: &Map,
         player_position: Point,
         events: &mut Vec<EntityEvent>,
     ) {
         self.gravity(map);
-        if window.is_key_down(Key::B) {
+        if input.key_held(VirtualKeyCode::B) {
             self.orientation_lock = true;
         } else {
             self.orientation_lock = false;
@@ -211,14 +212,3 @@ impl Entity {
         self.mover.step(0.0, 0.0, map, false);
     }
 }
-//This is if we want to go back to id system, butt i dont see the point
-//  fn entity_type_from_id(id: i32) -> EntityType {
-//         match id {
-//             1 => EntityType::Bullet,
-//             2 => EntityType::RedBarrel,
-//             3 => EntityType::MeleeEnemy,
-//             4 => EntityType::RangedEnemy,
-//             _ => EntityType::Dummy,
-
-//         }
-//     }
