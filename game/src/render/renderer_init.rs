@@ -45,7 +45,6 @@ pub fn render_init(
     let screen_height_as_f64 = screen_height as f64;
     let screen_height_as_isize: isize = screen_height as isize;
     let screen_width_as_isize: isize = screen_width as isize;
-    println!("{}", screen_width_as_isize);
 
     let vertical_fov: f64 =
         ((screen_height_as_f64 / screen_width as f64) * (horizontal_fov / 2.0).tan()).atan() * 2.0;

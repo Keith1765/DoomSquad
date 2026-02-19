@@ -86,9 +86,6 @@ pub fn task_sprite(
         for x in left_screen_x.clamp(0, renderer_data.screen_width_as_isize)
             ..(left_screen_x + onscreen_width).clamp(0, renderer_data.screen_width_as_isize - 1)
         {
-            if x < 0 || x > SCREEN_WIDTH as isize - 1 {
-                continue;
-            }
 
             let texture_u = ((x - left_screen_x) as f64
                 * (entity.sprite.width / onscreen_width_f64)) as usize
