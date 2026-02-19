@@ -158,8 +158,8 @@ impl Game {
 
             let distance_to_player = player_position.distance_to(&self.entities[j].mover.position);
 
-            //if player size in range of entity size
-            if distance_to_player <= self.entities[j].size + self.player.size{
+            //if player size in range of entity size using pythagoras to calc in height difference
+            if (distance_to_player.powf(2.0)+(self.player.mover.view_level-self.entities[j].mover.view_level).powf(2.0)).sqrt() <= self.entities[j].size + self.player.size{
 
                 let damage = match self.entities[j].entity_type {
                     EnemyBullet => BULLET_DMG,

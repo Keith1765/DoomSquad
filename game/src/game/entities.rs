@@ -230,7 +230,7 @@ impl Entity {
         else{
             let direction_to_player = self.mover.position.angle_to(&player_position);
             self.cooldown = SHOOTING_COOLDOWN;
-            let bullet = generate_entities(EnemyBullet, self.mover.position, self.mover.height, direction_to_player, renderer_data);
+            let bullet = generate_entities(EnemyBullet, self.mover.position, self.mover.view_level, direction_to_player, renderer_data);
             events.push(Spawn(bullet));
         }
     }

@@ -32,7 +32,7 @@ const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 100;
 const STRAIFING_SPEED: f64 = 0.035;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
-const PLAYER_HP: f64 = 1000.0;  //was 100, set higher for testing
+const PLAYER_HP: f64 = 10000.0;  //was 100, set higher for testing
 const PLAYER_SIZE: f64 = 3.0;
 const JUMP_SPEED_BOOST_MULTIPLICATOR: f64 = 0.4;
 const JUMP_SPEED_BOOST: f64 = 0.0;
@@ -113,12 +113,15 @@ impl Player {
 
     pub fn update(&mut self, window: &Window, map: &Map,renderer_data: &RendererData) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
+
+        print!("{}", self.is_jumping);
+
         if window.is_key_pressed(Key::F, KeyRepeat::No){
            self.interacting = true; 
         }
          
         if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) {
-            let bullet = generate_entities(PlayerBullet, self.mover.position, self.mover.height, self.mover.facing_direction, renderer_data);
+            let bullet = generate_entities(PlayerBullet, self.mover.position, self.mover.view_level, self.mover.facing_direction, renderer_data);
             events.push(Spawn(bullet));
         }
 
@@ -342,14 +345,17 @@ impl Player {
             self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
         }
 
+        
+
         return events;
     }
 
     fn save_input (&mut self, window: &Window){
-        if window.is_key_down(Key::D) {self.last_input = D};
-        if window.is_key_down(Key::A) {self.last_input = A};
-        if window.is_key_down(Key::S) {self.last_input = S};
-        if window.is_key_down(Key::W) {self.last_input = W};
+        if window.is_key_down(Key::D) {self.last_input = D}
+        else if window.is_key_down(Key::A) {self.last_input = A}        
+        else if window.is_key_down(Key::S) {self.last_input = S}
+        else if window.is_key_down(Key::W) {self.last_input = W}
+        else {self.last_input = No}
     }
 
     fn check_angle(&mut self) {
