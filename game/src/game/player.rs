@@ -114,7 +114,6 @@ impl Player {
     pub fn update(&mut self, window: &Window, map: &Map,renderer_data: &RendererData) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
 
-        print!("{}", self.is_jumping);
 
         if window.is_key_pressed(Key::F, KeyRepeat::No){
            self.interacting = true; 
@@ -253,6 +252,8 @@ impl Player {
         else {
             self.jumping_allowed = false;
         }
+
+        if self.is_jumping {self.jumping_allowed_timer = 0};
 
         //jumping init
         if (window.is_key_pressed(Key::Space, KeyRepeat::No)
