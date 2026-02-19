@@ -203,6 +203,9 @@ fn draw_tasks(
         if let Some(texture_column) = task.texture_column {
             //println!("{}",texture_column.len());
             for screen_y in onscreen_bottom..onscreen_top {
+                if onscreen_top > renderer_data.screen_height_as_isize {
+                    println!("hi");
+                }
                 let column_v = screen_y - onscreen_bottom;
                 if let Some(pixel_color) = texture_column.get(column_v as usize) {
                     // dont draw outside of screen bounds

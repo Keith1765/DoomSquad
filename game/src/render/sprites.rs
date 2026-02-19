@@ -55,8 +55,8 @@ pub fn task_sprite(
 
     let onscreen_width = ((entity.sprite.width / normalized_distance)
         * renderer_data.render_scale_coefficient) as isize;
-    let onscreen_height = (((entity.sprite.height / normalized_distance)
-        * renderer_data.render_scale_coefficient) as isize).min(renderer_data.screen_height_as_isize);
+    let onscreen_height = ((entity.sprite.height / normalized_distance)
+        * renderer_data.render_scale_coefficient) as isize;
     let onscreen_bottom: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
         + ((entity.mover.foot_level / normalized_distance)
         - (game.player.mover.view_level / normalized_distance)) // adjust for view hieght
@@ -83,7 +83,9 @@ pub fn task_sprite(
         // will be used often, so makes sense to cast only once
         let onscreen_width_f64 = onscreen_width.max(0) as f64;
 
-        for x in left_screen_x..left_screen_x + onscreen_width {
+        for x in left_screen_x.clamp(0, renderer_data.screen_width_as_isize)
+            ..(left_screen_x + onscreen_width).clamp(0, renderer_data.screen_width_as_isize - 1)
+        {
             if x < 0 || x > SCREEN_WIDTH as isize - 1 {
                 continue;
             }

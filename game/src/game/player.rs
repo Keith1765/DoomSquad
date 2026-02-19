@@ -265,7 +265,9 @@ impl Player {
                 }
             }
 
-            if (self.mover.foot_level + self.vertical_velocity) <= (lowest_ceiling_level - self.mover.height) {
+            if (self.mover.foot_level + self.vertical_velocity)
+                <= (lowest_ceiling_level - self.mover.height)
+            {
                 // if we didnt bump our head, we just go up normally
                 self.mover.foot_level = self.mover.foot_level + self.vertical_velocity;
             } else {
@@ -275,11 +277,11 @@ impl Player {
             }
             //landing
             if self.mover.foot_level <= self.mover.floor_level {
-                self.mover.foot_level = (self.mover.foot_level + MOVEMENT_SMOOTHING_SPEED).min(self.mover.floor_level);
+                self.mover.foot_level =
+                    (self.mover.foot_level + MOVEMENT_SMOOTHING_SPEED).min(self.mover.floor_level);
                 self.vertical_velocity = 0.0;
                 self.is_jumping = false;
             }
-            
         }
 
         if self.is_sliding {
