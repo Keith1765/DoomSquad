@@ -27,8 +27,15 @@ pub struct Sprite {
 
 impl Sprite {
     pub fn switch_sprite_for_duration(&mut self, new_texture_id: usize, time: usize) {
+        // if we already have a sprite switcher cative, we need to revert to the texture that it would revert to,
+        // not the texture we switched to when it was made
+        let revert_texture_id = if let Some(switcher) = &self.sprite_switcher {
+            switcher.texture_id
+        } else {
+            self.texture_id
+        };
         let switcher = SpriteSwitcher {
-            texture_id: self.texture_id,
+            texture_id: revert_texture_id,
             countdown: time,
         };
         self.texture_id = new_texture_id;
