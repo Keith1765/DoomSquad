@@ -1,6 +1,7 @@
 use std::ops::Rem;
 use std::{f64::consts::PI, rc::Rc};
 
+use crate::SCREEN_HEIGHT;
 use crate::render::textures::Texture;
 use crate::{
     SCREEN_WIDTH,
@@ -54,8 +55,8 @@ pub fn task_sprite(
 
     let onscreen_width = ((entity.sprite.width / normalized_distance)
         * renderer_data.render_scale_coefficient) as isize;
-    let onscreen_height = ((entity.sprite.height / normalized_distance)
-        * renderer_data.render_scale_coefficient) as isize;
+    let onscreen_height = (((entity.sprite.height / normalized_distance)
+        * renderer_data.render_scale_coefficient) as isize).min(renderer_data.screen_height_as_isize);
     let onscreen_bottom: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
         + ((entity.mover.foot_level / normalized_distance)
         - (game.player.mover.view_level / normalized_distance)) // adjust for view hieght

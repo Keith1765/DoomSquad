@@ -11,6 +11,7 @@ pub struct Texture {
 }
 
 impl Texture {
+    // returns the column of a texture, scaled
     pub fn get_texture_column(
         &self,
         u: usize,
