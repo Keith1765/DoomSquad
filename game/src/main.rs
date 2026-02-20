@@ -7,13 +7,12 @@ mod render;
 
 use crate::audio::Audio;
 use crate::render::{RendererData, render_init};
-use std::error::Error;
 use minifb::{Key, Window, WindowOptions};
 use std::f64::consts::PI;
 use std::time::Instant;
 
-use crate::parser::map_parser::*;
 use crate::parser::entities_parser::*;
+use crate::parser::map_parser::*;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
@@ -27,7 +26,6 @@ const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
 const AUDIO_ENABLED: bool = false;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     //I commented game init to test parser first
     //for fps count
     let mut last_time = Instant::now();
@@ -73,8 +71,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         return Err("Error parsing map".into());
     }
-    parse_entities("assets/maps/geogebra_test_map_with_jump+run+entities.xml".to_string(), &renderer_data)?; // TODO remove unwrap
-
+    parse_entities(
+        "assets/maps/geogebra_test_map_with_jump+run+entities.xml".to_string(),
+        &renderer_data,
+    )?; // TODO remove unwrap
 
     let mut audio: Option<Audio> = None;
     if AUDIO_ENABLED {

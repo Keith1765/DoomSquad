@@ -3,16 +3,12 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use crate::game::Game;
-use crate::game::map::{LEVEL_HEIGHT, Point, ShapeType, Side};
-use crate::render::blocks_walls::{task_block_slice, task_column, task_partial_surface, task_side};
+use crate::render::blocks_walls::task_column;
 // TODO LEVEL_HEIGHT and other map data into sth similar to renderer_data?
-use crate::render::raycast::{
-    self, BlockSlice, MapSlice, RayHit, RayHitOrderer, intersect, raycast,
-};
+use crate::render::raycast::{MapSlice, raycast};
 use crate::render::renderer_init::RendererData;
 use crate::render::sprites::task_sprite;
-use crate::render::textures::Texture;
-use crate::{BACKGROUND_COLOR, SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
+use crate::{SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_data (currently problem because arraysize wants constant, typing)
 
 pub type VerticalDisctance = f64;
 
@@ -156,7 +152,7 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     for e in &game.entities {
         if let Some(instruction) = task_sprite(game, e, renderer_data) {
             for x in instruction.sprite_left_screen_x..instruction.sprite_right_screen_x {
-                if x < 0 || x > SCREEN_WIDTH - 1 {
+                if x > SCREEN_WIDTH - 1 {
                     continue;
                 }
 
@@ -217,7 +213,9 @@ fn draw_tasks(
                     let b = pixel_color & 0xFF;
 
                     // if we have transparency at this pixel, we dont draw it; partial transparency not supported
-                    if a != 255 {continue;}
+                    if a != 255 {
+                        continue;
+                    }
 
                     // 3. Scale each channel with brightness
                     let r = (r as f64 * task.brightness) as u32;
@@ -433,7 +431,6 @@ fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, col
 
 #[cfg(test)]
 mod test {
-    use std::vec;
 
     // use super::*;
     // #[test]

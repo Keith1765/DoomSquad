@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs, path::Path};
 
 use image::ImageReader;
 
-use crate::{SCREEN_HEIGHT, render::RendererData};
+use crate::render::RendererData;
 
 pub struct Texture {
     pub width: usize,

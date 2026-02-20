@@ -1,13 +1,4 @@
-use std::{
-    collections::HashMap,
-    ffi::OsString,
-    fs,
-    hash::{DefaultHasher, Hash},
-    io,
-    path::Path,
-};
-
-use image::ImageReader;
+use std::collections::HashMap;
 
 use crate::render::textures::{Texture, load_textures};
 

@@ -1,7 +1,5 @@
-use std::ops::Rem;
 use std::{f64::consts::PI, rc::Rc};
 
-use crate::render::textures::Texture;
 use crate::{
     SCREEN_WIDTH,
     game::{Game, entities::Entity},

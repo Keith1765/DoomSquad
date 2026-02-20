@@ -229,7 +229,7 @@ fn read_point(
     Ok(())
 }
 
-//TODO creating Segment struc 
+//TODO creating Segment struc
 //left to implemt diffrent texture for each segment, but for now we will use the same texture for all segments
 fn read_segment(_reader: &mut Reader<&[u8]>, _buf: &mut Vec<u8>, _name: &str) -> Result<()> {
     // loop {

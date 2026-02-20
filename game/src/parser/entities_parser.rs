@@ -44,7 +44,12 @@ pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> R
                         read_values_for_player_from_point()? //TODO
                     }
                     (Some("point"), label) if label.starts_with("Enemy") => {
-                        read_values_for_enemy_from_point(&mut reader, &mut buf, &mut entities, renderer_data)?
+                        read_values_for_enemy_from_point(
+                            &mut reader,
+                            &mut buf,
+                            &mut entities,
+                            renderer_data,
+                        )?
                     }
                     _ => {}
                 }
@@ -55,17 +60,18 @@ pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> R
 
         buf.clear();
     }
-    for entity in &entities {
-        println!(
-            "Parsed entity: {} at position ({}, {}) with floor level {}, facing direction {}, and type {}",
-            &entity.entity_type,
-            &entity.mover.position.x,
-            &entity.mover.position.y,
-            &entity.mover.height,
-            &entity.mover.facing_direction,
-            &entity.entity_type
-        );
-    }
+    //used for testing:
+    // for entity in &entities {
+    //     println!(
+    //         "Parsed entity: {} at position ({}, {}) with floor level {}, facing direction {}, and type {}",
+    //         &entity.entity_type,
+    //         &entity.mover.position.x,
+    //         &entity.mover.position.y,
+    //         &entity.mover.height,
+    //         &entity.mover.facing_direction,
+    //         &entity.entity_type
+    //     );
+    // }
     Ok(entities)
 }
 
@@ -127,8 +133,8 @@ fn read_values_for_enemy_from_point(
     let entitties_pushing = generate_entities(
         entity_type,
         Point {
-            x: x.unwrap()*SCALING_FACTOR,
-            y: y.unwrap()*SCALING_FACTOR,
+            x: x.unwrap() * SCALING_FACTOR,
+            y: y.unwrap() * SCALING_FACTOR,
         },
         floor_level.unwrap(),
         facing_direction.unwrap(),

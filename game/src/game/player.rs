@@ -1,21 +1,18 @@
 use super::map::Map;
+use crate::game::entities::{
+    ARROW_COOLDOWN, EntityEvent,
+    EntityEvent::Spawn,
+    EntityType::{PlayerArrow, PlayerBullet},
+};
+use crate::game::generate_entities::generate_entities;
+use crate::game::player::LastInputDirection::*;
 use crate::{
-    SCREEN_HEIGHT, SCREEN_WIDTH,
-    game::{
-        map::{LEVEL_HEIGHT, Point},
-        movement::Mover, player,
-    }, render::RendererData,
+    SCREEN_WIDTH,
+    game::{map::Point, movement::Mover},
+    render::RendererData,
 };
 use minifb::{Key, KeyRepeat, MouseMode, Window};
 use std::f64::consts::PI;
-use crate::game::player::LastInputDirection::*;
-use crate::game::entities::{
-    Entity,
-    EntityEvent,
-    EntityEvent::Spawn,
-    EntityType::{PlayerBullet, PlayerArrow}, PROJECTILE_HP, ARROW_COOLDOWN,
-};
-use crate::game::generate_entities::generate_entities;
 
 const ROTATION_SPEED_MOUSE: f64 = 2.0;
 const ROTATION_SPEED_KEYS: f64 = 0.15;
@@ -26,13 +23,13 @@ pub const MAX_STEP_UP_HEIGHT: f64 = 6.0;
 const PLAYER_HEAD_HEIGHT: f64 = 15.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 const SPRINT_SPEED: f64 = 5.0;
-const CROUCH_HEIGHT_DIFF: f64 = 5.0; 
+const CROUCH_HEIGHT_DIFF: f64 = 5.0;
 const SLIDE_COOLDOWN_TIME: i32 = 10;
-const ROCKETLAUNCHER_COOLDOWN_TIME: i32= 100; 
+const ROCKETLAUNCHER_COOLDOWN_TIME: i32 = 100;
 const STRAIFING_SPEED: f64 = 0.035;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
-const PLAYER_HP: f64 = 100.0;  //was 100, set higher for testing
+const PLAYER_HP: f64 = 100.0; //was 100, set higher for testing
 const PLAYER_SIZE: f64 = 3.0;
 const JUMP_SPEED_BOOST_MULTIPLICATOR: f64 = 0.4;
 const JUMP_SPEED_BOOST: f64 = 0.0;
@@ -42,8 +39,7 @@ const ROCKETLAUNCHER_HEIGHT_BOOST: f64 = 5.0;
 const JUMPING_ALLOWED_TIMER_AMOUNT: i32 = 10;
 const DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING: f64 = 0.3;
 
-
-#[derive(Clone,PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum LastInputDirection {
     W,
     A,
@@ -65,7 +61,7 @@ pub struct Player {
     pub is_jumping: bool,
     pub vertical_velocity: f64,
     pub gravity: f64,
-    pub rocketlauncher_Cooldown: i32,
+    pub rocketlauncher_cooldown: i32,
     pub hp: f64,
     pub arrow_cooldown: i32,
     pub size: f64,
@@ -73,7 +69,6 @@ pub struct Player {
     pub interacting: bool,
     pub jumping_allowed: bool,
     pub jumping_allowed_timer: i32,
-    
 }
 
 impl Player {
@@ -87,7 +82,6 @@ impl Player {
                 view_level: PLAYER_VIEW_HEIGHT,
                 height: PLAYER_HEAD_HEIGHT,
                 facing_direction: pa,
-                
             },
             velocity_x: pa.cos() * ROTATION_SPEED_MOUSE,
             velocity_y: pa.sin() * ROTATION_SPEED_MOUSE,
@@ -100,7 +94,7 @@ impl Player {
             is_jumping: false,
             vertical_velocity: 0.0,
             gravity: -1.0,
-            rocketlauncher_Cooldown: 0,
+            rocketlauncher_cooldown: 0,
             hp: PLAYER_HP,
             arrow_cooldown: 0,
             size: PLAYER_SIZE,
@@ -111,21 +105,37 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, window: &Window, map: &Map,renderer_data: &RendererData) -> Vec<EntityEvent> {
+    pub fn update(
+        &mut self,
+        window: &Window,
+        map: &Map,
+        renderer_data: &RendererData,
+    ) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
 
-
-        if window.is_key_pressed(Key::F, KeyRepeat::No){
-           self.interacting = true; 
+        if window.is_key_pressed(Key::F, KeyRepeat::No) {
+            self.interacting = true;
         }
-         
+
         if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) {
-            let bullet = generate_entities(PlayerBullet, self.mover.position, self.mover.view_level, self.mover.facing_direction, renderer_data);
+            let bullet = generate_entities(
+                PlayerBullet,
+                self.mover.position,
+                self.mover.view_level,
+                self.mover.facing_direction,
+                renderer_data,
+            );
             events.push(Spawn(bullet));
         }
 
         if window.is_key_pressed(Key::RightShift, KeyRepeat::No) && self.arrow_cooldown == 0 {
-            let arrow = generate_entities(PlayerArrow, self.mover.position, self.mover.height, self.mover.facing_direction, renderer_data);
+            let arrow = generate_entities(
+                PlayerArrow,
+                self.mover.position,
+                self.mover.height,
+                self.mover.facing_direction,
+                renderer_data,
+            );
             events.push(Spawn(arrow));
             self.arrow_cooldown = ARROW_COOLDOWN;
         }
@@ -145,10 +155,10 @@ impl Player {
 
         if window.is_key_down(Key::Left) {
             //during slide heavily restricted rotation
-            let rotation_factor = match self.is_sliding || self.is_jumping{
-                true => match self.using_rocketlauncher{
-                    true => STRAIFING_SPEED *INCREASED_STRAFING_SPEED_RL,
-                    false => STRAIFING_SPEED
+            let rotation_factor = match self.is_sliding || self.is_jumping {
+                true => match self.using_rocketlauncher {
+                    true => STRAIFING_SPEED * INCREASED_STRAFING_SPEED_RL,
+                    false => STRAIFING_SPEED,
                 },
                 false => ROTATION_SPEED_KEYS,
             };
@@ -161,9 +171,9 @@ impl Player {
         if window.is_key_down(Key::Right) {
             //during slide heavily restricted rotation
             let rotation_factor = match self.is_sliding || self.is_jumping {
-                true => match self.using_rocketlauncher{
-                    true => STRAIFING_SPEED *INCREASED_STRAFING_SPEED_RL,
-                    false => STRAIFING_SPEED
+                true => match self.using_rocketlauncher {
+                    true => STRAIFING_SPEED * INCREASED_STRAFING_SPEED_RL,
+                    false => STRAIFING_SPEED,
                 },
                 false => ROTATION_SPEED_KEYS,
             };
@@ -172,21 +182,33 @@ impl Player {
             self.update_dir();
         }
 
-        if (window.is_key_down(Key::W) && ((!self.is_sliding && !self.is_jumping) || self.last_input==W)) || (self.is_jumping && (self.last_input == W)) {
+        if (window.is_key_down(Key::W)
+            && ((!self.is_sliding && !self.is_jumping) || self.last_input == W))
+            || (self.is_jumping && (self.last_input == W))
+        {
             self.mover.step(self.move_speed, 0.0, map, self.godmode);
-            
         }
-        if (window.is_key_down(Key::A) && ((!self.is_sliding && !self.is_jumping)|| self.last_input==A)) || (self.is_jumping && (self.last_input == A)) {
-            self.mover.step(self.move_speed, -PI / 2.0, map, self.godmode);
+        if (window.is_key_down(Key::A)
+            && ((!self.is_sliding && !self.is_jumping) || self.last_input == A))
+            || (self.is_jumping && (self.last_input == A))
+        {
+            self.mover
+                .step(self.move_speed, -PI / 2.0, map, self.godmode);
         }
-        if (window.is_key_down(Key::D) && ((!self.is_sliding && !self.is_jumping) || self.last_input==D)) || (self.is_jumping && (self.last_input == D)) {
-            self.mover.step(self.move_speed, PI / 2.0, map, self.godmode);
+        if (window.is_key_down(Key::D)
+            && ((!self.is_sliding && !self.is_jumping) || self.last_input == D))
+            || (self.is_jumping && (self.last_input == D))
+        {
+            self.mover
+                .step(self.move_speed, PI / 2.0, map, self.godmode);
         }
 
-        if (window.is_key_down(Key::S) && ((!self.is_sliding && !self.is_jumping) || self.last_input==S)) || (self.is_jumping && (self.last_input == S)) {
+        if (window.is_key_down(Key::S)
+            && ((!self.is_sliding && !self.is_jumping) || self.last_input == S))
+            || (self.is_jumping && (self.last_input == S))
+        {
             self.mover.step(self.move_speed, PI, map, self.godmode);
         }
-
 
         if window.is_key_down(Key::Space) && self.godmode {
             self.mover.foot_level += FLY_UP_DOWN_SPEED;
@@ -198,15 +220,15 @@ impl Player {
 
         //slowdown movespeed if not sprinting and sliding anymore
         if !window.is_key_down(Key::LeftShift) && !self.is_jumping && !self.is_sliding {
-            self.move_speed=MOVE_SPEED;
+            self.move_speed = MOVE_SPEED;
         }
 
         //implementing Sprint that gradually increases movement speed
-        if window.is_key_down(Key::LeftShift) && !self.godmode{
-            if self.move_speed < SPRINT_SPEED-0.1 {
+        if window.is_key_down(Key::LeftShift) && !self.godmode {
+            if self.move_speed < SPRINT_SPEED - 0.1 {
                 self.move_speed += 0.1;
             }
-            if self.move_speed <SPRINT_SPEED {
+            if self.move_speed < SPRINT_SPEED {
                 self.move_speed = SPRINT_SPEED;
             }
 
@@ -217,84 +239,91 @@ impl Player {
 
         if (self.slide_cooldown > 0) && !window.is_key_down(Key::C) {
             self.slide_cooldown -= 1;
-        } 
+        }
         //init slide gives speed boost
-        if window.is_key_down(Key::C) && !self.is_sliding && !self.godmode && self.slide_cooldown == 0{
+        if window.is_key_down(Key::C)
+            && !self.is_sliding
+            && !self.godmode
+            && self.slide_cooldown == 0
+        {
             if self.move_speed > 1.5 {
                 self.move_speed += 5.0;
                 self.is_sliding = true;
                 self.save_input(window);
             }
-            
         }
-        
+
         //during slide speed decreases
         if self.is_sliding {
             self.move_speed -= 0.2;
         }
 
         //ending slide (either cause not pressed or slowed down)
-        if (!window.is_key_down(Key::C) && self.is_sliding) || ((self.move_speed <= SPRINT_SPEED) && self.is_sliding){
+        if (!window.is_key_down(Key::C) && self.is_sliding)
+            || ((self.move_speed <= SPRINT_SPEED) && self.is_sliding)
+        {
             self.is_sliding = false;
-            self.last_input=No;
+            self.last_input = No;
             self.slide_cooldown = SLIDE_COOLDOWN_TIME;
         }
 
         //timer to allow jump slightly after leaving allowed window
-        if (self.mover.foot_level-self.mover.floor_level).abs() < 0.3 {
+        if (self.mover.foot_level - self.mover.floor_level).abs() < 0.3 {
             self.jumping_allowed = true;
             self.jumping_allowed_timer = JUMPING_ALLOWED_TIMER_AMOUNT;
         }
 
         if self.jumping_allowed_timer > 0 {
             self.jumping_allowed_timer -= 1;
-        }
-        else {
+        } else {
             self.jumping_allowed = false;
         }
 
-        if self.is_jumping {self.jumping_allowed_timer = 0};
+        if self.is_jumping {
+            self.jumping_allowed_timer = 0
+        };
 
         //jumping init
         if (window.is_key_pressed(Key::Space, KeyRepeat::No)
-        && ((!self.is_jumping && (self.mover.foot_level-self.mover.floor_level).abs() < DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING )|| self.jumping_allowed))
-        || window.is_key_pressed(Key::R, KeyRepeat::No) 
-            {
-                self.gravity = GRAVITY_CONST;
-                self.is_jumping = true;
-                if self.is_sliding {
-                    self.is_sliding = false;
-                    self.mover.foot_level += CROUCH_HEIGHT_DIFF;
-                    self.slide_cooldown = SLIDE_COOLDOWN_TIME;
-                    self.move_speed += 3.0;
-                }
-                //normal jump init
-                if window.is_key_pressed(Key::Space, KeyRepeat::No) {
-                    self.move_speed += self.move_speed*JUMP_SPEED_BOOST_MULTIPLICATOR;
-                    let speed_bonus = self.move_speed * 0.8;
-                    self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
-                    self.gravity += self.gravity*(self.move_speed*0.08) //special Relativity (kidding, just wanted to decrease height scalling on big jumps)
-                }
+            && ((!self.is_jumping
+                && (self.mover.foot_level - self.mover.floor_level).abs()
+                    < DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING)
+                || self.jumping_allowed))
+            || window.is_key_pressed(Key::R, KeyRepeat::No)
+        {
+            self.gravity = GRAVITY_CONST;
+            self.is_jumping = true;
+            if self.is_sliding {
+                self.is_sliding = false;
+                self.mover.foot_level += CROUCH_HEIGHT_DIFF;
+                self.slide_cooldown = SLIDE_COOLDOWN_TIME;
+                self.move_speed += 3.0;
+            }
+            //normal jump init
+            if window.is_key_pressed(Key::Space, KeyRepeat::No) {
+                self.move_speed += self.move_speed * JUMP_SPEED_BOOST_MULTIPLICATOR;
+                let speed_bonus = self.move_speed * 0.8;
+                self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
+                self.gravity += self.gravity * (self.move_speed * 0.08) //special Relativity (kidding, just wanted to decrease height scalling on big jumps)
+            }
 
-                //rocketlauncher
-                if window.is_key_pressed(Key::R, KeyRepeat::No) && (self.rocketlauncher_Cooldown == 0){
-                    self.using_rocketlauncher=true;
-                    self.move_speed += self.move_speed*JUMP_SPEED_BOOST_MULTIPLICATOR + ROCKETLAUNCHER_SPEED_BOOST;
-                    let speed_bonus = self.move_speed * 0.8;
-                    self.vertical_velocity = JUMP_STRENGTH + speed_bonus + ROCKETLAUNCHER_HEIGHT_BOOST;
-                    self.gravity += self.gravity*(self.move_speed*0.04);
-                    self.rocketlauncher_Cooldown = ROCKETLAUNCHER_COOLDOWN_TIME;
-                }
+            //rocketlauncher
+            if window.is_key_pressed(Key::R, KeyRepeat::No) && (self.rocketlauncher_cooldown == 0) {
+                self.using_rocketlauncher = true;
+                self.move_speed +=
+                    self.move_speed * JUMP_SPEED_BOOST_MULTIPLICATOR + ROCKETLAUNCHER_SPEED_BOOST;
+                let speed_bonus = self.move_speed * 0.8;
+                self.vertical_velocity = JUMP_STRENGTH + speed_bonus + ROCKETLAUNCHER_HEIGHT_BOOST;
+                self.gravity += self.gravity * (self.move_speed * 0.04);
+                self.rocketlauncher_cooldown = ROCKETLAUNCHER_COOLDOWN_TIME;
+            }
 
-                self.save_input(window);
-
-                
-
+            self.save_input(window);
         }
 
         //Rocketlauncher cooldwon
-        if self.rocketlauncher_Cooldown != 0{
-            self.rocketlauncher_Cooldown -= 1;
+        if self.rocketlauncher_cooldown != 0 {
+            self.rocketlauncher_cooldown -= 1;
         }
 
         //height during jump
@@ -307,23 +336,23 @@ impl Player {
             self.mover.foot_level += self.vertical_velocity;
 
             //landing
-            if self.mover.foot_level <= self.mover.floor_level{
+            if self.mover.foot_level <= self.mover.floor_level {
                 self.mover.foot_level = self.mover.floor_level;
-                self.vertical_velocity= 0.0;
+                self.vertical_velocity = 0.0;
                 self.is_jumping = false;
-                if self.using_rocketlauncher {self.using_rocketlauncher=false};
+                if self.using_rocketlauncher {
+                    self.using_rocketlauncher = false
+                };
             }
-
         }
 
-        if window.is_key_pressed(Key::G,KeyRepeat::No) {
+        if window.is_key_pressed(Key::G, KeyRepeat::No) {
             self.godmode = !self.godmode;
         }
 
         //adjust feet_level to fit floor_level
         // GRAVITY
         if !self.godmode && !self.is_jumping {
-            
             //adjust for gravity
             self.vertical_velocity += self.gravity;
 
@@ -331,32 +360,37 @@ impl Player {
             self.mover.foot_level += self.vertical_velocity;
 
             //landing
-            if self.mover.foot_level <= self.mover.floor_level{
+            if self.mover.foot_level <= self.mover.floor_level {
                 self.mover.foot_level = self.mover.floor_level;
-                self.vertical_velocity= 0.0;
+                self.vertical_velocity = 0.0;
                 self.is_jumping = false;
             }
-
-        
         }
         if self.is_sliding {
             self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT - CROUCH_HEIGHT_DIFF;
-        }
-        else{
+        } else {
             self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
         }
-
-        
 
         return events;
     }
 
-    fn save_input (&mut self, window: &Window){
-        if window.is_key_down(Key::D) {self.last_input = D; return;}
-        else if window.is_key_down(Key::A) {self.last_input = A; return;}        
-        else if window.is_key_down(Key::S) {self.last_input = S; return;}
-        else if window.is_key_down(Key::W) {self.last_input = W; return;}
-        else {self.last_input = No}
+    fn save_input(&mut self, window: &Window) {
+        if window.is_key_down(Key::D) {
+            self.last_input = D;
+            return;
+        } else if window.is_key_down(Key::A) {
+            self.last_input = A;
+            return;
+        } else if window.is_key_down(Key::S) {
+            self.last_input = S;
+            return;
+        } else if window.is_key_down(Key::W) {
+            self.last_input = W;
+            return;
+        } else {
+            self.last_input = No
+        }
     }
 
     fn check_angle(&mut self) {
