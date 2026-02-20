@@ -24,7 +24,7 @@ impl Texture {
             return None;
         }
 
-        // TODO function very slow: improve somehow?
+        // TODO function still very slow: improve somehow?
 
         // get the unscaled column
         let mut unscaled_column = Vec::with_capacity(self.height);
