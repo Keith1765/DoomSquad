@@ -53,7 +53,7 @@ pub fn damage_check(game_state: &mut Game) {
                 //check if horizontal hitbox overlap
                 let shooting_height = game_state.player.mover.view_level;
                 let entity_bottom = game_state.entities[j].mover.foot_level;
-                let entity_top = game_state.entities[j].mover.height;
+                let entity_top = game_state.entities[j].mover.height + entity_bottom;
 
                 if shooting_height <= entity_top && shooting_height >= entity_bottom {
                     let damage = match game_state.entities[i].entity_type {
@@ -93,8 +93,8 @@ pub fn damage_check(game_state: &mut Game) {
         {
             //check if horizontal overlap of hitbox
             let shooting_height = game_state.entities[j].mover.view_level;
-            let player_bottom = game_state.player.mover.foot_level;
-            let player_top = game_state.player.mover.height;
+            let player_bottom = game_state.player.mover.foot_level ;
+            let player_top = game_state.player.mover.height + player_bottom;
 
             if shooting_height <= player_top && shooting_height >= player_bottom {
                 let damage = match game_state.entities[j].entity_type {
