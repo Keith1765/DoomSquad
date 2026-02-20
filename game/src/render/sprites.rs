@@ -39,13 +39,13 @@ pub fn task_sprite(
     renderer_data: &RendererData,
 ) -> Option<SpriteInstruction> {
     // return the leftmost x of the sprite, and all the tasks to be rendered right of that
-    let angle_off_player_view = game.player.mover.position.angle_to(&entity.mover.position)
-        - game.player.mover.facing_direction; // TODO abort if sprite out of FOV
+    let angle_off_player_view: f64 = game.player.mover.position.angle_to(&entity.mover.position)
+         - game.player.mover.facing_direction; // TODO abort if sprite out of FOV
     let distance: f64 = game
-        .player
-        .mover
-        .position
-        .distance_to(&entity.mover.position);
+         .player
+         .mover
+         .position
+         .distance_to(&entity.mover.position);
     let normalized_distance = distance * angle_off_player_view.cos();
 
     // TODO temporary, find cleaner solution ?
@@ -90,6 +90,7 @@ pub fn task_sprite(
             let texture_u = ((x - left_screen_x) as f64
                 * (entity.sprite.width / onscreen_width_f64)) as usize
                 % texture.width;
+
             let texture_column = texture.get_texture_column(
                 texture_u,
                 onscreen_bottom,
@@ -100,7 +101,7 @@ pub fn task_sprite(
 
             let task = RenderTask {
                 texture_column: texture_column,
-                color: 0x000000, // default color, should not be read because texture exists
+                color: 0x000000, // default color, will not be read because texture exists
                 brightness: brightness,
                 onscreen_bottom,
                 onscreen_top: onscreen_bottom + onscreen_height,
@@ -115,9 +116,9 @@ pub fn task_sprite(
     }
 
     return Some(SpriteInstruction {
-        // .max() ist to prevent overflow into fvery high numbers when casting to usize
-        sprite_left_screen_x: left_screen_x.max(0) as usize,
-        sprite_right_screen_x: (left_screen_x + onscreen_width).max(0) as usize,
+        // .clamp() is mainly to prevent overflow into fvery high numbers when casting to usize
+        sprite_left_screen_x: left_screen_x.clamp(0, renderer_data.screen_width_as_isize) as usize,
+        sprite_right_screen_x: (left_screen_x + onscreen_width).clamp(0, renderer_data.screen_width_as_isize) as usize,
         tasks,
     });
 }
