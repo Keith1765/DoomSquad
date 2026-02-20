@@ -8,7 +8,6 @@ use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
 use std::io::Read;
-use std::str;
 
 pub struct ParserEntity {
     pub if_player: bool,     //true if player, false if enemy
@@ -56,7 +55,6 @@ pub fn read_entities_from_file(path: String, renderer_data: &RendererData) -> Re
                         read_point(
                             &mut reader,
                             &mut buf,
-                            label,
                             &mut entities,
                             renderer_data,
                         )?
@@ -74,7 +72,7 @@ pub fn read_entities_from_file(path: String, renderer_data: &RendererData) -> Re
     Ok(entities)
 }
 
-fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, entities: &mut Vec<Entity>, renderer_data: &RendererData) -> Result<()> {
+fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, entities: &mut Vec<Entity>, renderer_data: &RendererData) -> Result<()> {
     let mut x = None;
     let mut y = None;
     let mut floor_level = None;

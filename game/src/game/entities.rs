@@ -7,8 +7,7 @@ use crate::game::entity_behaviour::{
     player_bullet_behaviour, ranged_enemy_behaviour, red_barrel_behaviour,
     summoner_enemy_behaviour, weak_enemy_behaviour,
 };
-use crate::game::entities::EntityEvent::*;
-use crate::game::entities::EntityType::*;
+
 use crate::game::map::{Map, Point};
 use crate::game::movement::Mover;
 use crate::render::RendererData;
@@ -22,7 +21,7 @@ const GRAVITY_CONST: f64 = -0.8;
 pub const BULLET_SPEED: f64 = 30.0;
 pub const SHOOTING_COOLDOWN: i32 = 50;
 pub const ARROW_COOLDOWN: i32 = 75;
-pub const SUMMONING_COOLDOWN: i32 = 500;
+pub const SUMMONING_COOLDOWN: i32 = 200;
 pub const PROJECTILE_HP: f64 = 30.0;
 pub const ENEMY_HP: f64 = 50.0;
 pub const ENEMY_SIZE: f64 = 20.0; //testing

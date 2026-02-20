@@ -1,9 +1,6 @@
 use std::{f64::consts::PI, rc::Rc};
 
-use crate::{HORIZONTAL_FOV, SCREEN_HEIGHT};
-use crate::render::textures::Texture;
 use crate::{
-    SCREEN_WIDTH,
     game::{Game, entities::Entity},
     render::{
         RendererData,

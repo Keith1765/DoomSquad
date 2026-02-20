@@ -8,7 +8,6 @@ mod render;
 use crate::audio::Audio;
 use crate::render::{RendererData, render_init};
 use minifb::{Key, Window, WindowOptions};
-use std::error::Error;
 use std::f64::consts::PI;
 use std::time::Instant;
 

@@ -4,13 +4,7 @@ use crate::{
         entity_behaviour::death_behaviour,
         map_grid::MapGrid,
     },
-    render::RendererData,
-    game::entities::{
-        EntityEvent::{self, *},
-        EntityType::*,
-    },
-    game::map::Point,
-    game::movement::Mover,
+    render::RendererData
 };
 
 use super::map::Map;

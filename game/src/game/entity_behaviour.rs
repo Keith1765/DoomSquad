@@ -110,40 +110,6 @@ pub fn summoner_enemy_behaviour(
 ) {
     entity.gravity(map, 1.0);
 
-    if entity.cooldown == 20 {
-        let direction_to_player = entity.mover.position.angle_to(&player_position);
-        let melee_enemy = Entity::new(
-            entity.mover.position,
-            entity.mover.floor_level,
-            entity.mover.height,
-            direction_to_player,
-            7,
-            renderer_data,
-            MeleeEnemy,
-            ENEMY_HP,
-            ENEMY_SIZE,
-        )
-        .unwrap();
-        events.push(Spawn(melee_enemy));
-    }
-
-    if entity.cooldown == 10 {
-        let direction_to_player = entity.mover.position.angle_to(&player_position);
-        let melee_enemy = Entity::new(
-            entity.mover.position,
-            entity.mover.floor_level,
-            entity.mover.height,
-            direction_to_player,
-            7,
-            renderer_data,
-            MeleeEnemy,
-            ENEMY_HP,
-            ENEMY_SIZE,
-        )
-        .unwrap();
-        events.push(Spawn(melee_enemy));
-    }
-
     if entity.cooldown == 0 {
         let direction_to_player = entity.mover.position.angle_to(&player_position);
         entity.cooldown = SUMMONING_COOLDOWN;

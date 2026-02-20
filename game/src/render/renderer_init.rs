@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::{
-    SCREEN_HEIGHT,
     render::textures::{Texture, load_textures},
 };
 
