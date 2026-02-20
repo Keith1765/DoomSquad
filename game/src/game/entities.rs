@@ -7,6 +7,8 @@ use crate::game::entity_behaviour::{
     player_bullet_behaviour, ranged_enemy_behaviour, red_barrel_behaviour,
     summoner_enemy_behaviour, weak_enemy_behaviour,
 };
+use crate::game::entities::EntityEvent::*;
+use crate::game::entities::EntityType::*;
 use crate::game::map::{Map, Point};
 use crate::game::movement::Mover;
 use crate::render::RendererData;

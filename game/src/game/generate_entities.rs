@@ -7,8 +7,7 @@ use crate::{
             EntityType, PROJECTILE_HP, RED_BARREL_HP, RED_BARREL_SIZE, WEAK_ENEMY_MULTIPLICATOR,
         },
         map::Point,
-    },
-    render::RendererData,
+    }, parser::entities_parser::ParserEntity, render::RendererData
 };
 
 pub fn generate_entities(

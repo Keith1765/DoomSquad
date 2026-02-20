@@ -8,6 +8,7 @@ mod render;
 use crate::audio::Audio;
 use crate::render::{RendererData, render_init};
 use minifb::{Key, Window, WindowOptions};
+use std::error::Error;
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -64,8 +65,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let mut game = game::Game::new_test_game(&renderer_data);
 
-    //TODO TEST
-    let map = parse_map("assets/maps/geogebra_test_map_with_jump+run+entities.xml".to_string());
+    //TODO TEST, make this clean (dont initialize with test map then overwrite it with parsed)
+    let map = parse_map("assets/maps/first-test-map-from-geogebra.xml".to_string()); // TODO remove unwrap
     if let Ok(map) = map {
         game.map = map;
     } else {

@@ -1,20 +1,29 @@
 use crate::game::entities::{Entity, EntityType};
 use crate::game::generate_entities::*;
 use crate::game::map::Point;
+use crate::parser::map_parser::SCALING_FACTOR;
 use crate::render::RendererData;
 use anyhow::Result;
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
 use std::io::Read;
+use std::str;
 
-use crate::parser::map_parser::SCALING_FACTOR;
-
-pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
-    read_entitties_from_file(path, renderer_data)
+pub struct ParserEntity {
+    pub if_player: bool,     //true if player, false if enemy
+    pub x: f64,            //pos from the point
+    pub y: f64,            //pos from the point
+    floor_level: f64,      //r from rgba-value
+    facing_direction: f64, //g from rgba-value
+    enemy_type: i32,       //b from rgba-value
 }
 
-pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
+pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
+    read_entities_from_file(path, renderer_data)
+}
+
+pub fn read_entities_from_file(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
     let mut file = File::open(path)?;
     let mut xml_contents = String::new();
     file.read_to_string(&mut xml_contents)?;
@@ -44,9 +53,10 @@ pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> R
                         read_values_for_player_from_point()? //TODO
                     }
                     (Some("point"), label) if label.starts_with("Enemy") => {
-                        read_values_for_enemy_from_point(
+                        read_point(
                             &mut reader,
                             &mut buf,
+                            label,
                             &mut entities,
                             renderer_data,
                         )?
@@ -60,27 +70,11 @@ pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> R
 
         buf.clear();
     }
-    //used for testing:
-    // for entity in &entities {
-    //     println!(
-    //         "Parsed entity: {} at position ({}, {}) with floor level {}, facing direction {}, and type {}",
-    //         &entity.entity_type,
-    //         &entity.mover.position.x,
-    //         &entity.mover.position.y,
-    //         &entity.mover.height,
-    //         &entity.mover.facing_direction,
-    //         &entity.entity_type
-    //     );
-    // }
+
     Ok(entities)
 }
 
-fn read_values_for_enemy_from_point(
-    reader: &mut Reader<&[u8]>,
-    buf: &mut Vec<u8>,
-    entities: &mut Vec<Entity>,
-    renderer_data: &RendererData,
-) -> Result<()> {
+fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, name: &str, entities: &mut Vec<Entity>, renderer_data: &RendererData) -> Result<()> {
     let mut x = None;
     let mut y = None;
     let mut floor_level = None;
@@ -130,7 +124,7 @@ fn read_values_for_enemy_from_point(
         _ => EntityType::Dummy,
     });
 
-    let entitties_pushing = generate_entities(
+    let entities_pushing = generate_entities(
         entity_type,
         Point {
             x: x.unwrap() * SCALING_FACTOR,
@@ -141,7 +135,7 @@ fn read_values_for_enemy_from_point(
         renderer_data,
     );
 
-    entities.push(entitties_pushing);
+    entities.push(entities_pushing);
     Ok(())
 }
 

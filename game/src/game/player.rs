@@ -1,9 +1,8 @@
 use super::map::Map;
-use crate::game::entities::{
-    ARROW_COOLDOWN, EntityEvent,
-    EntityEvent::Spawn,
+use crate::game::{entities::{
+    ARROW_COOLDOWN, EntityEvent::{self, Spawn},
     EntityType::{PlayerArrow, PlayerBullet},
-};
+}, movement::find_blocks_were_currently_in};
 use crate::game::generate_entities::generate_entities;
 use crate::game::player::LastInputDirection::*;
 use crate::{
@@ -357,8 +356,30 @@ impl Player {
             self.vertical_velocity += self.gravity;
 
             //vertical movement after gravity adjustment
-            self.mover.foot_level += self.vertical_velocity;
+            // for that, we need to find if we'd bump our head into a block when moving up
+            let blocks_were_stepping_inside =
+                find_blocks_were_currently_in(self.mover.position, map);
+            let mut lowest_ceiling_level = f64::MAX;
+            let head_level = self.mover.foot_level + self.mover.height;
+            for block in &blocks_were_stepping_inside {
+                if block.bottom < lowest_ceiling_level// lower thn lowest previously found ceiling level
+                && block.bottom > head_level-self.vertical_velocity
+                // not totally below out head anyway
+                {
+                    lowest_ceiling_level = block.bottom;
+                }
+            }
 
+            if (self.mover.foot_level + self.vertical_velocity)
+                <= (lowest_ceiling_level - self.mover.height)
+            {
+                // if we didnt bump our head, we just go up normally
+                self.mover.foot_level = self.mover.foot_level + self.vertical_velocity;
+            } else {
+                // if we bumped our head, we only go up to the ceiling and lose vertical velocity
+                self.mover.foot_level = lowest_ceiling_level - self.mover.height;
+                self.vertical_velocity = 0.0;
+            }
             //landing
             if self.mover.foot_level <= self.mover.floor_level {
                 self.mover.foot_level = self.mover.floor_level;
@@ -366,6 +387,7 @@ impl Player {
                 self.is_jumping = false;
             }
         }
+
         if self.is_sliding {
             self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT - CROUCH_HEIGHT_DIFF;
         } else {

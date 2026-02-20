@@ -5,6 +5,12 @@ use crate::{
         map_grid::MapGrid,
     },
     render::RendererData,
+    game::entities::{
+        EntityEvent::{self, *},
+        EntityType::*,
+    },
+    game::map::Point,
+    game::movement::Mover,
 };
 
 use super::map::Map;

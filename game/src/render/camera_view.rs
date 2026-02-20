@@ -150,18 +150,19 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
 
     // create entity (sprite) tasks, put them into the taskings
     for e in &game.entities {
-        if let Some(instruction) = task_sprite(game, e, renderer_data) {
-            for x in instruction.sprite_left_screen_x..instruction.sprite_right_screen_x {
-                if x > SCREEN_WIDTH - 1 {
+        if let Some(mut instruction) = task_sprite(game, e, renderer_data) {
+            let sprite_width = instruction.sprite_right_screen_x - instruction.sprite_left_screen_x;
+            for x in 0..sprite_width {
+                if x < 0 || x > SCREEN_WIDTH - 1 {
                     continue;
                 }
 
-                if let Some(cts) = &mut columns_tasked[x]
+                if let Some(cts) = &mut columns_tasked[instruction.sprite_right_screen_x-x-1]
                     && let Some(sprite_task) =
-                        instruction.tasks.get(x - instruction.sprite_left_screen_x)
+                        instruction.tasks.pop()
                     && sprite_task.distance <= cts.wall_distance
                 {
-                    cts.tasks.push(sprite_task.clone()); // TODO remove necessity for clone()
+                    cts.tasks.push(sprite_task);
                 }
             }
         }
@@ -199,6 +200,9 @@ fn draw_tasks(
         if let Some(texture_column) = task.texture_column {
             //println!("{}",texture_column.len());
             for screen_y in onscreen_bottom..onscreen_top {
+                if onscreen_top > renderer_data.screen_height_as_isize {
+                    println!("hi");
+                }
                 let column_v = screen_y - onscreen_bottom;
                 if let Some(pixel_color) = texture_column.get(column_v as usize) {
                     // dont draw outside of screen bounds

@@ -11,6 +11,7 @@ pub struct Texture {
 }
 
 impl Texture {
+    // returns the column of a texture, scaled
     pub fn get_texture_column(
         &self,
         u: usize,
@@ -23,6 +24,8 @@ impl Texture {
             return None;
         }
 
+        // TODO function still very slow: improve somehow?
+
         // get the unscaled column
         let mut unscaled_column = Vec::with_capacity(self.height);
         for v in 1..self.height + 1 {
@@ -31,16 +34,18 @@ impl Texture {
                 unscaled_column.push(*pixel);
             }
         }
+
         let onscreen_height = onscreen_top - onscreen_bottom;
+        let onscreen_height_as_f64 = onscreen_height as f64;
         let mut scaled_column: Vec<u32> = Vec::with_capacity(
             onscreen_height.clamp(0, renderer_data.screen_height_as_isize) as usize,
         );
-        let onscreen_inworld_ratio = onscreen_height as f64 / inworld_height;
+        let inworld_onscreen_ratio =  inworld_height / onscreen_height_as_f64;
         for onscreen_y in onscreen_bottom.clamp(0, renderer_data.screen_height_as_isize)
             ..onscreen_top.clamp(0, renderer_data.screen_height_as_isize)
         {
             let onscreen_y_on_tex = onscreen_y - onscreen_bottom;
-            let inworld_y_on_tex = (onscreen_y_on_tex as f64 / onscreen_inworld_ratio) as usize;
+            let inworld_y_on_tex = (onscreen_y_on_tex as f64 * inworld_onscreen_ratio) as usize; 
             let v = inworld_y_on_tex % self.height;
             if let Some(color) = unscaled_column.get(v) {
                 scaled_column.push(*color);
