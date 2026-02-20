@@ -28,6 +28,27 @@ impl Audio {
         })
     }
 
+    // Initialisiert Audio und lädt direkt alle Assets
+    pub fn init() -> Option<Self> {
+        let mut audio = Self::new().ok()?;
+
+        let _ = audio.load_sfx("step", "assets/audio/step.wav");
+        let _ = audio.load_sfx("jump", "assets/audio/jump.wav");
+        let _ = audio.play_music_loop("assets/audio/music.wav", 0.6);
+
+        Some(audio)
+    }
+
+    pub fn handle_input(&mut self, is_moving: bool, just_jumped: bool) {
+        if is_moving {
+            self.play_step();
+        }
+
+        if just_jumped {
+            self.play_sfx("jump");
+        }
+    }
+
     pub fn load_sfx<P: AsRef<Path>>(
         &mut self,
         name: &str,

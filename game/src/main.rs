@@ -24,7 +24,7 @@ const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.005;
 const WALL_DEFAULT_COLOR: u32 = 0x00ff00;
 const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
-const AUDIO_ENABLED: bool = false;
+const AUDIO_ENABLED: bool = true; 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //I commented game init to test parser first
@@ -73,16 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Err("Error parsing map".into());
     }
 
-    let mut audio: Option<Audio> = None;
-    if AUDIO_ENABLED {
-        audio = Audio::new().ok();
-
-        if let Some(a) = audio.as_mut() {
-            let _ = a.load_sfx("step", "assets/audio/step.wav");
-            let _ = a.load_sfx("jump", "assets/audio/jump.wav");
-            let _ = a.play_music_loop("assets/audio/music.wav", 0.6);
-        }
-    }
+    let mut audio = if AUDIO_ENABLED { Audio::init() } else { None };
 
     let mut prev_keys = (false, false, false, false, false); // (W, A, S, D, Space)
 
@@ -96,15 +87,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let cur_space = window.is_key_down(Key::Space);
 
         if let Some(a) = &mut audio {
-            // call this for any movement key pressed
-            if cur_w || cur_a || cur_s || cur_d {
-                a.play_step(); // step sound with cooldown
-            }
-
-            // jump SFX
-            if cur_space && !prev_space {
-                a.play_sfx("jump");
-            }
+            let is_moving = cur_w || cur_a || cur_s || cur_d;
+            let just_jumped = cur_space && !prev_space;
+            
+            a.handle_input(is_moving, just_jumped);
         }
 
         prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
