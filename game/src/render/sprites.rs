@@ -1,7 +1,7 @@
 use std::ops::Rem;
 use std::{f64::consts::PI, rc::Rc};
 
-use crate::SCREEN_HEIGHT;
+use crate::{HORIZONTAL_FOV, SCREEN_HEIGHT};
 use crate::render::textures::Texture;
 use crate::{
     SCREEN_WIDTH,
@@ -33,14 +33,15 @@ pub struct SpriteInstruction {
 }
 
 // creates the instruction (task collection) for an entitys sprite
+// return the leftmost x of the sprite, and all the tasks to be rendered right of that
 pub fn task_sprite(
     game: &Game,
     entity: &Entity,
     renderer_data: &RendererData,
 ) -> Option<SpriteInstruction> {
-    // return the leftmost x of the sprite, and all the tasks to be rendered right of that
+
     let angle_off_player_view: f64 = game.player.mover.position.angle_to(&entity.mover.position)
-         - game.player.mover.facing_direction; // TODO abort if sprite out of FOV
+         - game.player.mover.facing_direction; 
     let distance: f64 = game
          .player
          .mover
@@ -83,6 +84,12 @@ pub fn task_sprite(
         // will be used often, so makes sense to cast only once
         let onscreen_width_f64 = onscreen_width as f64;
 
+        // will be memoized when possible for optimization
+        let mut texture_column: Option<Vec<u32>> = Some(Vec::with_capacity(onscreen_height as usize));
+
+        // for determining if we can reuse texture_column, initialize with value well never actualy reach
+        let mut prev_texture_u: usize = usize::MAX; 
+
         for x in left_screen_x.clamp(0, renderer_data.screen_width_as_isize)
             ..(left_screen_x + onscreen_width).clamp(0, renderer_data.screen_width_as_isize)
         {
@@ -91,16 +98,20 @@ pub fn task_sprite(
                 * (entity.sprite.width / onscreen_width_f64)) as usize
                 % texture.width;
 
-            let texture_column = texture.get_texture_column(
-                texture_u,
-                onscreen_bottom,
-                onscreen_bottom + onscreen_height,
-                entity.sprite.height,
-                renderer_data,
-            );
+            // if we've gone into a new pixel column on the texture, we need to recalculate texture_column
+            if texture_u != prev_texture_u {
+                texture_column = texture.get_texture_column(
+                    texture_u,
+                    onscreen_bottom,
+                    onscreen_bottom + onscreen_height,
+                    entity.sprite.height,
+                    renderer_data,
+                );
+                prev_texture_u = texture_u;
+            }
 
             let task = RenderTask {
-                texture_column: texture_column,
+                texture_column: texture_column.clone(),
                 color: 0x000000, // default color, will not be read because texture exists
                 brightness: brightness,
                 onscreen_bottom,
