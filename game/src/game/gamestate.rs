@@ -32,7 +32,8 @@ impl Game {
             player: Player::new(),
             entities:parse_entities("assets/maps/geogebra_test_map_with_jump+run+entities.xml".to_string(), &renderer_data).unwrap(),
             interactables: vec![Interactable::new(InteractableType::Button, Point { x: 250.0, y: 250.0 }, 30.0,  16.0, 10, &renderer_data).unwrap(),
-            Interactable::new(InteractableType::Button, Point { x: 350.0, y: 350.0 }, 30.0,  16.0, 10, &renderer_data).unwrap()],
+            //Interactable::new(InteractableType::Button, Point { x: 350.0, y: 350.0 }, 30.0,  16.0, 10, &renderer_data).unwrap()
+            ],
             // entities: vec![
             //     generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 0.0, 0.0,renderer_data ),
             //     // generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 0.0, 0.0, renderer_data),
@@ -59,7 +60,7 @@ impl Game {
         let mut spawns = Vec::new();
         
         for i in 0..self.interactables.len() {
-            self.player_is_in_range_of_interactable(i);
+            self.player_is_in_range_of_interactable();
         }
         //update all interactables and add possible spawn events
         for interactable in &mut self.interactables {
@@ -217,17 +218,25 @@ impl Game {
         }
 
     }
-fn player_is_in_range_of_interactable(&mut self, interactable_index: usize) {
-    // let player_position = self.player.mover.position;
-    // let interactable_position = self.interactables[interactable_index].mover.position;
 
-    // let distance = player_position.distance_to(&interactable_position);
+fn player_is_in_range_of_interactable(&mut self) {
+    self.map_grid.update_interactables(&self.interactables);
 
-    // self.interactables[interactable_index].player_in_range = distance <= self.player.size + self.interactables[interactable_index].sprite.width / 2.0;
-    
+    for interactable in &mut self.interactables {
+        interactable.player_in_range = false;
+    }
+
     let player_position = self.player.mover.position;
 
-        //get all entities from neighbouring cells
-    let neighbours = self.map_grid.get_neighbours(player_position);
+    let neighbours = self.map_grid.get_interactable_neighbours(player_position);
+
+    for j in neighbours {
+        let interactable_position = self.interactables[j].mover.position;
+        let distance_from_player_to_interactable = player_position.distance_to(&interactable_position);
+        if distance_from_player_to_interactable <= 30.0 {
+            self.interactables[j].player_in_range = true;
+        } 
+    }
 }
 }
+

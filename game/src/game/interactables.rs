@@ -1,7 +1,7 @@
 use minifb::Window;
 use ron::de::Position;
 
-use crate::{game::{map::{Map, Point}, movement::Mover}, render::{RendererData, sprites::Sprite}};
+use crate::{game::{map::{Map, Point}, movement::Mover, player}, render::{RendererData, sprites::Sprite}};
 use std::fmt;
 
 #[derive(Clone, PartialEq, Eq)]

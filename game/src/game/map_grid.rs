@@ -71,9 +71,9 @@ impl MapGrid{
     }
 
     pub fn get_interactable_neighbours(&self, position: Point) -> Vec<usize> {
-    let mut interactables = Vec::new();
-    let current_cell = self.getCell(position);
-
+        let mut interactables = Vec::new();
+        let current_cell = self.getCell(position);
+        
     for dx in -1..=1 {
         for dy in -1..=1 {
             let cell = Cell {
@@ -86,7 +86,6 @@ impl MapGrid{
             }
         }
     }
-
     interactables
 }
 
