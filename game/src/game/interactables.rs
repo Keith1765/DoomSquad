@@ -2,7 +2,6 @@ use minifb::Window;
 use ron::de::Position;
 
 use crate::{game::{map::{Map, Point}, movement::Mover}, render::{RendererData, sprites::Sprite}};
-
 use std::fmt;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -29,6 +28,8 @@ pub struct Interactable {
     pub mover: Mover,
     pub sprite: Sprite,
     pub entity_type: InteractableType,
+    pub player_in_range: bool,
+    pub last_player_state: bool
 }
 
 // #[derive(Clone)]
@@ -61,7 +62,8 @@ impl Interactable {
                 width: renderer_data.textures.get(&sprite_texture_id)?.width as f64,
             },
             entity_type,
-            
+            player_in_range: false,
+            last_player_state: false,
         };
         Some(interactable)
     }
@@ -77,8 +79,12 @@ impl Interactable {
             }
     }
     fn button_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData) {
-        //println!("position: {}, {}", self.mover.position.x, self.mover.position.y);
+        if self.player_in_range != self.last_player_state {
+            println!("State changed: {} at {}, {}", self.player_in_range, self.mover.position.x, self.mover.position.y);
+            self.last_player_state = self.player_in_range;
+        }
     }
+
     fn door_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData) {
         //TODO
     }

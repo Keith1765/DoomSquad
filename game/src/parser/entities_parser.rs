@@ -10,6 +10,7 @@ use std::io::Read;
 
 use crate::parser::map_parser::SCALING_FACTOR;
 
+
 pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
     read_entitties_from_file(path, renderer_data)
 }
