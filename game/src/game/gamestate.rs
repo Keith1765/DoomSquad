@@ -218,11 +218,16 @@ impl Game {
 
     }
 fn player_is_in_range_of_interactable(&mut self, interactable_index: usize) {
+    // let player_position = self.player.mover.position;
+    // let interactable_position = self.interactables[interactable_index].mover.position;
+
+    // let distance = player_position.distance_to(&interactable_position);
+
+    // self.interactables[interactable_index].player_in_range = distance <= self.player.size + self.interactables[interactable_index].sprite.width / 2.0;
+    
     let player_position = self.player.mover.position;
-    let interactable_position = self.interactables[interactable_index].mover.position;
 
-    let distance = player_position.distance_to(&interactable_position);
-
-    self.interactables[interactable_index].player_in_range = distance <= self.player.size + self.interactables[interactable_index].sprite.width / 2.0;
+        //get all entities from neighbouring cells
+    let neighbours = self.map_grid.get_neighbours(player_position);
 }
 }

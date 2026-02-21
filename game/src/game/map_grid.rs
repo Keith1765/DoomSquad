@@ -1,5 +1,5 @@
 use std::{collections::HashMap, thread::current};
-use crate::game::{entities::{self, Entity}, map::Point};
+use crate::game::{entities::{self, Entity}, interactables::Interactable, map::Point};
 
 //grid in each cell of MapGrid
 # [derive(PartialEq, Eq, Hash,Clone)]
@@ -30,7 +30,7 @@ impl MapGrid{
         }
     } 
 
-
+    //implemented for entities
     pub fn update(&mut self, entities: &Vec<Entity>) {
         //clear last frame
         self.grid.clear();
@@ -60,6 +60,35 @@ impl MapGrid{
 
         entities
     }
+    //implemetation for interactables 
+    pub fn update_interactables(&mut self, interactables: &Vec<Interactable>) {
+        self.grid.clear();
+
+        for (id, interactable) in interactables.iter().enumerate() {
+            let cell = self.getCell(interactable.mover.position);
+            self.grid.entry(cell).or_default().push(id);
+        }
+    }
+
+    pub fn get_interactable_neighbours(&self, position: Point) -> Vec<usize> {
+    let mut interactables = Vec::new();
+    let current_cell = self.getCell(position);
+
+    for dx in -1..=1 {
+        for dy in -1..=1 {
+            let cell = Cell {
+                x: current_cell.x + dx,
+                y: current_cell.y + dy,
+            };
+
+            if let Some(neighbour) = self.grid.get(&cell) {
+                interactables.extend(neighbour);
+            }
+        }
+    }
+
+    interactables
+}
 
 }
 
