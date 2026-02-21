@@ -6,20 +6,33 @@ use std::fmt;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum InteractableType {
-    Button,
+    Button(ButtonType),
     Door,
     Elevator,
     WeaponBin,
 }
+#[derive(Clone, PartialEq, Eq)]
+pub enum ButtonType {
+    Map,
+    Spawner,
+    Heal,
+}
+
 impl fmt::Display for InteractableType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let text = match self {
-            InteractableType::Button => "Button",
+            InteractableType::Button(button_type) => {
+                match button_type {
+                    ButtonType::Map => "Map Button",
+                    ButtonType::Spawner => "Spawner Button",
+                    ButtonType::Heal => "Heal Button",
+                }
+            }
             InteractableType::Door => "Door",
             InteractableType::Elevator => "Elevator",
             InteractableType::WeaponBin => "WeaponBin",
-            
         };
+
         write!(f, "{}", text)
     }
 }
@@ -67,24 +80,30 @@ impl Interactable {
         };
         Some(interactable)
     }
-    pub fn update(&mut self, window: &Window, map: &Map, _renderer_data: &RendererData) {
-            match self.entity_type {
-                InteractableType::Button => {
-                    self.button_behaviour(window, _renderer_data);
+    pub fn update(&mut self, window: &Window, map: &Map, _renderer_data: &RendererData, player: &player::Player) {
+            let entity_type = self.entity_type.clone();
+            match entity_type {
+                InteractableType::Button(button_type) => {
+                    self.button_behaviour(window, _renderer_data, player, &button_type);
                 }
-                InteractableType::Door => {
-                    self.door_behaviour(window, _renderer_data);
+                InteractableType::Elevator => {
+                    self.elevator_behaviour(window, _renderer_data);
                 }
                 _ => {}
             }
     }
-    fn button_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData) {
-        if self.player_in_range != self.last_player_state {
-            println!("State changed: {} at {}, {}", self.player_in_range, self.mover.position.x, self.mover.position.y);
-            self.last_player_state = self.player_in_range;
+    fn button_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData, player: &player::Player, button_type: &ButtonType) {
+
+        if self.player_in_range && player.interacting {
+            match button_type {
+                ButtonType::Map => {println!("Map button pressed!");},
+                ButtonType::Spawner => {println!("Spawner button pressed!");},
+                ButtonType::Heal => {println!("Heal button pressed!");},
+            }
         }
+        
     }
-    fn door_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData) {
+    fn elevator_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData) {
         //TODO
     }
 

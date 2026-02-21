@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    game::{entities::{self, ARROW_DMG, BULLET_DMG, ENEMY_SIZE, Entity, EntityEvent::{self, *}, EntityType::*, MEELE_ENEMY_DMG, RED_BARREL_DMG, WEAK_ENEMY_MULTIPLICATOR}, generate_entities::generate_entities, interactables::{self, Interactable, InteractableType}, map::Point, map_grid::MapGrid, movement::Mover},
+    game::{entities::{self, ARROW_DMG, BULLET_DMG, ENEMY_SIZE, Entity, EntityEvent::{self, *}, EntityType::*, MEELE_ENEMY_DMG, RED_BARREL_DMG, WEAK_ENEMY_MULTIPLICATOR}, generate_entities::generate_entities, interactables::{self, ButtonType, Interactable, InteractableType}, map::Point, map_grid::MapGrid, movement::Mover},
     render::{RendererData, sprites::Sprite},
 };
 
@@ -32,8 +32,9 @@ impl Game {
         Self {
             player: Player::new(),
             entities:parse_entities("assets/maps/geogebra_test_map_with_jump+run+entities.xml".to_string(), &renderer_data).unwrap(),
-            interactables: vec![Interactable::new(InteractableType::Button, Point { x: 250.0, y: 250.0 }, 30.0,  16.0, 10, &renderer_data).unwrap(),
-            //Interactable::new(InteractableType::Button, Point { x: 350.0, y: 350.0 }, 30.0,  16.0, 10, &renderer_data).unwrap()
+            interactables: vec![Interactable::new(InteractableType::Button(ButtonType::Map), Point { x: 250.0, y: 0.0 }, 30.0,  16.0, 10, &renderer_data).unwrap(),
+            Interactable::new(InteractableType::Button(ButtonType::Spawner), Point { x: 350.0, y: 0.0 }, 30.0,  16.0, 11, &renderer_data).unwrap(),
+            Interactable::new(InteractableType::Button(ButtonType::Heal), Point { x: 450.0, y: 0.0 }, 30.0,  16.0, 12, &renderer_data).unwrap()
             ],
             // entities: vec![
             //     generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 0.0, 0.0,renderer_data ),
@@ -65,7 +66,7 @@ impl Game {
         }
         //update all interactables and add possible spawn events
         for interactable in &mut self.interactables {
-            interactable.update(window,&self.map, renderer_data);
+            interactable.update(window,&self.map, renderer_data, &self.player);
         }
 
         //update player

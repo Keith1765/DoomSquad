@@ -113,6 +113,8 @@ impl Player {
 
     pub fn update(&mut self, window: &Window, map: &Map,renderer_data: &RendererData) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
+        //reseting keyinput idfk how to do it an other way
+        self.interacting = false; 
         if window.is_key_pressed(Key::F, KeyRepeat::No){
            self.interacting = true; 
         }
