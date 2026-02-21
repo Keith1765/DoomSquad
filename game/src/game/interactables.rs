@@ -1,7 +1,7 @@
 use minifb::Window;
 use ron::de::Position;
 
-use crate::{game::{map::Point, movement::Mover}, render::{RendererData, sprites::Sprite}};
+use crate::{game::{map::{Map, Point}, movement::Mover}, render::{RendererData, sprites::Sprite}};
 
 use std::fmt;
 
@@ -65,7 +65,7 @@ impl Interactable {
         };
         Some(interactable)
     }
-    pub fn update(&mut self, window: &Window, _renderer_data: &RendererData) {
+    pub fn update(&mut self, window: &Window, map: &Map, _renderer_data: &RendererData) {
             match self.entity_type {
                 InteractableType::Button => {
                     self.button_behaviour(window, _renderer_data);
@@ -77,7 +77,7 @@ impl Interactable {
             }
     }
     fn button_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData) {
-        //TODO
+        //println!("position: {}, {}", self.mover.position.x, self.mover.position.y);
     }
     fn door_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData) {
         //TODO

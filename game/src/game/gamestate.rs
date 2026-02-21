@@ -31,7 +31,7 @@ impl Game {
         Self {
             player: Player::new(),
             entities:parse_entities("assets/maps/geogebra_test_map_with_jump+run+entities.xml".to_string(), &renderer_data).unwrap(),
-            interactables: vec![Interactable::new(InteractableType::Button, Point { x: 0.0, y: 0.0 }, 0.0,  16.0, 0, &renderer_data).unwrap()],
+            interactables: vec![Interactable::new(InteractableType::Button, Point { x: 250.0, y: 250.0 }, 30.0,  16.0, 10, &renderer_data).unwrap()],
             // entities: vec![
             //     generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 0.0, 0.0,renderer_data ),
             //     // generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 0.0, 0.0, renderer_data),
@@ -53,7 +53,7 @@ impl Game {
     }
 
     pub fn update(&mut self, window: &Window, renderer_data: &RendererData) {
-        
+        println!("player position: {}, {}", self.player.mover.position.x, self.player.mover.position.y);
         let mut spawns = Vec::new();
         
         //update player
@@ -68,7 +68,7 @@ impl Game {
         }
         //update all interactables and add possible spawn events
         for interactable in &mut self.interactables {
-            interactable.update(window, renderer_data);
+            interactable.update(window,&self.map, renderer_data);
         }
         //deal damage
         self.damage_check();
@@ -96,7 +96,7 @@ impl Game {
         
     }
 
-     fn damage_check (self: &mut Self) {
+    fn damage_check (self: &mut Self) {
 
     //DMG calc for entities
         
@@ -210,5 +210,13 @@ impl Game {
         }
 
     }
+fn player_is_in_range(mut self: &mut Self, interactable: &Interactable) -> bool {
+    let player_position = self.player.mover.position;
+    let interactable_position = interactable.mover.position;
 
+    let distance = player_position.distance_to(&interactable_position);
+
+    distance <= self.player.size + interactable.sprite.width / 2.0
+
+}
 }
