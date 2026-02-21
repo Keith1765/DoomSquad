@@ -68,7 +68,7 @@ pub fn ranged_enemy_behaviour(
         let bullet = generate_entities(
             EnemyBullet,
             entity.mover.position,
-            entity.mover.view_level,
+            15.0, //per default entities are generated at default view height plus this value, therfore should be 0.0
             direction_to_player,
             renderer_data,
         );
@@ -116,6 +116,7 @@ pub fn summoner_enemy_behaviour(
         let melee_enemy = Entity::new(
             entity.mover.position,
             entity.mover.floor_level,
+            0.0,
             entity.mover.height,
             direction_to_player,
             7,

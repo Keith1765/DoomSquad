@@ -28,7 +28,7 @@ const ROCKETLAUNCHER_COOLDOWN_TIME: i32 = 100;
 const STRAIFING_SPEED: f64 = 0.035;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
-const PLAYER_HP: f64 = 1000.0; //was 100, set higher for testing
+const PLAYER_HP: f64 = 100.0; //was 100, set higher for testing
 const PLAYER_SIZE: f64 = 3.0;
 const JUMP_SPEED_BOOST_MULTIPLICATOR: f64 = 0.4;
 const JUMP_SPEED_BOOST: f64 = 0.0;
@@ -120,7 +120,7 @@ impl Player {
             let bullet = generate_entities(
                 PlayerBullet,
                 self.mover.position,
-                self.mover.view_level,
+                self.mover.view_level, //per default entities are generated at default view height plus this value, therfore should be 0.0
                 self.mover.facing_direction,
                 renderer_data,
             );

@@ -103,6 +103,7 @@ impl Entity {
     pub fn new(
         position: Point,
         start_floor_level: f64,
+        start_foot_level: f64,
         collision_height: f64,
         facing_direction: f64,
         sprite_texture_id: usize,
@@ -115,8 +116,8 @@ impl Entity {
             mover: Mover {
                 position, // Point { x: 230.0, y: 210.0 },
                 floor_level: start_floor_level,
-                foot_level: start_floor_level,
-                view_level: start_floor_level + ENTITY_DEFAULT_VIEW_HEIGHT,
+                foot_level: start_foot_level,
+                view_level: ENTITY_DEFAULT_VIEW_HEIGHT,
                 height: collision_height,
                 facing_direction,
             },
@@ -180,8 +181,10 @@ impl Entity {
             _ => dummy_behaviour(self, map),
         }
 
-        //set view level correctly
-        self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
+        //set view level correctly (excluded projectiles)
+        if !matches!(self.entity_type, EntityType::EnemyArrow | EntityType::EnemyBullet | EntityType::PlayerArrow | EntityType::PlayerBullet){
+            self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
+        }
 
         return events;
     }

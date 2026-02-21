@@ -20,6 +20,7 @@ pub fn generate_entities(
     match entity_type {
         EntityType::PlayerBullet => Entity::new(
             position,
+            0.0,
             height,
             1.0,
             facing_direction,
@@ -32,6 +33,7 @@ pub fn generate_entities(
         .unwrap(),
         EntityType::EnemyBullet => Entity::new(
             position,
+            0.0,
             height,
             1.0,
             facing_direction,
@@ -44,6 +46,7 @@ pub fn generate_entities(
         .unwrap(),
         EntityType::PlayerArrow => Entity::new(
             position,
+            0.0,
             height,
             1.0,
             facing_direction,
@@ -56,6 +59,7 @@ pub fn generate_entities(
         .unwrap(),
         EntityType::EnemyArrow => Entity::new(
             position,
+            0.0,
             height,
             1.0,
             facing_direction,
@@ -68,6 +72,7 @@ pub fn generate_entities(
         .unwrap(),
         EntityType::Dummy => Entity::new(
             position,
+            0.0,
             height,
             DUMMY_SIZE,
             facing_direction,
@@ -80,6 +85,7 @@ pub fn generate_entities(
         .unwrap(),
         EntityType::RangedEnemy => Entity::new(
             position,
+            0.0,
             height,
             ENEMY_SIZE,
             facing_direction,
@@ -92,6 +98,7 @@ pub fn generate_entities(
         .unwrap(),
         EntityType::Archer => Entity::new(
             position,
+            0.0,
             height,
             ENEMY_SIZE,
             facing_direction,
@@ -104,6 +111,7 @@ pub fn generate_entities(
         .unwrap(),
         EntityType::MeleeEnemy => Entity::new(
             position,
+            0.0,
             height,
             ENEMY_SIZE,
             facing_direction,
@@ -116,6 +124,7 @@ pub fn generate_entities(
         .unwrap(),
         EntityType::SummonerEnemy => Entity::new(
             position,
+            0.0,
             height,
             ENEMY_SIZE,
             facing_direction,
@@ -128,6 +137,7 @@ pub fn generate_entities(
         .unwrap(),
         EntityType::WeakEnemy => Entity::new(
             position,
+            0.0,
             height,
             ENEMY_SIZE * WEAK_ENEMY_MULTIPLICATOR,
             facing_direction,
@@ -140,6 +150,7 @@ pub fn generate_entities(
         .unwrap(),
         EntityType::RedBarrel => Entity::new(
             position,
+            0.0,
             height,
             RED_BARREL_SIZE,
             facing_direction,
@@ -152,6 +163,7 @@ pub fn generate_entities(
         .unwrap(),
         EntityType::ExplodedRedBarrel => Entity::new(
             position,
+            0.0,
             height,
             RED_BARREL_SIZE,
             facing_direction,
@@ -164,6 +176,7 @@ pub fn generate_entities(
         .unwrap(),
         _ => Entity::new(
             position,
+            0.0,
             height,
             1.0,
             facing_direction,
