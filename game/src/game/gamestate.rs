@@ -13,6 +13,7 @@ use crate::parser::interactables_parser::*;
 
 const DESPAWN_TIME: i32 = 300;
 const MAP_GRID_CELL_SIZE: f64 = 64.0;
+const INTERACTABLE_RANGE: f64 = 30.0;
 
 #[derive(Clone)]
 pub struct Game {
@@ -233,7 +234,7 @@ fn player_is_in_range_of_interactable(&mut self) {
     for j in neighbours {
         let interactable_position = self.interactables[j].mover.position;
         let distance_from_player_to_interactable = player_position.distance_to(&interactable_position);
-        if distance_from_player_to_interactable <= 30.0 {
+        if distance_from_player_to_interactable <= INTERACTABLE_RANGE {
             self.interactables[j].player_in_range = true;
         } 
     }

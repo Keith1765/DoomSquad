@@ -84,9 +84,8 @@ impl Interactable {
             self.last_player_state = self.player_in_range;
         }
     }
-
     fn door_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData) {
         //TODO
     }
-    
+
 }
