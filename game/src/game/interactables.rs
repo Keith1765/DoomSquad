@@ -40,9 +40,9 @@ impl fmt::Display for InteractableType {
 pub struct Interactable {
     pub mover: Mover,
     pub sprite: Sprite,
-    pub entity_type: InteractableType,
     pub player_in_range: bool,
-    pub last_player_state: bool
+    pub last_player_state: bool,
+    pub interactable_type: InteractableType,
 }
 
 // #[derive(Clone)]
@@ -53,7 +53,7 @@ pub struct Interactable {
 
 impl Interactable {
     pub fn new(
-        entity_type: InteractableType,
+        interactable_type: InteractableType,
         position: Point,
         start_floor_level: f64,
         collision_height: f64, 
@@ -74,14 +74,14 @@ impl Interactable {
                 height: renderer_data.textures.get(&sprite_texture_id)?.height as f64,
                 width: renderer_data.textures.get(&sprite_texture_id)?.width as f64,
             },
-            entity_type,
+            interactable_type,
             player_in_range: false,
             last_player_state: false,
         };
         Some(interactable)
     }
     pub fn update(&mut self, window: &Window, map: &Map, _renderer_data: &RendererData, player: &player::Player) {
-            let entity_type = self.entity_type.clone();
+            let entity_type = self.interactable_type.clone();
             match entity_type {
                 InteractableType::Button(button_type) => {
                     self.button_behaviour(window, _renderer_data, player, &button_type);
