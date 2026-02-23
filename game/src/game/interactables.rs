@@ -176,7 +176,8 @@ impl Interactable {
             && game_state.player.interacting //checking if player pressed F for interact
             && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0 //checking if player is on the same hight level
         {
-            println!("Elevator button pressed!");
+            let player = &mut game_state.player;
+            player.vertical_velocity = 25.0;
         }
     }
 }
