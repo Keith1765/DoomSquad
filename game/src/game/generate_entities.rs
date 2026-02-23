@@ -138,14 +138,14 @@ pub fn generate_entities(
         EntityType::WeakEnemy => Entity::new(
             position,
             0.0,
-            height,
-            ENEMY_SIZE * WEAK_ENEMY_MULTIPLICATOR,
+            0.0,
+            ENEMY_SIZE,
             facing_direction,
             7,
             renderer_data,
             EntityType::WeakEnemy,
             ENEMY_HP * WEAK_ENEMY_MULTIPLICATOR,
-            ENEMY_SIZE * WEAK_ENEMY_MULTIPLICATOR,
+            ENEMY_SIZE,
         )
         .unwrap(),
         EntityType::RedBarrel => Entity::new(
