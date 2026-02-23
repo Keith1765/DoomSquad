@@ -24,7 +24,7 @@ const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.005;
 const WALL_DEFAULT_COLOR: u32 = 0x00ff00;
 const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
-const AUDIO_ENABLED: bool = true; 
+const AUDIO_ENABLED: bool = false; 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //I commented game init to test parser first
