@@ -1,6 +1,6 @@
 use minifb::Window;
 
-use crate::parser::entities_parser::map_enemy_type;
+use crate::parser::entities_parser::{map_enemy_type, parse_entities};
 use crate::{
     game::{self, generate_entities::*, map::Point, movement::Mover},
     parser::map_parser::parse_map,
@@ -127,11 +127,17 @@ impl Interactable {
                     if let Some(entry) = entries.get(index) {
                         let path = entry.path();
                         let map = parse_map(path.to_str().unwrap().to_string());
+                        let entitties = parse_entities(path.to_str().unwrap().to_string(), _renderer_data);
                         if let Ok(map) = map {
                             game_state.map = map;
                         } else {
                             eprintln!("Error parsing map");
                             return;
+                        }
+                        if let Ok(entities) = entitties {
+                            game_state.entities = entities;
+                        } else {
+                            eprintln!("Error parsing entities");
                         }
                     }
                 }
