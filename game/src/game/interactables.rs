@@ -52,12 +52,6 @@ pub struct Interactable {
     pub float_1: f64,
 }
 
-// #[derive(Clone)]
-// pub enum EntityEvent{
-//     Spawn(Interactable),
-
-// }
-
 impl Interactable {
     pub fn new(
         interactable_type: InteractableType,
@@ -177,7 +171,7 @@ impl Interactable {
             && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0 //checking if player is on the same hight level
         {
             let player = &mut game_state.player;
-            player.vertical_velocity = 25.0;
+            player.vertical_velocity = self.float_1;
         }
     }
 }
