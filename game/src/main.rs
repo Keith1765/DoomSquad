@@ -14,6 +14,8 @@ use std::time::Instant;
 use crate::parser::entities_parser::*;
 use crate::parser::map_parser::*;
 
+use crate::game::interactables::*;
+
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
 const TARGET_FPS: usize = 30;
@@ -64,8 +66,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let mut game = game::Game::new_test_game(&renderer_data);
 
-    //TODO TEST, make this clean (dont initialize with test map then overwrite it with parsed)
-    let map = parse_map("assets/maps/first-test-map-from-geogebra.xml".to_string()); // TODO remove unwrap
+    //TODO TEST
+    let map = parse_map("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string());
     if let Ok(map) = map {
         game.map = map;
     } else {

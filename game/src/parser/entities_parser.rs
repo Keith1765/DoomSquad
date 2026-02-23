@@ -6,6 +6,8 @@ use crate::render::RendererData;
 use anyhow::Result;
 use quick_xml::Reader;
 use quick_xml::events::Event;
+use zip::ZipArchive;
+use zip::read::ZipFile;
 use std::fs::File;
 use std::io::Read;
 
@@ -19,13 +21,18 @@ pub struct ParserEntity {
 }
 
 pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
-    read_entities_from_file(path, renderer_data)
+        // ZIP-Archiv öffnen
+    let file = File::open(path)?;
+    let mut archive = ZipArchive::new(file)?;
+    let mut xml_file = archive.by_name("geogebra.xml")?;
+
+    // XML-Inhalt lesen
+    read_entitties_from_file(&mut xml_file, renderer_data)
 }
 
-pub fn read_entities_from_file(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
-    let mut file = File::open(path)?;
+pub fn read_entitties_from_file(xml_file: &mut ZipFile<File>, renderer_data: &RendererData) -> Result<Vec<Entity>> {
     let mut xml_contents = String::new();
-    file.read_to_string(&mut xml_contents)?;
+    xml_file.read_to_string(&mut xml_contents)?;
 
     let mut reader = Reader::from_str(&xml_contents);
     let mut buf = Vec::new();
@@ -108,19 +115,7 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, entities: &mut Vec<
         }
         buf.clear();
     }
-    let entity_type = enemy_type_num.map_or(EntityType::Dummy, |id| match id {
-        1 => EntityType::PlayerBullet,
-        2 => EntityType::RedBarrel,
-        3 => EntityType::MeleeEnemy,
-        4 => EntityType::RangedEnemy,
-        5 => EntityType::SummonerEnemy,
-        6 => EntityType::WeakEnemy,
-        7 => EntityType::EnemyArrow,
-        8 => EntityType::PlayerArrow,
-        9 => EntityType::Archer,
-        10 => EntityType::Button,
-        _ => EntityType::Dummy,
-    });
+    let entity_type = map_enemy_type(enemy_type_num.unwrap());
 
     let entities_pushing = generate_entities(
         entity_type,
@@ -140,4 +135,19 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, entities: &mut Vec<
 fn read_values_for_player_from_point() -> Result<()> {
     //TODO if needed, implement player parsing, but for now we can just spawn player at start pos
     Ok(())
+}
+pub fn map_enemy_type(enemy_type_num: i32) -> EntityType {
+    match enemy_type_num {
+        1 => EntityType::PlayerBullet,
+        2 => EntityType::RedBarrel,
+        3 => EntityType::MeleeEnemy,
+        4 => EntityType::RangedEnemy,
+        5 => EntityType::SummonerEnemy,
+        6 => EntityType::WeakEnemy,
+        7 => EntityType::EnemyArrow,
+        8 => EntityType::PlayerArrow,
+        9 => EntityType::Archer,
+        10 => EntityType::Button,
+        _ => EntityType::Dummy,
+    }
 }

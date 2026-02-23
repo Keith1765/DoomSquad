@@ -111,9 +111,10 @@ impl Player {
         renderer_data: &RendererData,
     ) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
-
-        if window.is_key_pressed(Key::F, KeyRepeat::No) {
-            self.interacting = true;
+        //reseting keyinput idfk how to do it an other way
+        self.interacting = false; 
+        if window.is_key_pressed(Key::F, KeyRepeat::No){
+           self.interacting = true; 
         }
 
         if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) {
