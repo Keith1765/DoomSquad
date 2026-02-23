@@ -1,17 +1,7 @@
+use crate::game::map::{Map, Point, Shape, Side};
 use crate::game::player::MAX_STEP_UP_HEIGHT;
-use crate::game::{
-    Game,
-    map::{Map, Point, Shape, ShapeID, Side},
-    player::PLAYER_VIEW_HEIGHT,
-};
 use core::f64;
-use std::{
-    collections::{
-        HashSet,
-        hash_set::{IntoIter, Iter},
-    },
-    rc::Rc,
-};
+use std::{collections::HashSet, rc::Rc};
 
 #[derive(Clone)]
 pub struct Mover {

@@ -5,9 +5,6 @@ use std::{
     rc::Rc,
 };
 
-use crate::game::{entities::Entity, movement::Mover};
-use crate::render::sprites::Sprite;
-
 pub const LEVEL_HEIGHT: f64 = 50.0; // TODO different for every map
 
 pub type ShapeID = usize;
@@ -382,6 +379,22 @@ impl Map {
             0x00ff00,
             vec![0; floor_block_points.len()],
         )?;
+
+        // let lagtest_block_points_1: Vec<Point> = vec![
+        //     Point { x: 210.0, y: 290.0 },
+        //     Point { x: 200.0, y: 290.0 },
+        // ];
+        // for _ in 0..10 {
+        //     map.add_shape_from_points(
+        //         lagtest_block_points_1.clone(),
+        //         ShapeType::Block,
+        //         0.0,
+        //         20.0,
+        //         0xffffff,
+        //         0x00ff00,
+        //         vec![0; lagtest_block_points_1.len()],
+        //     )?;
+        // }
 
         Some(map)
     }
