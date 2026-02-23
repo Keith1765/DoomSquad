@@ -120,7 +120,7 @@ impl Player {
             let bullet = generate_entities(
                 PlayerBullet,
                 self.mover.position,
-                self.mover.view_level, //per default entities are generated at default view height plus this value, therfore should be 0.0
+                self.mover.view_level, 
                 self.mover.facing_direction,
                 renderer_data,
             );
