@@ -1,12 +1,12 @@
 use std::{
     cmp::Ordering,
-    collections::{BinaryHeap, HashMap, HashSet, btree_map::IntoValues},
+    collections::{BinaryHeap, HashMap},
     rc::Rc,
 };
 
 use crate::game::{
     Game,
-    map::{Point, Shape, ShapeID, ShapeType, Side},
+    map::{Point, ShapeID, Side},
 };
 
 #[derive(Clone, PartialEq)]
