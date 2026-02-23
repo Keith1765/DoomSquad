@@ -146,18 +146,18 @@ impl Entity {
     ) {
         self.gravity(map);
 
-        // TODO remove; only for testing of sprite switching
-        if window.is_key_pressed(Key::T, minifb::KeyRepeat::No) {
-            self.sprite.switch_sprite_for_action(0, 30);
-        }
-        if window.is_key_pressed(Key::Z, minifb::KeyRepeat::No) {
-            self.sprite.walk_cycle_handler = Some(WalkCycleHandler {
-                current_texture_id: 1,
-                other_texture_id: 2,
-                countdown: 15,
-                countdown_full_value: 30,
-            })
-        }
+        // // TODO remove; only for testing of sprite switching
+        // if window.is_key_pressed(Key::T, minifb::KeyRepeat::No) {
+        //     self.sprite.switch_sprite_for_action(0, 30);
+        // }
+        // if window.is_key_pressed(Key::Z, minifb::KeyRepeat::No) {
+        //     self.sprite.walk_cycle_handler = Some(WalkCycleHandler {
+        //         current_texture_id: 1,
+        //         other_texture_id: 2,
+        //         countdown: 15,
+        //         countdown_full_value: 30,
+        //     })
+        // }
     }
     fn bullet_behaviour(
         self: &mut Self,
