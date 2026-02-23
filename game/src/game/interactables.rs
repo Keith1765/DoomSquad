@@ -1,19 +1,17 @@
 use minifb::Window;
-use ron::de::Position;
 
 use crate::{
     game::{
-        self, interactables,
-        map::{Map, Point},
+        self,
+        map::{Point},
         movement::Mover,
-        player,
     },
-    parser::map_parser::{self, parse_map},
+    parser::map_parser::{parse_map},
     render::{RendererData, sprites::Sprite},
 };
 use std::{
     fmt,
-    fs::{self, read_dir},
+    fs::{self},
     path::Path,
 };
 
@@ -147,7 +145,10 @@ impl Interactable {
                     println!("Spawner button pressed!");
                 }
                 ButtonType::Heal => {
-                    println!("Heal button pressed!");
+                    println!("Player health before: {}", game_state.player.hp);
+                    let player = &mut game_state.player;
+                    player.hp = (player.hp + self.float_1);
+                    println!("Player healed! Current HP: {}", player.hp);
                 }
             }
         }
