@@ -69,14 +69,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut game = game::Game::new_test_game(&renderer_data);
 
     //TODO TEST
-    let map = parse_map("assets/maps/geogebra_test_map_with_jump+run+entities.xml".to_string());
+    let map = parse_map("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string());
     if let Ok(map) = map {
         game.map = map;
     } else {
         return Err("Error parsing map".into());
     }
-    parse_entities("assets/maps/geogebra_test_map_with_jump+run+entities.xml".to_string(), &renderer_data)?; // TODO remove unwrap
-
 
     let mut audio: Option<Audio> = None;
     if AUDIO_ENABLED {

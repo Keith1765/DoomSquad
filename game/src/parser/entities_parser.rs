@@ -5,6 +5,8 @@ use crate::render::RendererData;
 use anyhow::Result;
 use quick_xml::Reader;
 use quick_xml::events::Event;
+use zip::ZipArchive;
+use zip::read::ZipFile;
 use std::fs::File;
 use std::io::Read;
 
@@ -12,13 +14,18 @@ use crate::parser::map_parser::SCALING_FACTOR;
 
 
 pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
-    read_entitties_from_file(path, renderer_data)
+        // ZIP-Archiv öffnen
+    let file = File::open(path)?;
+    let mut archive = ZipArchive::new(file)?;
+    let mut xml_file = archive.by_name("geogebra.xml")?;
+
+    // XML-Inhalt lesen
+    read_entitties_from_file(&mut xml_file, renderer_data)
 }
 
-pub fn read_entitties_from_file(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
-    let mut file = File::open(path)?;
+pub fn read_entitties_from_file(xml_file: &mut ZipFile<File>, renderer_data: &RendererData) -> Result<Vec<Entity>> {
     let mut xml_contents = String::new();
-    file.read_to_string(&mut xml_contents)?;
+    xml_file.read_to_string(&mut xml_contents)?;
 
     let mut reader = Reader::from_str(&xml_contents);
     let mut buf = Vec::new();

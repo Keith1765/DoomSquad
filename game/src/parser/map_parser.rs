@@ -2,6 +2,8 @@
 
 use crate::game::map::{self, Point, ShapeType};
 use anyhow::Result;
+use zip::ZipArchive;
+use zip::read::ZipFile;
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
@@ -54,15 +56,20 @@ impl Default for GeogebraPolygone {
 }
 
 pub fn parse_map(path: String) -> Result<map::Map> {
-    let map = reading_attr_from_ggb(&path);
+    // ZIP-Archiv öffnen
+    let file = File::open(path)?;
+    let mut archive = ZipArchive::new(file)?;
+    let mut xml_file = archive.by_name("geogebra.xml")?;
+
+    // XML-Inhalt lesen
+    let map = reading_attr_from_ggb(&mut xml_file);
     map
 }
 
-fn reading_attr_from_ggb(path: &str) -> Result<map::Map> {
+fn reading_attr_from_ggb(xml_file: &mut ZipFile<File>) -> Result<map::Map> {
     //XML laden
-    let mut file = File::open(path)?;
     let mut xml_content = String::new();
-    file.read_to_string(&mut xml_content)?;
+    xml_file.read_to_string(&mut xml_content)?;
 
     let mut reader = Reader::from_str(&xml_content);
     let mut buf = Vec::new();

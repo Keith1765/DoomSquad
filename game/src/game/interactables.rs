@@ -1,8 +1,21 @@
 use minifb::Window;
 use ron::de::Position;
 
-use crate::{game::{map::{Map, Point}, movement::Mover, player}, render::{RendererData, sprites::Sprite}};
-use std::fmt;
+use crate::{
+    game::{
+        self, interactables,
+        map::{Map, Point},
+        movement::Mover,
+        player,
+    },
+    parser::map_parser::{self, parse_map},
+    render::{RendererData, sprites::Sprite},
+};
+use std::{
+    fmt,
+    fs::{self, read_dir},
+    path::Path,
+};
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum InteractableType {
@@ -21,13 +34,11 @@ pub enum ButtonType {
 impl fmt::Display for InteractableType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let text = match self {
-            InteractableType::Button(button_type) => {
-                match button_type {
-                    ButtonType::Map => "Map Button",
-                    ButtonType::Spawner => "Spawner Button",
-                    ButtonType::Heal => "Heal Button",
-                }
-            }
+            InteractableType::Button(button_type) => match button_type {
+                ButtonType::Map => "Map Button",
+                ButtonType::Spawner => "Spawner Button",
+                ButtonType::Heal => "Heal Button",
+            },
             InteractableType::Door => "Door",
             InteractableType::Elevator => "Elevator",
             InteractableType::WeaponBin => "WeaponBin",
@@ -43,12 +54,13 @@ pub struct Interactable {
     pub player_in_range: bool,
     pub last_player_state: bool,
     pub interactable_type: InteractableType,
+    pub float_1: f64,
 }
 
 // #[derive(Clone)]
 // pub enum EntityEvent{
 //     Spawn(Interactable),
-    
+
 // }
 
 impl Interactable {
@@ -56,13 +68,14 @@ impl Interactable {
         interactable_type: InteractableType,
         position: Point,
         start_floor_level: f64,
-        collision_height: f64, 
+        collision_height: f64,
+        float_1: f64,
         sprite_texture_id: usize,
-        renderer_data: &RendererData,        
+        renderer_data: &RendererData,
     ) -> Option<Self> {
-        let interactable =  Interactable{
+        let interactable = Interactable {
             mover: Mover {
-                position, 
+                position,
                 floor_level: start_floor_level,
                 foot_level: start_floor_level,
                 view_level: start_floor_level,
@@ -77,34 +90,69 @@ impl Interactable {
             interactable_type,
             player_in_range: false,
             last_player_state: false,
+            float_1: float_1,
         };
         Some(interactable)
     }
-    pub fn update(&mut self, window: &Window, map: &Map, _renderer_data: &RendererData, player: &player::Player) {
-            let entity_type = self.interactable_type.clone();
-            match entity_type {
-                InteractableType::Button(button_type) => {
-                    self.button_behaviour(window, _renderer_data, player, &button_type);
-                }
-                InteractableType::Elevator => {
-                    self.elevator_behaviour(window, _renderer_data);
-                }
-                _ => {}
+    pub fn update(
+        &mut self,
+        window: &Window,
+        _renderer_data: &RendererData,
+        game_state: &mut game::Game,
+    ) {
+        let entity_type = self.interactable_type.clone();
+        match entity_type {
+            InteractableType::Button(button_type) => {
+                self.button_behaviour(window, _renderer_data, &button_type, game_state);
             }
+            InteractableType::Elevator => {
+                self.elevator_behaviour(window, _renderer_data);
+            }
+            _ => {}
+        }
     }
-    fn button_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData, player: &player::Player, button_type: &ButtonType) {
-
-        if self.player_in_range && player.interacting {
+    fn button_behaviour(
+        &mut self,
+        _window: &Window,
+        _renderer_data: &RendererData,
+        button_type: &ButtonType,
+        game_state: &mut game::Game,
+    ) {
+        if self.player_in_range && game_state.player.interacting {
             match button_type {
-                ButtonType::Map => {println!("Map button pressed!");},
-                ButtonType::Spawner => {println!("Spawner button pressed!");},
-                ButtonType::Heal => {println!("Heal button pressed!");},
+                ButtonType::Map => {
+                    let path = Path::new("assets/maps/ggb");
+                    let entries_result = fs::read_dir(path);
+                    let mut entries: Vec<_> = match entries_result {
+                        Ok(read_dir) => read_dir.filter_map(Result::ok).collect(),
+                        Err(e) => {
+                            eprintln!("Error when reading directory: {}", e);
+                            return; 
+                        }
+                    };
+                    entries.sort_by_key(|e| e.path());
+                    let index = self.float_1 as usize;
+                    if let Some(entry) = entries.get(index) {
+                        let path = entry.path();
+                        let map = parse_map(path.to_str().unwrap().to_string());
+                        if let Ok(map) = map {
+                            game_state.map = map;
+                        } else {
+                            eprintln!("Error parsing map");
+                            return;
+                        }
+                    }
+                }
+                ButtonType::Spawner => {
+                    println!("Spawner button pressed!");
+                }
+                ButtonType::Heal => {
+                    println!("Heal button pressed!");
+                }
             }
         }
-        
     }
     fn elevator_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData) {
         //TODO
     }
-
 }
