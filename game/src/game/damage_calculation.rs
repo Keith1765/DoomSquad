@@ -96,14 +96,6 @@ pub fn damage_check(game_state: &mut Game) {
             let player_bottom = game_state.player.mover.foot_level ;
             let player_top = game_state.player.mover.height + player_bottom;
 
-            println!("{}", game_state.entities[j].entity_type);
-            if game_state.entities[j].entity_type == EnemyBullet{
-                println!("{}", game_state.entities[j].mover.view_level);
-                println!("{}", game_state.player.mover.foot_level);
-                println!("{}", game_state.player.mover.height + player_bottom);
-                
-            }
-
             if shooting_height <= player_top && shooting_height >= player_bottom {
                 let damage = match game_state.entities[j].entity_type {
                     EnemyBullet => BULLET_DMG,
@@ -122,7 +114,6 @@ pub fn damage_check(game_state: &mut Game) {
                     },
                     _ => 0.0,
                 };
-                println!("{}", damage);
                 //DAMAGE THAT BITCH
                 game_state.player.hp -= damage;
 
