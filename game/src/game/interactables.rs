@@ -1,13 +1,11 @@
 use minifb::Window;
 
+use crate::parser::entities_parser::map_enemy_type;
 use crate::{
-    game::{
-        self, generate_entities::*, map::Point, movement::Mover
-    },
+    game::{self, generate_entities::*, map::Point, movement::Mover, player},
     parser::map_parser::parse_map,
     render::{RendererData, sprites::Sprite},
 };
-use crate::parser::entities_parser::map_enemy_type;
 use std::{
     fmt,
     fs::{self},
@@ -103,7 +101,7 @@ impl Interactable {
                 self.button_behaviour(window, _renderer_data, &button_type, game_state);
             }
             InteractableType::Elevator => {
-                self.elevator_behaviour(window, _renderer_data);
+                self.elevator_behaviour(window, _renderer_data, game_state);
             }
             _ => {}
         }
@@ -115,7 +113,10 @@ impl Interactable {
         button_type: &ButtonType,
         game_state: &mut game::Game,
     ) {
-        if self.player_in_range && game_state.player.interacting {
+        if self.player_in_range //checking if player is in range and pressing interact
+            && game_state.player.interacting //checking if player pressed F for interact
+            && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0 //checking if player is on the same hight level 
+            {
             match button_type {
                 ButtonType::Map => {
                     let path = Path::new("assets/maps/ggb");
@@ -124,7 +125,7 @@ impl Interactable {
                         Ok(read_dir) => read_dir.filter_map(Result::ok).collect(),
                         Err(e) => {
                             eprintln!("Error when reading directory: {}", e);
-                            return; 
+                            return;
                         }
                     };
                     entries.sort_by_key(|e| e.path());
@@ -165,7 +166,17 @@ impl Interactable {
             }
         }
     }
-    fn elevator_behaviour(&mut self, _window: &Window, _renderer_data: &RendererData) {
-        //TODO
+    fn elevator_behaviour(
+        &mut self,
+        _window: &Window,
+        _renderer_data: &RendererData,
+        game_state: &mut game::Game,
+    ) {
+        if self.player_in_range //checking if player is in range and pressing interact
+            && game_state.player.interacting //checking if player pressed F for interact
+            && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0 //checking if player is on the same hight level
+        {
+            println!("Elevator button pressed!");
+        }
     }
 }

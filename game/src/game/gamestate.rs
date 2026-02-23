@@ -51,7 +51,7 @@ impl Game {
                 Interactable::new(
                     InteractableType::Button(ButtonType::Map),
                     Point { x: 250.0, y: 5.0 },
-                    30.0,
+                    0.0,
                     16.0,
                     1.0,
                     14,
@@ -61,7 +61,7 @@ impl Game {
                 Interactable::new(
                     InteractableType::Button(ButtonType::Spawner),
                     Point { x: 350.0, y: 5.0 },
-                    30.0,
+                    0.0,
                     16.0,
                     6.0,
                     14,
@@ -71,13 +71,22 @@ impl Game {
                 Interactable::new(
                     InteractableType::Button(ButtonType::Heal),
                     Point { x: 450.0, y: 5.0 },
-                    30.0,
+                    0.0,
                     16.0,
                     50.0,
                     14,
                     &renderer_data,
                 )
                 .unwrap(),
+                Interactable::new(
+                    InteractableType::Elevator,
+                    Point { x: 550.0, y: 5.0 },
+                    0.0,
+                    16.0,
+                    50.0,
+                    14,
+                    &renderer_data,
+                ).unwrap(),
             ],
             // entities: vec![
             //     generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 0.0, 0.0,renderer_data ),
