@@ -15,9 +15,7 @@ use std::{
 #[derive(Clone, PartialEq, Eq)]
 pub enum InteractableType {
     Button(ButtonType),
-    Door,
     Elevator,
-    WeaponBin,
 }
 #[derive(Clone, PartialEq, Eq)]
 pub enum ButtonType {
@@ -34,9 +32,7 @@ impl fmt::Display for InteractableType {
                 ButtonType::Spawner => "Spawner Button",
                 ButtonType::Heal => "Heal Button",
             },
-            InteractableType::Door => "Door",
             InteractableType::Elevator => "Elevator",
-            InteractableType::WeaponBin => "WeaponBin",
         };
 
         write!(f, "{}", text)
