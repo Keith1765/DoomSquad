@@ -11,6 +11,7 @@ use crate::game::player::MOVE_SPEED;
 use crate::game::{Game, map};
 use crate::render::RendererData;
 use crate::render::sprites::Sprite;
+use crate::render::sprites::WalkCycleHandler;
 
 const ENTITY_DEFAULT_VIEW_HEIGHT: f64 = 15.0;
 const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
@@ -67,9 +68,11 @@ impl Entity {
             },
             movement_locked: false,
             sprite: Sprite {
-                texture_id: sprite_texture_id,
+                default_texture_id: sprite_texture_id,
                 height: renderer_data.textures.get(&sprite_texture_id)?.height as f64,
                 width: renderer_data.textures.get(&sprite_texture_id)?.width as f64,
+                action_sprite_switcher: None,
+                walk_cycle_handler: None,
             },
             gravity: GRAVITY_CONST,
             vertical_velocity: 0.0,
@@ -98,7 +101,7 @@ impl Entity {
         }
 
         match self.entity_type {
-            Dummy => self.dummy_behaviour(map, player_mover.position, &mut events),
+            Dummy => self.dummy_behaviour(map, player_mover.position, &mut events, window),
             Bullet => self.bullet_behaviour(map, player_mover.position, &mut events),
             RedBarrel => self.red_barrel_behaviour(map, player_mover.position, &mut events),
             RangedEnemy => {
@@ -107,13 +110,22 @@ impl Entity {
             MeleeEnemy => {
                 self.melee_enemy_behaviour(window, map, player_mover.position, &mut events)
             }
-            _ => self.dummy_behaviour(map, player_mover.position, &mut events),
+            _ => self.dummy_behaviour(map, player_mover.position, &mut events, window),
         }
 
         //set view level correctly
         self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
         // // move testwise
         // self.normal_enemy_movement(map, player_mover.position);
+
+        if let Some(switcher) = &mut self.sprite.action_sprite_switcher {
+            if switcher.countdown == 0 {
+                self.sprite.action_sprite_switcher = None;
+            } else {
+                switcher.countdown -= 1;
+            }
+        }
+        self.sprite.continue_walk_cycle();
 
         return events;
     }
@@ -130,8 +142,22 @@ impl Entity {
         map: &Map,
         player_position: Point,
         events: &mut Vec<EntityEvent>,
+        window: &Window
     ) {
         self.gravity(map);
+
+        // // TODO remove; only for testing of sprite switching
+        // if window.is_key_pressed(Key::T, minifb::KeyRepeat::No) {
+        //     self.sprite.switch_sprite_for_action(0, 30);
+        // }
+        // if window.is_key_pressed(Key::Z, minifb::KeyRepeat::No) {
+        //     self.sprite.walk_cycle_handler = Some(WalkCycleHandler {
+        //         current_texture_id: 1,
+        //         other_texture_id: 2,
+        //         countdown: 15,
+        //         countdown_full_value: 30,
+        //     })
+        // }
     }
     fn bullet_behaviour(
         self: &mut Self,
