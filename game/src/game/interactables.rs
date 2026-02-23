@@ -2,13 +2,12 @@ use minifb::Window;
 
 use crate::{
     game::{
-        self,
-        map::{Point},
-        movement::Mover,
+        self, generate_entities::*, map::Point, movement::Mover
     },
-    parser::map_parser::{parse_map},
+    parser::map_parser::parse_map,
     render::{RendererData, sprites::Sprite},
 };
+use crate::parser::entities_parser::map_enemy_type;
 use std::{
     fmt,
     fs::{self},
@@ -143,6 +142,19 @@ impl Interactable {
                 }
                 ButtonType::Spawner => {
                     println!("Spawner button pressed!");
+                    let enemy_type = map_enemy_type(self.float_1 as i32);
+                    println!("Spawning entity of type: {}", enemy_type);
+                    let entity = generate_entities(
+                        enemy_type,
+                        Point {
+                            x: self.mover.position.x,
+                            y: self.mover.position.y,
+                        },
+                        self.mover.floor_level,
+                        0.0,
+                        _renderer_data,
+                    );
+                    game_state.entities.push(entity);
                 }
                 ButtonType::Heal => {
                     println!("Player health before: {}", game_state.player.hp);

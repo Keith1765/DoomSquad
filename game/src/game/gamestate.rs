@@ -63,7 +63,7 @@ impl Game {
                     Point { x: 350.0, y: 5.0 },
                     30.0,
                     16.0,
-                    1.0,
+                    6.0,
                     14,
                     &renderer_data,
                 )

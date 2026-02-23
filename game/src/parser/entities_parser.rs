@@ -118,7 +118,7 @@ fn read_values_for_enemy_from_point(
         }
         buf.clear();
     }
-    let entity_type = map_enemy_type(enemy_type_num);
+    let entity_type = map_enemy_type(enemy_type_num.unwrap());
 
     let entitties_pushing = generate_entities(
         entity_type,
@@ -139,18 +139,18 @@ fn read_values_for_player_from_point() -> Result<()> {
     //TODO if needed, implement player parsing, but for now we can just spawn player at start pos
     Ok(())
 }
-fn map_enemy_type(enemy_type_num: Option<i32>) -> EntityType {
+pub fn map_enemy_type(enemy_type_num: i32) -> EntityType {
     match enemy_type_num {
-        Some(1) => EntityType::PlayerBullet,
-        Some(2) => EntityType::RedBarrel,
-        Some(3) => EntityType::MeleeEnemy,
-        Some(4) => EntityType::RangedEnemy,
-        Some(5) => EntityType::SummonerEnemy,
-        Some(6) => EntityType::WeakEnemy,
-        Some(7) => EntityType::EnemyArrow,
-        Some(8) => EntityType::PlayerArrow,
-        Some(9) => EntityType::Archer,
-        Some(10) => EntityType::Button,
+        1 => EntityType::PlayerBullet,
+        2 => EntityType::RedBarrel,
+        3 => EntityType::MeleeEnemy,
+        4 => EntityType::RangedEnemy,
+        5 => EntityType::SummonerEnemy,
+        6 => EntityType::WeakEnemy,
+        7 => EntityType::EnemyArrow,
+        8 => EntityType::PlayerArrow,
+        9 => EntityType::Archer,
+        10 => EntityType::Button,
         _ => EntityType::Dummy,
     }
 }
