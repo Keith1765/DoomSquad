@@ -124,9 +124,10 @@ pub fn summoner_enemy_behaviour(
             MeleeEnemy,
             ENEMY_HP,
             ENEMY_SIZE,
-        )
-        .unwrap();
-        events.push(Spawn(melee_enemy));
+        );
+        if let Some(melee_enemy) = melee_enemy {
+            events.push(Spawn(melee_enemy));
+        }
     } else {
         entity.cooldown -= 1;
     }
