@@ -2,7 +2,7 @@ use minifb::Window;
 
 use crate::parser::entities_parser::map_enemy_type;
 use crate::{
-    game::{self, generate_entities::*, map::Point, movement::Mover, player},
+    game::{self, generate_entities::*, map::Point, movement::Mover},
     parser::map_parser::parse_map,
     render::{RendererData, sprites::Sprite},
 };
@@ -154,7 +154,7 @@ impl Interactable {
                 ButtonType::Heal => {
                     println!("Player health before: {}", game_state.player.hp);
                     let player = &mut game_state.player;
-                    player.hp = (player.hp + self.float_1);
+                    player.hp = player.hp + self.float_1;
                     println!("Player healed! Current HP: {}", player.hp);
                 }
             }
