@@ -12,6 +12,7 @@ use crate::game::map::{Map, Point};
 use crate::game::movement::Mover;
 use crate::render::RendererData;
 use crate::render::sprites::Sprite;
+use crate::render::sprites::WalkCycleHandler;
 
 use std::fmt;
 
@@ -123,9 +124,11 @@ impl Entity {
             },
             movement_locked: false,
             sprite: Sprite {
-                texture_id: sprite_texture_id,
+                default_texture_id: sprite_texture_id,
                 height: renderer_data.textures.get(&sprite_texture_id)?.height as f64,
                 width: renderer_data.textures.get(&sprite_texture_id)?.width as f64,
+                action_sprite_switcher: None,
+                walk_cycle_handler: None,
             },
             gravity: GRAVITY_CONST,
             vertical_velocity: 0.0,

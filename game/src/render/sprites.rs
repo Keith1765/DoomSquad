@@ -11,10 +11,59 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct Sprite {
+pub struct ActionSpriteSwitcher {
     pub texture_id: usize,
+    pub countdown: usize
+}
+
+#[derive(Clone)]
+pub struct WalkCycleHandler {
+    pub current_texture_id: usize,
+    pub other_texture_id: usize,
+    pub countdown: usize,
+    pub countdown_full_value: usize
+}
+
+#[derive(Clone)]
+pub struct Sprite {
+    pub default_texture_id: usize,
     pub height: f64,
     pub width: f64,
+    pub action_sprite_switcher: Option<ActionSpriteSwitcher>,
+    pub walk_cycle_handler: Option<WalkCycleHandler>,
+}
+
+impl Sprite {
+    pub fn get_current_sprite_texture_id(&self) -> usize {
+        if let Some(switcher) = &self.action_sprite_switcher {
+            return switcher.texture_id;
+        } else if let Some(handler) = &self.walk_cycle_handler {
+            return handler.current_texture_id;
+        } else {
+            return self.default_texture_id;
+        }
+    }
+
+    pub fn switch_sprite_for_action(&mut self, new_texture_id: usize, time: usize) {
+        let switcher = ActionSpriteSwitcher {
+            texture_id: new_texture_id,
+            countdown: time,
+        };
+        self.action_sprite_switcher = Some(switcher);
+    }
+
+    pub fn continue_walk_cycle(&mut self) {
+        if let Some(handler) = &mut self.walk_cycle_handler {
+            if handler.countdown == 0 {
+                let temp_texture_id = handler.current_texture_id;
+                handler.current_texture_id = handler.other_texture_id;
+                handler.other_texture_id = temp_texture_id;
+                handler.countdown = handler.countdown_full_value;
+            } else {
+                handler.countdown -= 1;
+            }
+        }
+    }
 }
 
 // currently unused
@@ -76,7 +125,7 @@ pub fn task_sprite(
         + 0.5)
         .clamp(0.2, 1.0);
 
-    let texture = renderer_data.textures.get(&sprite.texture_id);
+    let texture = renderer_data.textures.get(&entity.sprite.get_current_sprite_texture_id());
     let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width.max(0) as usize);
 
     if let Some(texture) = texture {
