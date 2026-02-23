@@ -68,9 +68,11 @@ impl Interactable {
                 facing_direction: 0.0,
             },
             sprite: Sprite {
-                texture_id: sprite_texture_id,
+                default_texture_id: sprite_texture_id,
                 height: renderer_data.textures.get(&sprite_texture_id)?.height as f64,
                 width: renderer_data.textures.get(&sprite_texture_id)?.width as f64,
+                action_sprite_switcher: None,
+                walk_cycle_handler: None,
             },
             interactable_type,
             player_in_range: false,

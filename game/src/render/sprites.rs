@@ -125,7 +125,7 @@ pub fn task_sprite(
         + 0.5)
         .clamp(0.2, 1.0);
 
-    let texture = renderer_data.textures.get(&entity.sprite.get_current_sprite_texture_id());
+    let texture = renderer_data.textures.get(&sprite.get_current_sprite_texture_id());
     let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width.max(0) as usize);
 
     if let Some(texture) = texture {
