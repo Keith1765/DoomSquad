@@ -19,7 +19,7 @@ pub const MOVE_SPEED: f64 = 3.0;
 const FLY_UP_DOWN_SPEED: f64 = 1.0;
 const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 pub const MAX_STEP_UP_HEIGHT: f64 = 6.0;
-const PLAYER_HEAD_HEIGHT: f64 = 15.0;
+const PLAYER_HEAD_HEIGHT: f64 = 20.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 const SPRINT_SPEED: f64 = 5.0;
 const CROUCH_HEIGHT_DIFF: f64 = 5.0;
@@ -37,6 +37,8 @@ const ROCKETLAUNCHER_SPEED_BOOST: f64 = 5.0;
 const ROCKETLAUNCHER_HEIGHT_BOOST: f64 = 5.0;
 const JUMPING_ALLOWED_TIMER_AMOUNT: i32 = 10;
 const DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING: f64 = 0.3;
+const BULLET_OFFSET_TO_MATCH_SCREEN_MIDDLE: f64 = 3.0;
+const VERTICAL_AIM_SPEED: f64 = 0.1;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum LastInputDirection {
@@ -68,6 +70,7 @@ pub struct Player {
     pub interacting: bool,
     pub jumping_allowed: bool,
     pub jumping_allowed_timer: i32,
+    pub vertcal_aim: f64,
 }
 
 impl Player {
@@ -101,6 +104,7 @@ impl Player {
             interacting: false,
             jumping_allowed: false,
             jumping_allowed_timer: 0,
+            vertcal_aim: 0.0,
         }
     }
 
@@ -121,7 +125,7 @@ impl Player {
             let bullet = generate_entities(
                 PlayerBullet,
                 self.mover.position,
-                self.mover.view_level, 
+                self.mover.view_level - BULLET_OFFSET_TO_MATCH_SCREEN_MIDDLE, 
                 self.mover.facing_direction,
                 renderer_data,
             );
@@ -393,6 +397,15 @@ impl Player {
             self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT - CROUCH_HEIGHT_DIFF;
         } else {
             self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
+        }
+
+        //aim (inverted controls because pixel grid is inverted too)
+        if window.is_key_down(Key::Up){
+            self.vertcal_aim = (self.vertcal_aim - VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 );
+        }
+
+        if window.is_key_down(Key::Down){
+            self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 );
         }
 
         return events;

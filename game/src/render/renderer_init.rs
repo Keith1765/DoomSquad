@@ -40,7 +40,7 @@ pub fn render_init(
         ((screen_height_as_f64 / screen_width as f64) * (horizontal_fov / 2.0).tan()).atan() * 2.0;
 
     // would be the sam with height / vertical_fov: can be used for both horizontal and vertical scaling
-    let render_scale_coefficient: f64 = (screen_width as f64 / 2.0) / (horizontal_fov / 2.0).tan();
+    let render_scale_coefficient: f64 = (screen_width_as_f64 / 2.0) / (horizontal_fov / 2.0).tan();
 
     // we accept this unwrap for now, if textures not working just crash, it's fine for now
     // TODO remove necessity for unwrap
