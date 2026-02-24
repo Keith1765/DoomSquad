@@ -92,6 +92,18 @@ impl EntityType {
             _ => None, // other types do not have walking animations
         }
     }
+
+    pub fn get_action_animation_data(&self) -> Option<(usize, usize)> {
+        match self {
+            // TODO insert proper values here
+            EntityType::MeleeEnemy => Some((10, 30)),
+            EntityType::WeakEnemy => Some((11, 30)),
+            EntityType::SummonerEnemy => Some((12, 30)),
+            EntityType::RangedEnemy => Some((13, 30)),
+            EntityType::Archer => Some((14, 30)),
+            _ => None, // other types do not have walking animations
+        }
+    }
 }
 #[derive(Clone)]
 pub enum EntityEvent {
@@ -107,7 +119,7 @@ pub struct Entity {
     pub vertical_velocity: f64,
     pub entity_type: EntityType,
     pub orientation_lock: bool,
-    pub cooldown: i32,
+    pub action_cooldown: i32,
     pub hp: f64,
     pub size: f64,
     pub did_damage: bool,
@@ -147,7 +159,7 @@ impl Entity {
             vertical_velocity: 0.0,
             entity_type: entity_type,
             orientation_lock: false,
-            cooldown: 0,
+            action_cooldown: 0,
             hp: hp,
             size: size,
             did_damage: false,
@@ -206,6 +218,14 @@ impl Entity {
                 | EntityType::PlayerBullet
         ) {
             self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
+        }
+
+        if let Some(switcher) = &mut self.sprite.action_sprite_switcher {
+            if switcher.countdown == 0 {
+                self.sprite.action_sprite_switcher = None;
+            } else {
+                switcher.countdown -= 1;
+            }
         }
 
         return events;

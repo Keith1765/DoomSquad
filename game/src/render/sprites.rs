@@ -37,6 +37,7 @@ pub struct Sprite {
 impl Sprite {
     pub fn get_current_sprite_texture_id(&self) -> usize {
         if let Some(switcher) = &self.action_sprite_switcher {
+            //println!("{}", switcher.countdown);
             return switcher.texture_id;
         } else if let Some(handler) = &self.walk_cycle_handler {
             return handler.current_texture_id;

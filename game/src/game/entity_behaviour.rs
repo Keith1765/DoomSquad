@@ -60,11 +60,11 @@ pub fn ranged_enemy_behaviour(
 ) {
     entity.gravity(map, 1.0);
 
-    if entity.cooldown != 0 {
-        entity.cooldown -= 1;
+    if entity.action_cooldown != 0 {
+        entity.action_cooldown -= 1;
     } else {
         let direction_to_player = entity.mover.position.angle_to(&player_position);
-        entity.cooldown = SHOOTING_COOLDOWN;
+        entity.action_cooldown = SHOOTING_COOLDOWN;
         let bullet = generate_entities(
             EnemyBullet,
             entity.mover.position,
@@ -73,6 +73,11 @@ pub fn ranged_enemy_behaviour(
             renderer_data,
         );
         events.push(Spawn(bullet));
+        // attack animation
+        if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
+            entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
+        }
+        println!("hi");
     }
 }
 
@@ -85,11 +90,11 @@ pub fn archer_behaviour(
 ) {
     entity.gravity(map, 1.0);
 
-    if entity.cooldown != 0 {
-        entity.cooldown -= 1;
+    if entity.action_cooldown != 0 {
+        entity.action_cooldown -= 1;
     } else {
         let direction_to_player = entity.mover.position.angle_to(&player_position);
-        entity.cooldown = ARROW_COOLDOWN;
+        entity.action_cooldown = ARROW_COOLDOWN;
         let arrow = generate_entities(
             EnemyArrow,
             entity.mover.position,
@@ -98,6 +103,10 @@ pub fn archer_behaviour(
             renderer_data,
         );
         events.push(Spawn(arrow));
+        // attack animation
+        if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
+            entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
+        }
     }
 }
 
@@ -110,9 +119,9 @@ pub fn summoner_enemy_behaviour(
 ) {
     entity.gravity(map, 1.0);
 
-    if entity.cooldown == 0 {
+    if entity.action_cooldown == 0 {
         let direction_to_player = entity.mover.position.angle_to(&player_position);
-        entity.cooldown = SUMMONING_COOLDOWN;
+        entity.action_cooldown = SUMMONING_COOLDOWN;
         let melee_enemy = generate_entities(
             WeakEnemy,
             entity.mover.position,
@@ -121,8 +130,12 @@ pub fn summoner_enemy_behaviour(
             renderer_data,
         );
         events.push(Spawn(melee_enemy));
+        // attack animation
+        if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
+            entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
+        }
     } else {
-        entity.cooldown -= 1;
+        entity.action_cooldown -= 1;
     }
 }
 
@@ -131,14 +144,18 @@ pub fn melee_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Po
 
     entity.normal_enemy_movement(map, player_position, MOVE_SPEED);
 
-    if entity.cooldown > 0 {
-        entity.cooldown -= 1;
+    if entity.action_cooldown > 0 {
+        entity.action_cooldown -= 1;
         return;
     }
 
     if entity.did_damage {
-        entity.cooldown = MELEE_ENEMY_ATTACK_COOLDOWN;
+        entity.action_cooldown = MELEE_ENEMY_ATTACK_COOLDOWN;
         entity.did_damage = false;
+        // attack animation
+        if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
+            entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
+        }
     }
 }
 
@@ -146,14 +163,18 @@ pub fn weak_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Poi
     entity.gravity(map, 1.0);
     entity.normal_enemy_movement(map, player_position, MOVE_SPEED * 0.5);
 
-    if entity.cooldown > 0 {
-        entity.cooldown -= 1;
+    if entity.action_cooldown > 0 {
+        entity.action_cooldown -= 1;
         return;
     }
 
     if entity.did_damage {
-        entity.cooldown = MELEE_ENEMY_ATTACK_COOLDOWN;
+        entity.action_cooldown = MELEE_ENEMY_ATTACK_COOLDOWN;
         entity.did_damage = false;
+        // attack animation
+        if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
+            entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
+        }
     }
 }
 
