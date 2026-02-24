@@ -99,7 +99,6 @@ impl EntityType {
             EntityType::MeleeEnemy => Some((10, 30)),
             EntityType::WeakEnemy => Some((11, 30)),
             EntityType::SummonerEnemy => Some((12, 30)),
-            EntityType::RangedEnemy => Some((13, 30)),
             EntityType::Archer => Some((14, 30)),
             _ => None, // other types do not have walking animations
         }
