@@ -11,7 +11,7 @@ use crate::render::{RendererData, render_init};
 use std::f64::consts::PI;
 use std::time::{Instant, Duration};
 
-use crate::parser::entitties_parser::*;
+use crate::parser::entities_parser::*;
 use crate::parser::map_parser::*;
 
 use pixels::{Pixels, SurfaceTexture};
@@ -20,6 +20,7 @@ use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
+use crate::game::interactables::*;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
@@ -72,13 +73,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let mut game = game::Game::new_test_game(&renderer_data);
 
-    // TODO TEST, make this clean
-    let map = parse_map("assets/maps/first-test-map-from-geogebra.xml".to_string());
+    //TODO TEST
+    let map = parse_map("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string());
     if let Ok(map) = map {
         game.map = map;
     } else {
         return Err("Error parsing map".into());
     }
+
 
     let mut audio: Option<Audio> = None;
     if AUDIO_ENABLED {

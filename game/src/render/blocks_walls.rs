@@ -296,5 +296,6 @@ pub fn calculate_side_bottom_top(
         as isize;
 
     let side_top_onscreen = side_bottom_onscreen + side_height_onscreen;
+
     (side_bottom_onscreen, side_top_onscreen)
 }
