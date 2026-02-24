@@ -77,7 +77,6 @@ pub fn ranged_enemy_behaviour(
         if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
             entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
         }
-        println!("hi");
     }
 }
 
