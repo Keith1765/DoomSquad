@@ -1,18 +1,18 @@
 use crate::game::entities::{Entity, EntityType};
-use crate::game::generate_entities::*;
+use crate::game::{generate_entities::*};
 use crate::game::map::Point;
 use crate::parser::map_parser::SCALING_FACTOR;
 use crate::render::RendererData;
 use anyhow::Result;
 use quick_xml::Reader;
 use quick_xml::events::Event;
-use zip::ZipArchive;
-use zip::read::ZipFile;
 use std::fs::File;
 use std::io::Read;
+use zip::ZipArchive;
+use zip::read::ZipFile;
 
 pub struct ParserEntity {
-    pub if_player: bool,     //true if player, false if enemy
+    pub if_player: bool,   //true if player, false if enemy
     pub x: f64,            //pos from the point
     pub y: f64,            //pos from the point
     floor_level: f64,      //r from rgba-value
@@ -21,7 +21,7 @@ pub struct ParserEntity {
 }
 
 pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
-        // ZIP-Archiv öffnen
+    // ZIP-Archiv öffnen
     let file = File::open(path)?;
     let mut archive = ZipArchive::new(file)?;
     let mut xml_file = archive.by_name("geogebra.xml")?;
@@ -29,8 +29,10 @@ pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<
     // XML-Inhalt lesen
     read_entitties_from_file(&mut xml_file, renderer_data)
 }
-
-pub fn read_entitties_from_file(xml_file: &mut ZipFile<File>, renderer_data: &RendererData) -> Result<Vec<Entity>> {
+pub fn read_entitties_from_file(
+    xml_file: &mut ZipFile<File>,
+    renderer_data: &RendererData,
+) -> Result<Vec<Entity>> {
     let mut xml_contents = String::new();
     xml_file.read_to_string(&mut xml_contents)?;
 
@@ -38,7 +40,7 @@ pub fn read_entitties_from_file(xml_file: &mut ZipFile<File>, renderer_data: &Re
     let mut buf = Vec::new();
 
     let mut entities: Vec<Entity> = Vec::new();
-
+    
     loop {
         match reader.read_event_into(&mut buf)? {
             Event::Start(ref e) if e.name().as_ref() == b"element" => {
@@ -55,16 +57,8 @@ pub fn read_entitties_from_file(xml_file: &mut ZipFile<File>, renderer_data: &Re
                 }
 
                 match (element_type.as_deref(), label.as_str()) {
-                    (Some("point"), label) if label.starts_with("Player") => {
-                        read_values_for_player_from_point()? //TODO
-                    }
                     (Some("point"), label) if label.starts_with("Enemy") => {
-                        read_point(
-                            &mut reader,
-                            &mut buf,
-                            &mut entities,
-                            renderer_data,
-                        )?
+                        read_point(&mut reader, &mut buf, &mut entities, renderer_data)?
                     }
                     _ => {}
                 }
@@ -79,7 +73,12 @@ pub fn read_entitties_from_file(xml_file: &mut ZipFile<File>, renderer_data: &Re
     Ok(entities)
 }
 
-fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, entities: &mut Vec<Entity>, renderer_data: &RendererData) -> Result<()> {
+fn read_point(
+    reader: &mut Reader<&[u8]>,
+    buf: &mut Vec<u8>,
+    player_vec: &mut Vec<Entity>,
+    renderer_data: &RendererData,
+) -> Result<()> {
     let mut x = None;
     let mut y = None;
     let mut floor_level = None;
@@ -115,8 +114,8 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, entities: &mut Vec<
         }
         buf.clear();
     }
-    let entity_type = map_enemy_type(enemy_type_num.unwrap());
 
+    let entity_type = map_enemy_type(enemy_type_num.unwrap());
     let entities_pushing = generate_entities(
         entity_type,
         Point {
@@ -128,14 +127,10 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, entities: &mut Vec<
         renderer_data,
     );
 
-    entities.push(entities_pushing);
+    player_vec.push(entities_pushing);
     Ok(())
 }
 
-fn read_values_for_player_from_point() -> Result<()> {
-    //TODO if needed, implement player parsing, but for now we can just spawn player at start pos
-    Ok(())
-}
 pub fn map_enemy_type(enemy_type_num: i32) -> EntityType {
     match enemy_type_num {
         1 => EntityType::PlayerBullet,

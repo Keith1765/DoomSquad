@@ -1,17 +1,26 @@
 use std::{fs, path::Path, usize};
 
-use crate::{game::{
-        entities::{Entity, EntityEvent::*}, entity_behaviour::death_behaviour, gamestate, interactables::{ButtonType, Interactable, InteractableType}, map::Point, map_grid::{self, MapGrid}
-    }, parser::map_parser::parse_map, render::RendererData};
+use crate::{
+    game::{
+        entities::{Entity, EntityEvent::*},
+        entity_behaviour::death_behaviour,
+        gamestate,
+        interactables::{ButtonType, Interactable, InteractableType},
+        map::Point,
+        map_grid::{self, MapGrid},
+    },
+    parser::map_parser::parse_map,
+    render::RendererData,
+};
 
 use super::map::Map;
 use super::player::Player;
-use crate::game::interactables::InteractableEvent::*;
 use crate::game::damage_calculation::damage_check;
-use minifb::Window;
-use crate::parser::entities_parser::*;
+use crate::game::interactables::InteractableEvent::*;
+use crate::parser::entities_parser::parse_entities;
+use crate::parser::player_parser::parse_player_position;
 use crate::parser::interactables_parser::*;
-
+use minifb::Window;
 
 const DESPAWN_TIME: i32 = 300;
 const MAP_GRID_CELL_SIZE: f64 = 64.0;
@@ -31,13 +40,24 @@ pub struct Game {
 impl Game {
     pub fn new_test_game(renderer_data: &RendererData) -> Self {
         Self {
-            player: Player::new(),
+            player: Player::new_with_position(
+                parse_player_position(
+                    "assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string(),
+                    &renderer_data,
+                )
+                .unwrap(),
+            ),
             entities: parse_entities(
                 "assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string(),
                 &renderer_data,
             )
             .unwrap(),
-            interactables : parse_interactables("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string(), &renderer_data).unwrap(),
+            interactables: parse_interactables(
+                "assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string(),
+                &renderer_data,
+            )
+            .unwrap(),
+
             // interactables: vec![
             //     Interactable::new(
             //         InteractableType::Button(ButtonType::Map),
@@ -105,7 +125,7 @@ impl Game {
         let mut interactables_spawns = Vec::new();
 
         for interactable in &mut interactables {
-            let event = interactable.update(window, renderer_data, self );
+            let event = interactable.update(window, renderer_data, self);
             interactables_spawns.extend(event);
         }
 
@@ -149,39 +169,49 @@ impl Game {
             }
         }
     }
-    pub fn map_swap(self: &mut Self, renderer_data: &RendererData, map_index: usize){
+    pub fn map_swap(self: &mut Self, renderer_data: &RendererData, map_index: usize) {
         let path = Path::new("assets/maps/ggb");
-                    let entries_result = fs::read_dir(path);
-                    let mut entries: Vec<_> = match entries_result {
-                        Ok(read_dir) => read_dir.filter_map(Result::ok).collect(),
-                        Err(e) => {
-                            eprintln!("Error when reading directory: {}", e);
-                            return;
-                        }
-                    };
-                    entries.sort_by_key(|e| e.path());
-                    if let Some(entry) = entries.get(map_index) {
-                        let path = entry.path();
-                        let map = parse_map(path.to_str().unwrap().to_string());
-                        let entitties = parse_entities(path.to_str().unwrap().to_string(), renderer_data);
-                        let interactables=  parse_interactables(path.to_str().unwrap().to_string(), renderer_data);
+        let entries_result = fs::read_dir(path);
+        let mut entries: Vec<_> = match entries_result {
+            Ok(read_dir) => read_dir.filter_map(Result::ok).collect(),
+            Err(e) => {
+                eprintln!("Error when reading directory: {}", e);
+                return;
+            }
+        };
+        entries.sort_by_key(|e| e.path());
+        if let Some(entry) = entries.get(map_index) {
+            let path_buf = entry.path();
 
-                        if let Ok(map) = map {
-                            self.map = map;
-                        } else {
-                            eprintln!("Error parsing map");
-                        }
-                        if let Ok(entities) = entitties {
-                            self.entities = entities;
-                        } else {
-                            eprintln!("Error parsing entities");
-                        }
-                        if let Ok(interactables) = interactables {
-                            self.interactables = interactables;
-                        } else {
-                            eprintln!("Error parsing interactables");
-                            return;
-                        }
-                    }
+            let path = match path_buf.to_str() {
+                Some(p) => p,
+                None => {
+                    eprintln!("Invalid path");
+                    return;
+                }
+            };
+
+            if let Ok(map) = parse_map(path.to_string()) {
+                self.map = map;
+            } else {
+                eprintln!("Error parsing map");
+            }
+            if let Ok(entities) = parse_entities(path.to_string(), renderer_data) {
+                self.entities = entities;
+            } else {
+                eprintln!("Error parsing entities");
+            }
+            if let Ok(interactables) = parse_interactables(path.to_string(), renderer_data) {
+                self.interactables = interactables;
+            } else {
+                eprintln!("Error parsing interactables");
+            }
+            if let Ok(player_position) = parse_player_position(path.to_string(), renderer_data) {
+                self.player.mover.position = player_position;
+            } else {
+                eprintln!("Error parsing player_pos");
+                return;
+            }
+        }
     }
 }

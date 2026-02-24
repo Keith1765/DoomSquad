@@ -41,13 +41,13 @@ pub fn read_interactables_from_file(
     loop {
         match reader.read_event_into(&mut buf)? {
             Event::Start(ref e) if e.name().as_ref() == b"element" => {
-                let mut element_type = None; //needed for later
+                //let mut element_type = None; //needed for later
                 let mut label = "unnamed".to_string();
 
                 for attr in e.attributes() {
                     let attr = attr?;
                     match attr.key.as_ref() {
-                        b"type" => element_type = Some(attr.unescape_value()?.to_string()),
+                        //b"type" => element_type = Some(attr.unescape_value()?.to_string()),
                         b"label" => label = attr.unescape_value()?.to_string(),
                         _ => {}
                     }
