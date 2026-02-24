@@ -8,12 +8,13 @@ mod render;
 use crate::audio::Audio;
 use crate::render::{RendererData, render_init};
 use minifb::{Key, Window, WindowOptions};
-use std::error::Error;
 use std::f64::consts::PI;
 use std::time::Instant;
 
-use crate::parser::entitties_parser::*;
+use crate::parser::entities_parser::*;
 use crate::parser::map_parser::*;
+
+use crate::game::interactables::*;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
@@ -65,8 +66,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let mut game = game::Game::new_test_game(&renderer_data);
 
-    //TODO TEST, make this clean (dont initialize with test map then overwrite it with parsed)
-    let map = parse_map("assets/maps/first-test-map-from-geogebra.xml".to_string()); // TODO remove unwrap
+    //TODO TEST
+    let map = parse_map("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string());
     if let Ok(map) = map {
         game.map = map;
     } else {
@@ -77,7 +78,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut prev_keys = (false, false, false, false, false); // (W, A, S, D, Space)
 
-    while window.is_open() && !window.is_key_down(Key::Escape) {
+    while window.is_open() && !window.is_key_down(Key::Escape) && (game.player.hp > 0.0) {
         let (_, _, _, _, prev_space) = prev_keys;
 
         let cur_w = window.is_key_down(Key::W);

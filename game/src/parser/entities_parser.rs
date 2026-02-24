@@ -1,12 +1,18 @@
+use crate::game::entities::{Entity, EntityType};
+use crate::game::generate_entities::*;
+use crate::game::map::Point;
+use crate::parser::map_parser::SCALING_FACTOR;
+use crate::render::RendererData;
 use anyhow::Result;
 use quick_xml::Reader;
 use quick_xml::events::Event;
+use zip::ZipArchive;
+use zip::read::ZipFile;
 use std::fs::File;
 use std::io::Read;
-use std::str;
 
-pub struct Entity {
-    pub if_player: bool,   //true if player, false if enemy
+pub struct ParserEntity {
+    pub if_player: bool,     //true if player, false if enemy
     pub x: f64,            //pos from the point
     pub y: f64,            //pos from the point
     floor_level: f64,      //r from rgba-value
@@ -14,14 +20,19 @@ pub struct Entity {
     enemy_type: i32,       //b from rgba-value
 }
 
-pub fn parse_entitties(path: String) -> Result<()> {
-    read_entitties_from_file(path)
+pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
+        // ZIP-Archiv öffnen
+    let file = File::open(path)?;
+    let mut archive = ZipArchive::new(file)?;
+    let mut xml_file = archive.by_name("geogebra.xml")?;
+
+    // XML-Inhalt lesen
+    read_entitties_from_file(&mut xml_file, renderer_data)
 }
 
-pub fn read_entitties_from_file(path: String) -> Result<()> {
-    let mut file = File::open(path)?;
+pub fn read_entitties_from_file(xml_file: &mut ZipFile<File>, renderer_data: &RendererData) -> Result<Vec<Entity>> {
     let mut xml_contents = String::new();
-    file.read_to_string(&mut xml_contents)?;
+    xml_file.read_to_string(&mut xml_contents)?;
 
     let mut reader = Reader::from_str(&xml_contents);
     let mut buf = Vec::new();
@@ -45,10 +56,15 @@ pub fn read_entitties_from_file(path: String) -> Result<()> {
 
                 match (element_type.as_deref(), label.as_str()) {
                     (Some("point"), label) if label.starts_with("Player") => {
-                        read_point(&mut reader, &mut buf, label, &mut entities)?
+                        read_values_for_player_from_point()? //TODO
                     }
                     (Some("point"), label) if label.starts_with("Enemy") => {
-                        read_point(&mut reader, &mut buf, label, &mut entities)?
+                        read_point(
+                            &mut reader,
+                            &mut buf,
+                            &mut entities,
+                            renderer_data,
+                        )?
                     }
                     _ => {}
                 }
@@ -59,31 +75,16 @@ pub fn read_entitties_from_file(path: String) -> Result<()> {
 
         buf.clear();
     }
-    for entity in entities {
-        println!(
-            "Entity: if_player = {}, x = {}, y = {}, floor_level = {}, facing_direction = {}, enemy_type = {}",
-            entity.if_player,
-            entity.x,
-            entity.y,
-            entity.floor_level,
-            entity.facing_direction,
-            entity.enemy_type
-        );
-    }
-    Ok(())
+
+    Ok(entities)
 }
 
-fn read_point(
-    reader: &mut Reader<&[u8]>,
-    buf: &mut Vec<u8>,
-    name: &str,
-    entities: &mut Vec<Entity>,
-) -> Result<()> {
+fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, entities: &mut Vec<Entity>, renderer_data: &RendererData) -> Result<()> {
     let mut x = None;
     let mut y = None;
     let mut floor_level = None;
     let mut facing_direction = None;
-    let mut enemy_type = None;
+    let mut enemy_type_num = None;
     loop {
         match reader.read_event_into(buf)? {
             Event::Empty(ref e) if e.name().as_ref() == b"coords" => {
@@ -103,7 +104,7 @@ fn read_point(
                     match attr.key.as_ref() {
                         b"r" => floor_level = Some(attr.unescape_value()?.parse::<f64>()?),
                         b"g" => facing_direction = Some(attr.unescape_value()?.parse::<f64>()?),
-                        b"b" => enemy_type = Some(attr.unescape_value()?.parse::<i32>()?),
+                        b"b" => enemy_type_num = Some(attr.unescape_value()?.parse::<i32>()?),
                         //b"alpha" => idk = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
                         _ => {}
                     }
@@ -114,14 +115,39 @@ fn read_point(
         }
         buf.clear();
     }
-    let entity = Entity {
-        if_player: name.starts_with("Player"),
-        x: x.unwrap_or(0.0),
-        y: y.unwrap_or(0.0),
-        floor_level: floor_level.unwrap_or(0.0),
-        facing_direction: facing_direction.unwrap_or(0.0),
-        enemy_type: enemy_type.unwrap_or(0),
-    };
-    entities.push(entity);
+    let entity_type = map_enemy_type(enemy_type_num.unwrap());
+
+    let entities_pushing = generate_entities(
+        entity_type,
+        Point {
+            x: x.unwrap() * SCALING_FACTOR,
+            y: y.unwrap() * SCALING_FACTOR,
+        },
+        floor_level.unwrap(),
+        facing_direction.unwrap(),
+        renderer_data,
+    );
+
+    entities.push(entities_pushing);
     Ok(())
+}
+
+fn read_values_for_player_from_point() -> Result<()> {
+    //TODO if needed, implement player parsing, but for now we can just spawn player at start pos
+    Ok(())
+}
+pub fn map_enemy_type(enemy_type_num: i32) -> EntityType {
+    match enemy_type_num {
+        1 => EntityType::PlayerBullet,
+        2 => EntityType::RedBarrel,
+        3 => EntityType::MeleeEnemy,
+        4 => EntityType::RangedEnemy,
+        5 => EntityType::SummonerEnemy,
+        6 => EntityType::WeakEnemy,
+        7 => EntityType::EnemyArrow,
+        8 => EntityType::PlayerArrow,
+        9 => EntityType::Archer,
+        10 => EntityType::Button,
+        _ => EntityType::Dummy,
+    }
 }
