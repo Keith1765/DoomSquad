@@ -35,6 +35,7 @@ pub struct Game {
     pub despawn_timer: i32,
     pub map_grid: MapGrid,
     pub projectile_that_hit: Vec<usize>,
+    pub map_index: usize,
 }
 
 impl Game {
@@ -57,65 +58,11 @@ impl Game {
                 &renderer_data,
             )
             .unwrap(),
-
-            // interactables: vec![
-            //     Interactable::new(
-            //         InteractableType::Button(ButtonType::Map),
-            //         Point { x: 250.0, y: 5.0 },
-            //         0.0,
-            //         1.0,
-            //         0.0,
-            //         14,
-            //         &renderer_data,
-            //     )
-            //     .unwrap(),
-            //     Interactable::new(
-            //         InteractableType::Button(ButtonType::Spawner),
-            //         Point { x: 350.0, y: 5.0 },
-            //         0.0,
-            //         6.0,
-            //         0.0,
-            //         14,
-            //         &renderer_data,
-            //     )
-            //     .unwrap(),
-            //     Interactable::new(
-            //         InteractableType::Button(ButtonType::Heal),
-            //         Point { x: 450.0, y: 5.0 }, //pos
-            //         50.0, //floor_lvl
-            //         50.0, //parameter_1
-            //         0.0, //parameter_2
-            //         14, //texture
-            //         &renderer_data, //render_data
-            //     )
-            //     .unwrap(),
-            //     Interactable::new(
-            //         InteractableType::Elevator,
-            //         Point { x: 550.0, y: 5.0 },
-            //         0.0,
-            //         25.0,
-            //         0.0,//parameter_2
-            //         14,
-            //         &renderer_data,
-            //     ).unwrap(),
-            // ],
-            // entities: vec![
-            // generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 0.0, 0.0,renderer_data ),
-            // generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-            // generate_entities(RangedEnemy, Point { x: 280.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-            // generate_entities(MeleeEnemy, Point { x: 320.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-            // generate_entities(MeleeEnemy, Point { x: 300.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-            // generate_entities(MeleeEnemy, Point { x: 360.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-            // generate_entities(MeleeEnemy, Point { x: 280.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-            // generate_entities(WeakEnemy, Point { x: 260.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-            // generate_entities(SummonerEnemy, Point { x: 360.0, y: 200.0 }, 0.0, 0.0, renderer_data),
-            // generate_entities(RedBarrel, Point { x: 400.0, y: 300.0 }, 0.0, 0.0, renderer_data),
-            // generate_entities(Dummy, Point { x: 400.0, y: 300.0 }, 0.0, 0.0, renderer_data),
-            //     ],
             map: Map::new_test_map().unwrap(), // TODO remove unwrap
             despawn_timer: DESPAWN_TIME,
             map_grid: MapGrid::new(MAP_GRID_CELL_SIZE),
             projectile_that_hit: Vec::new(),
+            map_index: 0,
         }
     }
 
@@ -169,7 +116,7 @@ impl Game {
             }
         }
     }
-    pub fn map_swap(self: &mut Self, renderer_data: &RendererData, map_index: usize) {
+    pub fn map_swap(self: &mut Self, renderer_data: &RendererData, new_map_index: usize) {
         let path = Path::new("assets/maps/ggb");
         let entries_result = fs::read_dir(path);
         let mut entries: Vec<_> = match entries_result {
@@ -180,7 +127,7 @@ impl Game {
             }
         };
         entries.sort_by_key(|e| e.path());
-        if let Some(entry) = entries.get(map_index) {
+        if let Some(entry) = entries.get(new_map_index) {
             let path_buf = entry.path();
 
             let path = match path_buf.to_str() {
@@ -210,8 +157,9 @@ impl Game {
                 self.player.mover.position = player_position;
             } else {
                 eprintln!("Error parsing player_pos");
-                return;
             }
+            self.map_index = new_map_index;
+            return;
         }
     }
 }

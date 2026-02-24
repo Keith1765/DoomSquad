@@ -142,7 +142,6 @@ pub fn map_enemy_type(enemy_type_num: i32) -> EntityType {
         7 => EntityType::EnemyArrow,
         8 => EntityType::PlayerArrow,
         9 => EntityType::Archer,
-        10 => EntityType::Button,
         _ => EntityType::Dummy,
     }
 }

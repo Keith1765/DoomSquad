@@ -121,7 +121,7 @@ fn read_values_for_button(
     }
     match interactable_string_type[2].as_str() {
         "Map" => {
-             let interactable = Interactable::new(
+            let interactable = Interactable::new(
                 InteractableType::Button(ButtonType::Map),
                 Point {
                     x: x.unwrap() * SCALING_FACTOR,
@@ -137,7 +137,7 @@ fn read_values_for_button(
             interactable_vector.push(interactable);
         }
         "Spawner" => {
-             let interactable = Interactable::new(
+            let interactable = Interactable::new(
                 InteractableType::Button(ButtonType::Spawner),
                 Point {
                     x: x.unwrap() * SCALING_FACTOR,
@@ -153,6 +153,22 @@ fn read_values_for_button(
             interactable_vector.push(interactable);
         }
         "Heal" => {}
+        "Slotmaschine" =>{
+            let interactable = Interactable::new(
+                InteractableType::SlotMaschine,
+                Point {
+                    x: x.unwrap() * SCALING_FACTOR,
+                    y: y.unwrap() * SCALING_FACTOR,
+                },
+                floor_level.unwrap(),
+                parameter_1.unwrap(),
+                parameter_2.unwrap(),
+                14,
+                &renderer_data,
+            )
+            .unwrap();
+            interactable_vector.push(interactable);
+        }
         _ => {}
     }
     Ok(())

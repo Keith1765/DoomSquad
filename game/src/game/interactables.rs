@@ -1,23 +1,18 @@
 use minifb::Window;
-use quick_xml::events::{self, Event};
 
-use crate::parser::entities_parser::{map_enemy_type, parse_entities};
-use crate::parser::interactables_parser::parse_interactables;
+use crate::parser::entities_parser::map_enemy_type;
 use crate::{
     game::{self, generate_entities::*, map::Point, movement::Mover},
-    parser::map_parser::parse_map,
     render::{RendererData, sprites::Sprite},
 };
-use std::{
-    fmt,
-    fs::{self},
-    path::Path,
-};
+use rand::prelude::*;
+use std::fmt;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum InteractableType {
     Button(ButtonType),
     Elevator,
+    SlotMaschine,
 }
 #[derive(Clone, PartialEq, Eq)]
 pub enum ButtonType {
@@ -26,7 +21,7 @@ pub enum ButtonType {
     Heal,
 }
 
-pub enum InteractableEvent{
+pub enum InteractableEvent {
     SpawnMap(usize),
 }
 
@@ -39,6 +34,7 @@ impl fmt::Display for InteractableType {
                 ButtonType::Heal => "Heal Button",
             },
             InteractableType::Elevator => "Elevator",
+            InteractableType::SlotMaschine => "SlotMaschine",
         };
 
         write!(f, "{}", text)
@@ -71,7 +67,7 @@ impl Interactable {
                 floor_level: 0.0, //not used for interactables
                 foot_level: start_floor_level,
                 view_level: 0.0, ////not used for interactables
-                height: 0.0, //not really need for interactables
+                height: 0.0,     //not really need for interactables
                 facing_direction: 0.0,
             },
             sprite: Sprite {
@@ -85,7 +81,7 @@ impl Interactable {
             player_in_range: false,
             last_player_state: false,
             parameter_1: parameter_1,
-            parameter_2: parameter_2
+            parameter_2: parameter_2,
         };
         Some(interactable)
     }
@@ -94,15 +90,24 @@ impl Interactable {
         window: &Window,
         _renderer_data: &RendererData,
         game_state: &mut game::Game,
-    ) -> Vec<InteractableEvent>{
+    ) -> Vec<InteractableEvent> {
         let entity_type = self.interactable_type.clone();
         let mut events: Vec<InteractableEvent> = Vec::new();
         match entity_type {
             InteractableType::Button(button_type) => {
-                self.button_behaviour(window, _renderer_data, &button_type, game_state, &mut events);
-            } 
+                self.button_behaviour(
+                    window,
+                    _renderer_data,
+                    &button_type,
+                    game_state,
+                    &mut events,
+                );
+            }
             InteractableType::Elevator => {
                 self.elevator_behaviour(window, _renderer_data, game_state);
+            }
+            InteractableType::SlotMaschine => {
+                self.slot_maschine_behaviour(window, _renderer_data, game_state);
             }
         }
         return events;
@@ -117,8 +122,9 @@ impl Interactable {
     ) {
         if self.player_in_range //checking if player is in range and pressing interact
             && game_state.player.interacting //checking if player pressed F for interact
-            && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0 //checking if player is on the same hight level 
-            {
+            && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0
+        //checking if player is on the same hight level
+        {
             match button_type {
                 ButtonType::Map => {
                     events.push(InteractableEvent::SpawnMap(self.parameter_1 as usize))
@@ -156,10 +162,52 @@ impl Interactable {
     ) {
         if self.player_in_range //checking if player is in range and pressing interact
             && game_state.player.interacting //checking if player pressed F for interact
-            && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0 //checking if player is on the same hight level
+            && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0
+        //checking if player is on the same hight level
         {
             let player = &mut game_state.player;
             player.vertical_velocity = self.parameter_1;
         }
     }
+    fn slot_maschine_behaviour(
+        &mut self,
+        _window: &Window,
+        _renderer_data: &RendererData,
+        game_state: &mut game::Game,
+    ) {
+        if self.player_in_range //checking if player is in range and pressing interact
+            && game_state.player.interacting //checking if player pressed F for interact
+            && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0
+        //checking if player is on the same hight level
+        {
+            let mut rng = rand::rng();
+
+            let roll: u8 = rng.random_range(0..100);
+
+            match roll {
+                n if n == 99 => println!("u won"), //TODO map swap
+                n if n < 30 => {
+                    let enemy_type = map_enemy_type(self.parameter_1 as i32);
+                    let entity = generate_entities(
+                        enemy_type,
+                        Point {
+                            x: self.mover.position.x,
+                            y: self.mover.position.y,
+                        },
+                        self.mover.floor_level,
+                        0.0,
+                        _renderer_data,
+                    );
+                    game_state.entities.push(entity);
+                },
+                n if n >= 30 => {
+                    let player = &mut game_state.player;
+                    player.hp = player.hp + 10.0;
+                    println!("u got healt by 10")
+                },
+                _ => unreachable!(),
+            }
+        }
+    }
 }
+
