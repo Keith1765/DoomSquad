@@ -6,13 +6,13 @@ use crate::render::RendererData;
 use anyhow::Result;
 use quick_xml::Reader;
 use quick_xml::events::Event;
-use zip::ZipArchive;
-use zip::read::ZipFile;
 use std::fs::File;
 use std::io::Read;
+use zip::ZipArchive;
+use zip::read::ZipFile;
 
 pub struct ParserEntity {
-    pub if_player: bool,     //true if player, false if enemy
+    pub if_player: bool,   //true if player, false if enemy
     pub x: f64,            //pos from the point
     pub y: f64,            //pos from the point
     floor_level: f64,      //r from rgba-value
@@ -21,7 +21,7 @@ pub struct ParserEntity {
 }
 
 pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<Entity>> {
-        // ZIP-Archiv öffnen
+    // ZIP-Archiv öffnen
     let file = File::open(path)?;
     let mut archive = ZipArchive::new(file)?;
     let mut xml_file = archive.by_name("geogebra.xml")?;
@@ -30,7 +30,10 @@ pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<
     read_entitties_from_file(&mut xml_file, renderer_data)
 }
 
-pub fn read_entitties_from_file(xml_file: &mut ZipFile<File>, renderer_data: &RendererData) -> Result<Vec<Entity>> {
+pub fn read_entitties_from_file(
+    xml_file: &mut ZipFile<File>,
+    renderer_data: &RendererData,
+) -> Result<Vec<Entity>> {
     let mut xml_contents = String::new();
     xml_file.read_to_string(&mut xml_contents)?;
 
@@ -59,12 +62,7 @@ pub fn read_entitties_from_file(xml_file: &mut ZipFile<File>, renderer_data: &Re
                         read_values_for_player_from_point()? //TODO
                     }
                     (Some("point"), label) if label.starts_with("Enemy") => {
-                        read_point(
-                            &mut reader,
-                            &mut buf,
-                            &mut entities,
-                            renderer_data,
-                        )?
+                        read_point(&mut reader, &mut buf, &mut entities, renderer_data)?
                     }
                     _ => {}
                 }
@@ -79,7 +77,12 @@ pub fn read_entitties_from_file(xml_file: &mut ZipFile<File>, renderer_data: &Re
     Ok(entities)
 }
 
-fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, entities: &mut Vec<Entity>, renderer_data: &RendererData) -> Result<()> {
+fn read_point(
+    reader: &mut Reader<&[u8]>,
+    buf: &mut Vec<u8>,
+    entities: &mut Vec<Entity>,
+    renderer_data: &RendererData,
+) -> Result<()> {
     let mut x = None;
     let mut y = None;
     let mut floor_level = None;

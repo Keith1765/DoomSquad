@@ -40,12 +40,12 @@ impl Texture {
         let mut scaled_column: Vec<u32> = Vec::with_capacity(
             onscreen_height.clamp(0, renderer_data.screen_height_as_isize) as usize,
         );
-        let inworld_onscreen_ratio =  inworld_height / onscreen_height_as_f64;
+        let inworld_onscreen_ratio = inworld_height / onscreen_height_as_f64;
         for onscreen_y in onscreen_bottom.clamp(0, renderer_data.screen_height_as_isize)
             ..onscreen_top.clamp(0, renderer_data.screen_height_as_isize)
         {
             let onscreen_y_on_tex = onscreen_y - onscreen_bottom;
-            let inworld_y_on_tex = (onscreen_y_on_tex as f64 * inworld_onscreen_ratio) as usize; 
+            let inworld_y_on_tex = (onscreen_y_on_tex as f64 * inworld_onscreen_ratio) as usize;
             let v = inworld_y_on_tex % self.height;
             if let Some(color) = unscaled_column.get(v) {
                 scaled_column.push(*color);

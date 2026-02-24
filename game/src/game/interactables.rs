@@ -107,8 +107,9 @@ impl Interactable {
     ) {
         if self.player_in_range //checking if player is in range and pressing interact
             && game_state.player.interacting //checking if player pressed F for interact
-            && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0 //checking if player is on the same hight level 
-            {
+            && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0
+        //checking if player is on the same hight level
+        {
             match button_type {
                 ButtonType::Map => {
                     let path = Path::new("assets/maps/ggb");
@@ -125,7 +126,8 @@ impl Interactable {
                     if let Some(entry) = entries.get(index) {
                         let path = entry.path();
                         let map = parse_map(path.to_str().unwrap().to_string());
-                        let entitties = parse_entities(path.to_str().unwrap().to_string(), _renderer_data);
+                        let entitties =
+                            parse_entities(path.to_str().unwrap().to_string(), _renderer_data);
                         if let Ok(map) = map {
                             game_state.map = map;
                         } else {
@@ -172,7 +174,8 @@ impl Interactable {
     ) {
         if self.player_in_range //checking if player is in range and pressing interact
             && game_state.player.interacting //checking if player pressed F for interact
-            && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0 //checking if player is on the same hight level
+            && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0
+        //checking if player is on the same hight level
         {
             let player = &mut game_state.player;
             player.vertical_velocity = self.float_1;

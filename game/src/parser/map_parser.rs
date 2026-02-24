@@ -2,12 +2,12 @@
 
 use crate::game::map::{self, Point, ShapeType};
 use anyhow::Result;
-use zip::ZipArchive;
-use zip::read::ZipFile;
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
 use std::io::Read;
+use zip::ZipArchive;
+use zip::read::ZipFile;
 pub const SCALING_FACTOR: f64 = 100.0;
 
 pub struct GeogebraPoint {

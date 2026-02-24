@@ -1,14 +1,20 @@
-use crate::{game::{
-        entities::{Entity, EntityEvent::*}, entity_behaviour::death_behaviour, interactables::{ButtonType, Interactable, InteractableType}, map::Point, map_grid::MapGrid
-    }, render::RendererData};
+use crate::{
+    game::{
+        entities::{Entity, EntityEvent::*},
+        entity_behaviour::death_behaviour,
+        interactables::{ButtonType, Interactable, InteractableType},
+        map::Point,
+        map_grid::MapGrid,
+    },
+    render::RendererData,
+};
 
 use super::map::Map;
 use super::player::Player;
 use crate::game::damage_calculation::damage_check;
-use minifb::Window;
 use crate::parser::entities_parser::*;
 use crate::parser::interactables_parser::*;
-
+use minifb::Window;
 
 const DESPAWN_TIME: i32 = 300;
 const MAP_GRID_CELL_SIZE: f64 = 64.0;
@@ -73,7 +79,8 @@ impl Game {
                     25.0,
                     14,
                     &renderer_data,
-                ).unwrap(),
+                )
+                .unwrap(),
             ],
             // entities: vec![
             // generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 0.0, 0.0,renderer_data ),

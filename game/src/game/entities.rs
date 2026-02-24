@@ -80,6 +80,19 @@ impl fmt::Display for EntityType {
         write!(f, "{}", text)
     }
 }
+impl EntityType {
+    pub fn get_walk_animation_data(&self) -> Option<(usize, usize, usize)> {
+        match self {
+            // TODO insert proper values here
+            EntityType::MeleeEnemy => Some((0, 1, 15)),
+            EntityType::WeakEnemy => Some((1, 2, 15)),
+            EntityType::SummonerEnemy => Some((2, 0, 15)),
+            EntityType::RangedEnemy => Some((3, 0, 15)),
+            EntityType::Archer => Some((1, 3, 15)),
+            _ => None, // other types do not have walking animations
+        }
+    }
+}
 #[derive(Clone)]
 pub enum EntityEvent {
     Spawn(Entity),
@@ -185,7 +198,13 @@ impl Entity {
         }
 
         //set view level correctly (excluded projectiles)
-        if !matches!(self.entity_type, EntityType::EnemyArrow | EntityType::EnemyBullet | EntityType::PlayerArrow | EntityType::PlayerBullet){
+        if !matches!(
+            self.entity_type,
+            EntityType::EnemyArrow
+                | EntityType::EnemyBullet
+                | EntityType::PlayerArrow
+                | EntityType::PlayerBullet
+        ) {
             self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
         }
 
@@ -203,7 +222,12 @@ impl Entity {
         }
         //entities never move when very close to player
         if self.mover.position.distance_to(&player_position) > self.size + MELEE_ENEMY_RANGE - 0.1 {
-            self.mover.step(move_speed, 0.0, map, false);
+            let step_succesful = self.mover.step(move_speed, 0.0, map, false);
+            if step_succesful {
+                self.sprite.continue_or_start_walk_cycle(&self.entity_type);
+            } else {
+                self.sprite.walk_cycle_handler = None; // if cant step, stop walk animation
+            }
         }
     }
 

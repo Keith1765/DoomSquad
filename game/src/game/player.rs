@@ -1,10 +1,14 @@
 use super::map::Map;
-use crate::game::{entities::{
-    ARROW_COOLDOWN, EntityEvent::{self, Spawn},
-    EntityType::{PlayerArrow, PlayerBullet},
-}, movement::find_blocks_were_currently_in};
 use crate::game::generate_entities::generate_entities;
 use crate::game::player::LastInputDirection::*;
+use crate::game::{
+    entities::{
+        ARROW_COOLDOWN,
+        EntityEvent::{self, Spawn},
+        EntityType::{PlayerArrow, PlayerBullet},
+    },
+    movement::find_blocks_were_currently_in,
+};
 use crate::{
     SCREEN_WIDTH,
     game::{map::Point, movement::Mover},
@@ -112,16 +116,16 @@ impl Player {
     ) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
         //reseting keyinput idfk how to do it an other way
-        self.interacting = false; 
-        if window.is_key_pressed(Key::F, KeyRepeat::No){
-           self.interacting = true; 
+        self.interacting = false;
+        if window.is_key_pressed(Key::F, KeyRepeat::No) {
+            self.interacting = true;
         }
 
         if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) {
             let bullet = generate_entities(
                 PlayerBullet,
                 self.mover.position,
-                self.mover.view_level, 
+                self.mover.view_level,
                 self.mover.facing_direction,
                 renderer_data,
             );
