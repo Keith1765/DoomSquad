@@ -1,4 +1,6 @@
-use minifb::Window;
+
+
+use winit_input_helper::WinitInputHelper;
 
 use crate::parser::entities_parser::{map_enemy_type, parse_entities};
 use crate::{
@@ -83,24 +85,24 @@ impl Interactable {
     }
     pub fn update(
         &mut self,
-        window: &Window,
+        input: &WinitInputHelper,
         _renderer_data: &RendererData,
         game_state: &mut game::Game,
     ) {
         let entity_type = self.interactable_type.clone();
         match entity_type {
             InteractableType::Button(button_type) => {
-                self.button_behaviour(window, _renderer_data, &button_type, game_state);
+                self.button_behaviour(input, _renderer_data, &button_type, game_state);
             }
             InteractableType::Elevator => {
-                self.elevator_behaviour(window, _renderer_data, game_state);
+                self.elevator_behaviour(input, _renderer_data, game_state);
             }
             _ => {}
         }
     }
     fn button_behaviour(
         &mut self,
-        _window: &Window,
+        _input: &WinitInputHelper,
         _renderer_data: &RendererData,
         button_type: &ButtonType,
         game_state: &mut game::Game,
@@ -166,7 +168,7 @@ impl Interactable {
     }
     fn elevator_behaviour(
         &mut self,
-        _window: &Window,
+        _input: &WinitInputHelper,
         _renderer_data: &RendererData,
         game_state: &mut game::Game,
     ) {
