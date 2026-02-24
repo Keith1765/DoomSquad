@@ -1,5 +1,5 @@
 use crate::{game::{
-        entities::{Entity, EntityEvent::*}, entity_behaviour::death_behaviour, interactables::{ButtonType, Interactable, InteractableType}, map::Point, map_grid::MapGrid
+        entities::{Entity, EntityEvent::*}, entity_behaviour::death_behaviour, interactables::{ButtonType, Interactable, InteractableType}, map::Point, map_grid::{self, MapGrid}
     }, render::RendererData};
 
 use super::map::Map;
@@ -12,7 +12,7 @@ use crate::parser::interactables_parser::*;
 
 const DESPAWN_TIME: i32 = 300;
 const MAP_GRID_CELL_SIZE: f64 = 64.0;
-const INTERACTABLE_RANGE: f64 = 30.0;
+pub const INTERACTABLE_RANGE: f64 = 30.0;
 
 #[derive(Clone)]
 pub struct Game {
@@ -34,47 +34,48 @@ impl Game {
                 &renderer_data,
             )
             .unwrap(),
-            interactables: vec![
-                Interactable::new(
-                    InteractableType::Button(ButtonType::Map),
-                    Point { x: 250.0, y: 5.0 },
-                    0.0,
-                    16.0,
-                    1.0,
-                    14,
-                    &renderer_data,
-                )
-                .unwrap(),
-                Interactable::new(
-                    InteractableType::Button(ButtonType::Spawner),
-                    Point { x: 350.0, y: 5.0 },
-                    0.0,
-                    16.0,
-                    6.0,
-                    14,
-                    &renderer_data,
-                )
-                .unwrap(),
-                Interactable::new(
-                    InteractableType::Button(ButtonType::Heal),
-                    Point { x: 450.0, y: 5.0 },
-                    0.0,
-                    16.0,
-                    50.0,
-                    14,
-                    &renderer_data,
-                )
-                .unwrap(),
-                Interactable::new(
-                    InteractableType::Elevator,
-                    Point { x: 550.0, y: 5.0 },
-                    0.0,
-                    16.0,
-                    25.0,
-                    14,
-                    &renderer_data,
-                ).unwrap(),
-            ],
+            interactables : parse_interactables("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string(), &renderer_data).unwrap(),
+            // interactables: vec![
+            //     Interactable::new(
+            //         InteractableType::Button(ButtonType::Map),
+            //         Point { x: 250.0, y: 5.0 },
+            //         0.0,
+            //         1.0,
+            //         0.0,
+            //         14,
+            //         &renderer_data,
+            //     )
+            //     .unwrap(),
+            //     Interactable::new(
+            //         InteractableType::Button(ButtonType::Spawner),
+            //         Point { x: 350.0, y: 5.0 },
+            //         0.0,
+            //         6.0,
+            //         0.0,
+            //         14,
+            //         &renderer_data,
+            //     )
+            //     .unwrap(),
+            //     Interactable::new(
+            //         InteractableType::Button(ButtonType::Heal),
+            //         Point { x: 450.0, y: 5.0 }, //pos
+            //         50.0, //floor_lvl
+            //         50.0, //parameter_1
+            //         0.0, //parameter_2
+            //         14, //texture
+            //         &renderer_data, //render_data
+            //     )
+            //     .unwrap(),
+            //     Interactable::new(
+            //         InteractableType::Elevator,
+            //         Point { x: 550.0, y: 5.0 },
+            //         0.0,
+            //         25.0,
+            //         0.0,//parameter_2
+            //         14,
+            //         &renderer_data,
+            //     ).unwrap(),
+            // ],
             // entities: vec![
             // generate_entities(Archer,Point { x: 200.0, y: 200.0 }, 0.0, 0.0,renderer_data ),
             // generate_entities(RedBarrel, Point { x: 240.0, y: 200.0 }, 0.0, 0.0, renderer_data),
@@ -96,11 +97,6 @@ impl Game {
     }
 
     pub fn update(&mut self, window: &Window, renderer_data: &RendererData) {
-        //Interactables
-
-        for i in 0..self.interactables.len() {
-            self.player_is_in_range_of_interactable();
-        }
         //update all interactables and add possible spawn events
         let mut interactables = std::mem::take(&mut self.interactables);
 
@@ -259,25 +255,4 @@ impl Game {
     //         self.entities[i].hp = 0.0; //o7
     //     }
     // }
-
-    fn player_is_in_range_of_interactable(&mut self) {
-        self.map_grid.update_interactables(&self.interactables);
-
-        for interactable in &mut self.interactables {
-            interactable.player_in_range = false;
-        }
-
-        let player_position = self.player.mover.position;
-
-        let neighbours = self.map_grid.get_interactable_neighbours(player_position);
-
-        for j in neighbours {
-            let interactable_position = self.interactables[j].mover.position;
-            let distance_from_player_to_interactable =
-                player_position.distance_to(&interactable_position);
-            if distance_from_player_to_interactable <= INTERACTABLE_RANGE {
-                self.interactables[j].player_in_range = true;
-            }
-        }
-    }
 }

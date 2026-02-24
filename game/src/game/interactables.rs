@@ -1,6 +1,7 @@
 use minifb::Window;
 
 use crate::parser::entities_parser::{map_enemy_type, parse_entities};
+use crate::parser::interactables_parser::parse_interactables;
 use crate::{
     game::{self, generate_entities::*, map::Point, movement::Mover},
     parser::map_parser::parse_map,
@@ -45,7 +46,8 @@ pub struct Interactable {
     pub player_in_range: bool,
     pub last_player_state: bool,
     pub interactable_type: InteractableType,
-    pub float_1: f64,
+    pub parameter_1: f64,
+    pub parameter_2: f64,
 }
 
 impl Interactable {
@@ -53,18 +55,18 @@ impl Interactable {
         interactable_type: InteractableType,
         position: Point,
         start_floor_level: f64,
-        collision_height: f64,
-        float_1: f64,
+        parameter_1: f64,
+        parameter_2: f64,
         sprite_texture_id: usize,
         renderer_data: &RendererData,
     ) -> Option<Self> {
         let interactable = Interactable {
             mover: Mover {
                 position,
-                floor_level: start_floor_level,
+                floor_level: 0.0, //not used for interactables
                 foot_level: start_floor_level,
-                view_level: start_floor_level,
-                height: collision_height,
+                view_level: 0.0, ////not used for interactables
+                height: 0.0, //not really need for interactables
                 facing_direction: 0.0,
             },
             sprite: Sprite {
@@ -77,7 +79,8 @@ impl Interactable {
             interactable_type,
             player_in_range: false,
             last_player_state: false,
-            float_1: float_1,
+            parameter_1: parameter_1,
+            parameter_2: parameter_2
         };
         Some(interactable)
     }
@@ -95,7 +98,6 @@ impl Interactable {
             InteractableType::Elevator => {
                 self.elevator_behaviour(window, _renderer_data, game_state);
             }
-            _ => {}
         }
     }
     fn button_behaviour(
@@ -121,27 +123,34 @@ impl Interactable {
                         }
                     };
                     entries.sort_by_key(|e| e.path());
-                    let index = self.float_1 as usize;
+                    let index = self.parameter_1 as usize;
                     if let Some(entry) = entries.get(index) {
                         let path = entry.path();
                         let map = parse_map(path.to_str().unwrap().to_string());
                         let entitties = parse_entities(path.to_str().unwrap().to_string(), _renderer_data);
+                        let interactables=  parse_interactables(path.to_str().unwrap().to_string(), _renderer_data);
+
                         if let Ok(map) = map {
                             game_state.map = map;
                         } else {
                             eprintln!("Error parsing map");
-                            return;
                         }
                         if let Ok(entities) = entitties {
                             game_state.entities = entities;
                         } else {
                             eprintln!("Error parsing entities");
                         }
+                        if let Ok(interactables) = interactables {
+                            game_state.interactables = interactables;
+                        } else {
+                            eprintln!("Error parsing interactables");
+                            return;
+                        }
                     }
                 }
                 ButtonType::Spawner => {
                     println!("Spawner button pressed!");
-                    let enemy_type = map_enemy_type(self.float_1 as i32);
+                    let enemy_type = map_enemy_type(self.parameter_1 as i32);
                     println!("Spawning entity of type: {}", enemy_type);
                     let entity = generate_entities(
                         enemy_type,
@@ -158,7 +167,7 @@ impl Interactable {
                 ButtonType::Heal => {
                     println!("Player health before: {}", game_state.player.hp);
                     let player = &mut game_state.player;
-                    player.hp = player.hp + self.float_1;
+                    player.hp = player.hp + self.parameter_1;
                     println!("Player healed! Current HP: {}", player.hp);
                 }
             }
@@ -175,7 +184,7 @@ impl Interactable {
             && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0 //checking if player is on the same hight level
         {
             let player = &mut game_state.player;
-            player.vertical_velocity = self.float_1;
+            player.vertical_velocity = self.parameter_1;
         }
     }
 }
