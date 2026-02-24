@@ -45,7 +45,7 @@ impl Audio {
         }
 
         if just_jumped {
-            self.play_sfx("jump");
+            self.play_sfx("jump", 1.0);
         }
     }
 
@@ -83,7 +83,7 @@ impl Audio {
         }
     }
 
-    pub fn play_sfx(&self, name: &str) {
+    pub fn play_sfx(&self, name: &str, volume: f32) {
         let data = match self.sfx_data.get(name) {
             Some(d) => d,
             None => return,
@@ -93,6 +93,7 @@ impl Audio {
             Decoder::new(BufReader::new(cursor)),
             Sink::try_new(&self.handle),
         ) {
+            sink.set_volume(volume);
             sink.append(decoder);
             sink.detach();
         }
