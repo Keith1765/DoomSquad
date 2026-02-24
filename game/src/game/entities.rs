@@ -35,7 +35,7 @@ pub const RED_BARREL_SIZE: f64 = 30.0;
 pub const BULLET_TRAVEL_COUNTDOWN: i32 = 2;
 pub const ARROW_SPEED: f64 = 15.0;
 pub const ARROW_DMG: f64 = 40.0;
-pub const EXPLODED_RED_BARREL_HP: f64 = 30.0;
+pub const EXPLODED_RED_BARREL_HP: f64 = 14.0;
 pub const RED_BARREL_DMG: f64 = 1000.0;
 pub const EXPLODED_RED_BARREL_SIZE: f64 = 20000.0;
 pub const MELEE_ENEMY_ATTACK_COOLDOWN: i32 = 20;
@@ -129,7 +129,7 @@ impl Entity {
                 width: renderer_data.textures.get(&sprite_texture_id)?.width as f64,
                 action_sprite_switcher: None,
                 walk_cycle_handler: None,
-            },
+                },
             gravity: GRAVITY_CONST,
             vertical_velocity: 0.0,
             entity_type: entity_type,
