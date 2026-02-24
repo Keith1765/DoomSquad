@@ -1,4 +1,5 @@
 use minifb::Window;
+use quick_xml::events::{self, Event};
 
 use crate::parser::entities_parser::{map_enemy_type, parse_entities};
 use crate::parser::interactables_parser::parse_interactables;
@@ -23,6 +24,10 @@ pub enum ButtonType {
     Map,
     Spawner,
     Heal,
+}
+
+pub enum InteractableEvent{
+    SpawnMap(usize),
 }
 
 impl fmt::Display for InteractableType {
@@ -89,16 +94,18 @@ impl Interactable {
         window: &Window,
         _renderer_data: &RendererData,
         game_state: &mut game::Game,
-    ) {
+    ) -> Vec<InteractableEvent>{
         let entity_type = self.interactable_type.clone();
+        let mut events: Vec<InteractableEvent> = Vec::new();
         match entity_type {
             InteractableType::Button(button_type) => {
-                self.button_behaviour(window, _renderer_data, &button_type, game_state);
-            }
+                self.button_behaviour(window, _renderer_data, &button_type, game_state, &mut events);
+            } 
             InteractableType::Elevator => {
                 self.elevator_behaviour(window, _renderer_data, game_state);
             }
         }
+        return events;
     }
     fn button_behaviour(
         &mut self,
@@ -106,6 +113,7 @@ impl Interactable {
         _renderer_data: &RendererData,
         button_type: &ButtonType,
         game_state: &mut game::Game,
+        events: &mut Vec<InteractableEvent>,
     ) {
         if self.player_in_range //checking if player is in range and pressing interact
             && game_state.player.interacting //checking if player pressed F for interact
@@ -113,40 +121,7 @@ impl Interactable {
             {
             match button_type {
                 ButtonType::Map => {
-                    let path = Path::new("assets/maps/ggb");
-                    let entries_result = fs::read_dir(path);
-                    let mut entries: Vec<_> = match entries_result {
-                        Ok(read_dir) => read_dir.filter_map(Result::ok).collect(),
-                        Err(e) => {
-                            eprintln!("Error when reading directory: {}", e);
-                            return;
-                        }
-                    };
-                    entries.sort_by_key(|e| e.path());
-                    let index = self.parameter_1 as usize;
-                    if let Some(entry) = entries.get(index) {
-                        let path = entry.path();
-                        let map = parse_map(path.to_str().unwrap().to_string());
-                        let entitties = parse_entities(path.to_str().unwrap().to_string(), _renderer_data);
-                        let interactables=  parse_interactables(path.to_str().unwrap().to_string(), _renderer_data);
-
-                        if let Ok(map) = map {
-                            game_state.map = map;
-                        } else {
-                            eprintln!("Error parsing map");
-                        }
-                        if let Ok(entities) = entitties {
-                            game_state.entities = entities;
-                        } else {
-                            eprintln!("Error parsing entities");
-                        }
-                        if let Ok(interactables) = interactables {
-                            game_state.interactables = interactables;
-                        } else {
-                            eprintln!("Error parsing interactables");
-                            return;
-                        }
-                    }
+                    events.push(InteractableEvent::SpawnMap(self.parameter_1 as usize))
                 }
                 ButtonType::Spawner => {
                     println!("Spawner button pressed!");
