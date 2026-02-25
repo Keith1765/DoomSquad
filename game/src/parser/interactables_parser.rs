@@ -63,7 +63,20 @@ pub fn read_interactables_from_file(
                             renderer_data,
                             interactable_string_type.clone(),
                         )?,
-                        "Elevator" => {}
+                        "Elevator" => read_values_for_rest(
+                            &mut reader,
+                            &mut buf,
+                            &mut interactable_vector,
+                            renderer_data,
+                            interactable_string_type,
+                        )?,
+                        "Slotmaschine" => read_values_for_rest(
+                            &mut reader,
+                            &mut buf,
+                            &mut interactable_vector,
+                            renderer_data,
+                            interactable_string_type,
+                        )?,
 
                         _ => {}
                     }
@@ -130,7 +143,7 @@ fn read_values_for_button(
                 floor_level.unwrap(),
                 parameter_1.unwrap(),
                 parameter_2.unwrap(),
-                14,
+                17,
                 &renderer_data,
             )
             .unwrap();
@@ -146,13 +159,92 @@ fn read_values_for_button(
                 floor_level.unwrap(),
                 parameter_1.unwrap(),
                 parameter_2.unwrap(),
-                14,
+                18,
                 &renderer_data,
             )
             .unwrap();
             interactable_vector.push(interactable);
         }
-        "Heal" => {}
+        "Heal" => {
+            let interactable = Interactable::new(
+                InteractableType::Button(ButtonType::Heal),
+                Point {
+                    x: x.unwrap() * SCALING_FACTOR,
+                    y: y.unwrap() * SCALING_FACTOR,
+                },
+                floor_level.unwrap(),
+                parameter_1.unwrap(),
+                parameter_2.unwrap(),
+                16,
+                &renderer_data,
+            )
+            .unwrap();
+            interactable_vector.push(interactable);
+        }
+        _ => {}
+    }
+    Ok(())
+}
+fn read_values_for_rest(
+    reader: &mut Reader<&[u8]>,
+    buf: &mut Vec<u8>,
+    interactable_vector: &mut Vec<Interactable>,
+    renderer_data: &RendererData,
+    interactable_string_type: Vec<String>,
+) -> Result<()> {
+    let mut x = None;
+    let mut y = None;
+    let mut floor_level = None;
+    let mut parameter_1 = None;
+    let mut parameter_2 = None;
+    loop {
+        match reader.read_event_into(buf)? {
+            Event::Empty(ref e) if e.name().as_ref() == b"coords" => {
+                for attr in e.attributes() {
+                    let attr = attr?;
+                    match attr.key.as_ref() {
+                        b"x" => x = Some(attr.unescape_value()?.parse::<f64>()?),
+                        b"y" => y = Some(attr.unescape_value()?.parse::<f64>()?),
+                        _ => {}
+                    }
+                }
+            }
+            Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
+                for attr in e.attributes() {
+                    let attr = attr?;
+
+                    match attr.key.as_ref() {
+                        b"r" => floor_level = Some(attr.unescape_value()?.parse::<f64>()?),
+                        b"g" => parameter_1 = Some(attr.unescape_value()?.parse::<f64>()?),
+                        b"b" => parameter_2 = Some(attr.unescape_value()?.parse::<f64>()?),
+                        //b"alpha" => idk = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
+                        _ => {}
+                    }
+                }
+            }
+            Event::End(ref e) if e.name().as_ref() == b"element" => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    match interactable_string_type[1].as_str() {
+        "Elevator" =>{
+            println!("elevator");
+            let interactable = Interactable::new(
+                InteractableType::Elevator,
+                Point {
+                    x: x.unwrap() * SCALING_FACTOR,
+                    y: y.unwrap() * SCALING_FACTOR,
+                },
+                floor_level.unwrap(),
+                parameter_1.unwrap(),
+                parameter_2.unwrap(),
+                15,
+                &renderer_data,
+            )
+            .unwrap();
+            interactable_vector.push(interactable);
+        }
         "Slotmaschine" =>{
             let interactable = Interactable::new(
                 InteractableType::SlotMaschine,
@@ -163,17 +255,16 @@ fn read_values_for_button(
                 floor_level.unwrap(),
                 parameter_1.unwrap(),
                 parameter_2.unwrap(),
-                14,
+                19,
                 &renderer_data,
             )
             .unwrap();
             interactable_vector.push(interactable);
         }
-        _ => {}
+        _ =>{}
     }
     Ok(())
 }
-
 pub fn split_string_uppercase(input: &str) -> Vec<String> {
     let cleaned = if let Some(prefix) = input.strip_suffix('}') {
         if let Some(pos) = prefix.rfind("_{") {
