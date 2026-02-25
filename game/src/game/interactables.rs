@@ -12,7 +12,7 @@ use std::fmt;
 pub enum InteractableType {
     Button(ButtonType),
     Elevator,
-    SlotMaschine,
+    SlotMachine,
 }
 #[derive(Clone, PartialEq, Eq)]
 pub enum ButtonType {
@@ -34,7 +34,7 @@ impl fmt::Display for InteractableType {
                 ButtonType::Heal => "Heal Button",
             },
             InteractableType::Elevator => "Elevator",
-            InteractableType::SlotMaschine => "SlotMaschine",
+            InteractableType::SlotMachine => "SlotMaschine",
         };
 
         write!(f, "{}", text)
@@ -108,7 +108,7 @@ impl Interactable {
             InteractableType::Elevator => {
                 self.elevator_behaviour(window, _renderer_data, game_state);
             }
-            InteractableType::SlotMaschine => {
+            InteractableType::SlotMachine => {
                 self.slot_maschine_behaviour(window, _renderer_data, game_state);
             }
         }

@@ -1,7 +1,7 @@
 use crate::game::map::Point;
 use crate::parser::map_parser::SCALING_FACTOR;
 use crate::render::RendererData;
-use anyhow::Result;
+use anyhow::{Error, Result};
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
@@ -81,7 +81,7 @@ fn read_coords_for_player(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>) -> Resu
     }
 
     Ok(Point {
-        x: x.unwrap() * SCALING_FACTOR,
-        y: y.unwrap() * SCALING_FACTOR,
+        x: x.ok_or(Error::msg("Error Parsing player at x"))? * SCALING_FACTOR,
+        y: y.ok_or(Error::msg("Error Parsing player at y"))? * SCALING_FACTOR,
     })
 }

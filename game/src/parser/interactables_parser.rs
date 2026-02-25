@@ -2,7 +2,7 @@ use crate::game::interactables::*;
 use crate::game::map::Point;
 use crate::render::RendererData;
 
-use anyhow::Result;
+use anyhow::{Error, Result};
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use zip::ZipArchive;
@@ -138,48 +138,48 @@ fn read_values_for_button(
             let interactable = Interactable::new(
                 InteractableType::Button(ButtonType::Map),
                 Point {
-                    x: x.unwrap() * SCALING_FACTOR,
-                    y: y.unwrap() * SCALING_FACTOR,
+                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
+                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
                 },
-                floor_level.unwrap(),
-                parameter_1.unwrap(),
-                parameter_2.unwrap(),
+                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
+                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
+                parameter_2.ok_or(Error::msg("Pasrser Error at parameter 2"))?,
                 17,
                 &renderer_data,
             )
-            .unwrap();
+            .ok_or(Error::msg("Pasrser Error at interactable"))?;
             interactable_vector.push(interactable);
         }
         "Spawner" => {
             let interactable = Interactable::new(
                 InteractableType::Button(ButtonType::Spawner),
                 Point {
-                    x: x.unwrap() * SCALING_FACTOR,
-                    y: y.unwrap() * SCALING_FACTOR,
+                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
+                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
                 },
-                floor_level.unwrap(),
-                parameter_1.unwrap(),
-                parameter_2.unwrap(),
+                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
+                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
+                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
                 18,
                 &renderer_data,
             )
-            .unwrap();
+            .ok_or(Error::msg("Pasrser Error at interactable"))?;
             interactable_vector.push(interactable);
         }
         "Heal" => {
             let interactable = Interactable::new(
                 InteractableType::Button(ButtonType::Heal),
                 Point {
-                    x: x.unwrap() * SCALING_FACTOR,
-                    y: y.unwrap() * SCALING_FACTOR,
+                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
+                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
                 },
-                floor_level.unwrap(),
-                parameter_1.unwrap(),
-                parameter_2.unwrap(),
+                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
+                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
+                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
                 16,
                 &renderer_data,
             )
-            .unwrap();
+            .ok_or(Error::msg("Pasrser Error at interactable"))?;
             interactable_vector.push(interactable);
         }
         _ => {}
@@ -230,36 +230,35 @@ fn read_values_for_rest(
     }
     match interactable_string_type[1].as_str() {
         "Elevator" =>{
-            println!("elevator");
             let interactable = Interactable::new(
                 InteractableType::Elevator,
                 Point {
-                    x: x.unwrap() * SCALING_FACTOR,
-                    y: y.unwrap() * SCALING_FACTOR,
+                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
+                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
                 },
-                floor_level.unwrap(),
-                parameter_1.unwrap(),
-                parameter_2.unwrap(),
+                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
+                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
+                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
                 15,
                 &renderer_data,
             )
-            .unwrap();
+            .ok_or(Error::msg("Pasrser Error at interactable"))?;
             interactable_vector.push(interactable);
         }
         "Slotmaschine" =>{
             let interactable = Interactable::new(
-                InteractableType::SlotMaschine,
+                InteractableType::SlotMachine,
                 Point {
-                    x: x.unwrap() * SCALING_FACTOR,
-                    y: y.unwrap() * SCALING_FACTOR,
+                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
+                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
                 },
-                floor_level.unwrap(),
-                parameter_1.unwrap(),
-                parameter_2.unwrap(),
+                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
+                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
+                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
                 19,
                 &renderer_data,
             )
-            .unwrap();
+            .ok_or(Error::msg("Pasrser Error at interactable"))?;
             interactable_vector.push(interactable);
         }
         _ =>{}

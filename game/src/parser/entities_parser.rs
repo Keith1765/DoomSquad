@@ -3,7 +3,7 @@ use crate::game::{generate_entities::*};
 use crate::game::map::Point;
 use crate::parser::map_parser::SCALING_FACTOR;
 use crate::render::RendererData;
-use anyhow::Result;
+use anyhow::{Error, Result};
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
@@ -115,15 +115,15 @@ fn read_point(
         buf.clear();
     }
 
-    let entity_type = map_enemy_type(enemy_type_num.unwrap());
+    let entity_type = map_enemy_type(enemy_type_num.ok_or(Error::msg("Error Parsing entity at entity_type"))?);
     let entities_pushing = generate_entities(
         entity_type,
         Point {
-            x: x.unwrap() * SCALING_FACTOR,
-            y: y.unwrap() * SCALING_FACTOR,
+            x: x.ok_or(Error::msg("Error Parsing entity at x"))? * SCALING_FACTOR,
+            y: y.ok_or(Error::msg("Error Parsing entity at y"))? * SCALING_FACTOR,
         },
-        floor_level.unwrap(),
-        facing_direction.unwrap(),
+        floor_level.ok_or(Error::msg("Error Parsing entity at floor_level"))?,
+        facing_direction.ok_or(Error::msg("Error Parsing entity at facing_direction"))?,
         renderer_data,
     );
 
