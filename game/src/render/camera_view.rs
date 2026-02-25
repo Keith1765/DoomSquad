@@ -2,8 +2,9 @@ use core::f64;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-use crate::game::Game;
+use crate::game::{Game, player};
 use crate::render::blocks_walls::task_column;
+use crate::render::player_hp_bar::draw_player_hp_bar;
 // TODO LEVEL_HEIGHT and other map data into sth similar to renderer_data?
 use crate::render::raycast::{MapSlice, raycast};
 use crate::render::renderer_init::RendererData;
@@ -113,6 +114,10 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
         draw_reference_points(buffer);
     }
     //draw_texture_bottom_left(buffer, renderer_data.textures.get(&0).unwrap());
+
+    //draw playwer hp bar
+    draw_player_hp_bar(buffer,&renderer_data, game.player.hp);
+
 }
 
 fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {

@@ -1,9 +1,9 @@
 use crate::game::entities::{Entity, EntityType};
-use crate::game::generate_entities::*;
+use crate::game::{generate_entities::*};
 use crate::game::map::Point;
 use crate::parser::map_parser::SCALING_FACTOR;
 use crate::render::RendererData;
-use anyhow::Result;
+use anyhow::{Error, Result};
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::fs::File;
@@ -29,7 +29,6 @@ pub fn parse_entities(path: String, renderer_data: &RendererData) -> Result<Vec<
     // XML-Inhalt lesen
     read_entitties_from_file(&mut xml_file, renderer_data)
 }
-
 pub fn read_entitties_from_file(
     xml_file: &mut ZipFile<File>,
     renderer_data: &RendererData,
@@ -41,7 +40,7 @@ pub fn read_entitties_from_file(
     let mut buf = Vec::new();
 
     let mut entities: Vec<Entity> = Vec::new();
-
+    
     loop {
         match reader.read_event_into(&mut buf)? {
             Event::Start(ref e) if e.name().as_ref() == b"element" => {
@@ -58,9 +57,6 @@ pub fn read_entitties_from_file(
                 }
 
                 match (element_type.as_deref(), label.as_str()) {
-                    (Some("point"), label) if label.starts_with("Player") => {
-                        read_values_for_player_from_point()? //TODO
-                    }
                     (Some("point"), label) if label.starts_with("Enemy") => {
                         read_point(&mut reader, &mut buf, &mut entities, renderer_data)?
                     }
@@ -80,7 +76,7 @@ pub fn read_entitties_from_file(
 fn read_point(
     reader: &mut Reader<&[u8]>,
     buf: &mut Vec<u8>,
-    entities: &mut Vec<Entity>,
+    player_vec: &mut Vec<Entity>,
     renderer_data: &RendererData,
 ) -> Result<()> {
     let mut x = None;
@@ -118,27 +114,23 @@ fn read_point(
         }
         buf.clear();
     }
-    let entity_type = map_enemy_type(enemy_type_num.unwrap());
 
+    let entity_type = map_enemy_type(enemy_type_num.ok_or(Error::msg("Error Parsing entity at entity_type"))?);
     let entities_pushing = generate_entities(
         entity_type,
         Point {
-            x: x.unwrap() * SCALING_FACTOR,
-            y: y.unwrap() * SCALING_FACTOR,
+            x: x.ok_or(Error::msg("Error Parsing entity at x"))? * SCALING_FACTOR,
+            y: y.ok_or(Error::msg("Error Parsing entity at y"))? * SCALING_FACTOR,
         },
-        floor_level.unwrap(),
-        facing_direction.unwrap(),
+        floor_level.ok_or(Error::msg("Error Parsing entity at floor_level"))?,
+        facing_direction.ok_or(Error::msg("Error Parsing entity at facing_direction"))?,
         renderer_data,
     );
 
-    entities.push(entities_pushing);
+    player_vec.push(entities_pushing);
     Ok(())
 }
 
-fn read_values_for_player_from_point() -> Result<()> {
-    //TODO if needed, implement player parsing, but for now we can just spawn player at start pos
-    Ok(())
-}
 pub fn map_enemy_type(enemy_type_num: i32) -> EntityType {
     match enemy_type_num {
         1 => EntityType::PlayerBullet,
@@ -150,7 +142,6 @@ pub fn map_enemy_type(enemy_type_num: i32) -> EntityType {
         7 => EntityType::EnemyArrow,
         8 => EntityType::PlayerArrow,
         9 => EntityType::Archer,
-        10 => EntityType::Button,
         _ => EntityType::Dummy,
     }
 }

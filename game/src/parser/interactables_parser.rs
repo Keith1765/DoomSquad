@@ -2,9 +2,11 @@ use crate::game::interactables::*;
 use crate::game::map::Point;
 use crate::render::RendererData;
 
-use anyhow::Result;
+use anyhow::{Error, Result};
 use quick_xml::Reader;
 use quick_xml::events::Event;
+use zip::ZipArchive;
+use zip::read::ZipFile;
 
 use std::fs::File;
 use std::io::Read;
@@ -15,48 +17,66 @@ pub fn parse_interactables(
     path: String,
     renderer_data: &RendererData,
 ) -> Result<Vec<Interactable>> {
-    read_interactables_from_file(path, renderer_data)
+    // ZIP-Archiv öffnen
+    let file = File::open(path)?;
+    let mut archive = ZipArchive::new(file)?;
+    let mut xml_file = archive.by_name("geogebra.xml")?;
+
+    // XML-Inhalt lesen
+    read_interactables_from_file(&mut xml_file, renderer_data)
 }
 
 pub fn read_interactables_from_file(
-    path: String,
+    xml_file: &mut ZipFile<File>,
     renderer_data: &RendererData,
 ) -> Result<Vec<Interactable>> {
-    let mut file = File::open(path)?;
     let mut xml_contents = String::new();
-    file.read_to_string(&mut xml_contents)?;
+    xml_file.read_to_string(&mut xml_contents)?;
 
     let mut reader = Reader::from_str(&xml_contents);
     let mut buf = Vec::new();
 
-    let mut Interactable: Vec<Interactable> = Vec::new();
+    let mut interactable_vector: Vec<Interactable> = Vec::new();
 
     loop {
         match reader.read_event_into(&mut buf)? {
             Event::Start(ref e) if e.name().as_ref() == b"element" => {
-                let mut element_type = None;
+                //let mut element_type = None; //needed for later
                 let mut label = "unnamed".to_string();
 
                 for attr in e.attributes() {
                     let attr = attr?;
                     match attr.key.as_ref() {
-                        b"type" => element_type = Some(attr.unescape_value()?.to_string()),
+                        //b"type" => element_type = Some(attr.unescape_value()?.to_string()),
                         b"label" => label = attr.unescape_value()?.to_string(),
                         _ => {}
                     }
                 }
                 let interactable_string_type = split_string_uppercase(label.as_str());
                 if interactable_string_type[0] == "Interactable" {
-                    match (interactable_string_type[1].as_str()) {
+                    match interactable_string_type[1].as_str() {
                         //todo
                         "Button" => read_values_for_button(
                             &mut reader,
                             &mut buf,
-                            &mut Interactable,
+                            &mut interactable_vector,
                             renderer_data,
                             interactable_string_type.clone(),
                         )?,
-                        "Elevator" => {}
+                        "Elevator" => read_values_for_rest(
+                            &mut reader,
+                            &mut buf,
+                            &mut interactable_vector,
+                            renderer_data,
+                            interactable_string_type,
+                        )?,
+                        "Slotmaschine" => read_values_for_rest(
+                            &mut reader,
+                            &mut buf,
+                            &mut interactable_vector,
+                            renderer_data,
+                            interactable_string_type,
+                        )?,
 
                         _ => {}
                     }
@@ -68,63 +88,20 @@ pub fn read_interactables_from_file(
 
         buf.clear();
     }
-    Ok(Interactable)
-}
-fn read_values_for_enemy_from_point(
-    reader: &mut Reader<&[u8]>,
-    buf: &mut Vec<u8>,
-    Interactable: &mut Vec<Interactable>,
-    renderer_data: &RendererData,
-) -> Result<()> {
-    let mut x = None;
-    let mut y = None;
-    let mut floor_level = None;
-    let mut facing_direction = None;
-    let mut enemy_type_num = None;
-    loop {
-        match reader.read_event_into(buf)? {
-            Event::Empty(ref e) if e.name().as_ref() == b"coords" => {
-                for attr in e.attributes() {
-                    let attr = attr?;
-                    match attr.key.as_ref() {
-                        b"x" => x = Some(attr.unescape_value()?.parse::<f64>()?),
-                        b"y" => y = Some(attr.unescape_value()?.parse::<f64>()?),
-                        _ => {}
-                    }
-                }
-            }
-            Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
-                for attr in e.attributes() {
-                    let attr = attr?;
-
-                    match attr.key.as_ref() {
-                        b"r" => floor_level = Some(attr.unescape_value()?.parse::<f64>()?),
-                        b"g" => facing_direction = Some(attr.unescape_value()?.parse::<f64>()?),
-                        b"b" => enemy_type_num = Some(attr.unescape_value()?.parse::<i32>()?),
-                        //b"alpha" => idk = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
-                        _ => {}
-                    }
-                }
-            }
-            Event::End(ref e) if e.name().as_ref() == b"element" => break,
-            _ => {}
-        }
-        buf.clear();
-    }
-    Ok(())
+    Ok(interactable_vector)
 }
 fn read_values_for_button(
     reader: &mut Reader<&[u8]>,
     buf: &mut Vec<u8>,
-    Interactable: &mut Vec<Interactable>,
+    interactable_vector: &mut Vec<Interactable>,
     renderer_data: &RendererData,
     interactable_string_type: Vec<String>,
 ) -> Result<()> {
     let mut x = None;
     let mut y = None;
     let mut floor_level = None;
-    let mut facing_direction = None;
-    let mut enemy_type_num = None;
+    let mut parameter_1 = None;
+    let mut parameter_2 = None;
     loop {
         match reader.read_event_into(buf)? {
             Event::Empty(ref e) if e.name().as_ref() == b"coords" => {
@@ -143,8 +120,8 @@ fn read_values_for_button(
 
                     match attr.key.as_ref() {
                         b"r" => floor_level = Some(attr.unescape_value()?.parse::<f64>()?),
-                        b"g" => facing_direction = Some(attr.unescape_value()?.parse::<f64>()?),
-                        b"b" => enemy_type_num = Some(attr.unescape_value()?.parse::<i32>()?),
+                        b"g" => parameter_1 = Some(attr.unescape_value()?.parse::<f64>()?),
+                        b"b" => parameter_2 = Some(attr.unescape_value()?.parse::<f64>()?),
                         //b"alpha" => idk = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
                         _ => {}
                     }
@@ -155,19 +132,157 @@ fn read_values_for_button(
         }
         buf.clear();
     }
+    //TODO make generate Interactables
     match interactable_string_type[2].as_str() {
-        "Map" => {}
-        "Spawner" => {}
+        "Map" => {
+            let interactable = Interactable::new(
+                InteractableType::Button(ButtonType::Map),
+                Point {
+                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
+                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
+                },
+                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
+                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
+                parameter_2.ok_or(Error::msg("Pasrser Error at parameter 2"))?,
+                17,
+                &renderer_data,
+            )
+            .ok_or(Error::msg("Pasrser Error at interactable"))?;
+            interactable_vector.push(interactable);
+        }
+        "Spawner" => {
+            let interactable = Interactable::new(
+                InteractableType::Button(ButtonType::Spawner),
+                Point {
+                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
+                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
+                },
+                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
+                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
+                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
+                18,
+                &renderer_data,
+            )
+            .ok_or(Error::msg("Pasrser Error at interactable"))?;
+            interactable_vector.push(interactable);
+        }
+        "Heal" => {
+            let interactable = Interactable::new(
+                InteractableType::Button(ButtonType::Heal),
+                Point {
+                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
+                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
+                },
+                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
+                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
+                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
+                16,
+                &renderer_data,
+            )
+            .ok_or(Error::msg("Pasrser Error at interactable"))?;
+            interactable_vector.push(interactable);
+        }
         _ => {}
     }
     Ok(())
 }
+fn read_values_for_rest(
+    reader: &mut Reader<&[u8]>,
+    buf: &mut Vec<u8>,
+    interactable_vector: &mut Vec<Interactable>,
+    renderer_data: &RendererData,
+    interactable_string_type: Vec<String>,
+) -> Result<()> {
+    let mut x = None;
+    let mut y = None;
+    let mut floor_level = None;
+    let mut parameter_1 = None;
+    let mut parameter_2 = None;
+    loop {
+        match reader.read_event_into(buf)? {
+            Event::Empty(ref e) if e.name().as_ref() == b"coords" => {
+                for attr in e.attributes() {
+                    let attr = attr?;
+                    match attr.key.as_ref() {
+                        b"x" => x = Some(attr.unescape_value()?.parse::<f64>()?),
+                        b"y" => y = Some(attr.unescape_value()?.parse::<f64>()?),
+                        _ => {}
+                    }
+                }
+            }
+            Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
+                for attr in e.attributes() {
+                    let attr = attr?;
 
+                    match attr.key.as_ref() {
+                        b"r" => floor_level = Some(attr.unescape_value()?.parse::<f64>()?),
+                        b"g" => parameter_1 = Some(attr.unescape_value()?.parse::<f64>()?),
+                        b"b" => parameter_2 = Some(attr.unescape_value()?.parse::<f64>()?),
+                        //b"alpha" => idk = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
+                        _ => {}
+                    }
+                }
+            }
+            Event::End(ref e) if e.name().as_ref() == b"element" => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    match interactable_string_type[1].as_str() {
+        "Elevator" =>{
+            let interactable = Interactable::new(
+                InteractableType::Elevator,
+                Point {
+                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
+                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
+                },
+                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
+                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
+                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
+                15,
+                &renderer_data,
+            )
+            .ok_or(Error::msg("Pasrser Error at interactable"))?;
+            interactable_vector.push(interactable);
+        }
+        "Slotmaschine" =>{
+            let interactable = Interactable::new(
+                InteractableType::SlotMachine,
+                Point {
+                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
+                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
+                },
+                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
+                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
+                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
+                19,
+                &renderer_data,
+            )
+            .ok_or(Error::msg("Pasrser Error at interactable"))?;
+            interactable_vector.push(interactable);
+        }
+        _ =>{}
+    }
+    Ok(())
+}
 pub fn split_string_uppercase(input: &str) -> Vec<String> {
+    let cleaned = if let Some(prefix) = input.strip_suffix('}') {
+        if let Some(pos) = prefix.rfind("_{") {
+            let number_part = &prefix[pos + 2..];
+            if number_part.chars().all(|c| c.is_ascii_digit()) {
+                &prefix[..pos]
+            } else {
+                input
+            }
+        } else {
+            input
+        }
+    } else {
+        input
+    };
     let mut parts = Vec::new();
     let mut current = String::new();
-
-    for c in input.chars() {
+    for c in cleaned.chars() {
         if c.is_uppercase() && !current.is_empty() {
             parts.push(current);
             current = String::new();

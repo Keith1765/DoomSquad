@@ -184,7 +184,7 @@ pub fn death_behaviour(entity: &mut Entity, renderer_data: &RendererData) -> Vec
             let explosion = generate_entities(
                 ExplodedRedBarrel,
                 entity.mover.position,
-                entity.mover.height,
+                entity.mover.foot_level,
                 0.0,
                 renderer_data,
             );
