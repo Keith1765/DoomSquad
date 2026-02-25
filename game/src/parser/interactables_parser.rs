@@ -132,6 +132,7 @@ fn read_values_for_button(
         }
         buf.clear();
     }
+    //TODO make generate Interactables
     match interactable_string_type[2].as_str() {
         "Map" => {
             let interactable = Interactable::new(
