@@ -84,10 +84,10 @@ impl EntityType {
     pub fn get_walk_animation_data(&self) -> Option<(usize, usize, usize)> {
         match self {
             // TODO insert proper values here
-            EntityType::MeleeEnemy => Some((0, 1, 15)),
-            EntityType::WeakEnemy => Some((1, 2, 15)),
-            EntityType::SummonerEnemy => Some((2, 0, 15)),
-            EntityType::Archer => Some((1, 3, 15)),
+            EntityType::MeleeEnemy => Some((0, 0, 15)),
+            EntityType::WeakEnemy => Some((0, 0, 15)),
+            EntityType::SummonerEnemy => Some((0, 0, 15)),
+            EntityType::Archer => Some((0, 0, 15)),
             _ => None, // other types do not have walking animations
         }
     }
@@ -95,12 +95,32 @@ impl EntityType {
     pub fn get_action_animation_data(&self) -> Option<(usize, usize)> {
         match self {
             // TODO insert proper values here
-            EntityType::MeleeEnemy => Some((10, 30)),
-            EntityType::WeakEnemy => Some((11, 30)),
-            EntityType::SummonerEnemy => Some((12, 30)),
-            EntityType::RangedEnemy => Some((13, 30)),
-            EntityType::Archer => Some((14, 30)),
+            EntityType::MeleeEnemy => Some((0, 15)),
+            EntityType::WeakEnemy => Some((0, 15)),
+            EntityType::SummonerEnemy => Some((0, 15)),
+            EntityType::RangedEnemy => Some((0, 15)),
+            EntityType::Archer => Some((0, 15)),
             _ => None, // other types do not have walking animations
+        }
+    }
+
+    pub fn get_default_texture_id(&self) -> usize {
+        match self {
+            // TODO insert proper values here
+            EntityType::MeleeEnemy => 0,
+            EntityType::WeakEnemy => 0,
+            EntityType::SummonerEnemy => 0,
+            EntityType::RangedEnemy => 0,
+            EntityType::Archer => 0,
+            EntityType::Dummy => 0,
+            EntityType::RedBarrel => 0,
+            EntityType::ExplodedRedBarrel => 0,
+            EntityType::EnemyBullet => 0,
+            EntityType::PlayerBullet => 0,
+            EntityType::EnemyArrow => 0,
+            EntityType::PlayerArrow => 0,
+            EntityType::Button => 0,
+            _ => 0,
         }
     }
 }

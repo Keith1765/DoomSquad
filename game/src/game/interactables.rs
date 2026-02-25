@@ -14,6 +14,20 @@ pub enum InteractableType {
     Elevator,
     SlotMachine,
 }
+
+impl InteractableType {
+    pub fn get_texture_id(&self) -> usize {
+        match self {
+            Self::Button(Map) => 0,
+            Self::Button(Map) => 0,
+            Self::Button(Map) => 0,
+            Self::Elevator => 0,
+            Self::SlotMachine => 0,
+            _ => 0,
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub enum ButtonType {
     Map,
@@ -59,7 +73,6 @@ impl Interactable {
         start_floor_level: f64,
         parameter_1: f64,
         parameter_2: f64,
-        sprite_texture_id: usize,
         renderer_data: &RendererData,
     ) -> Option<Self> {
         let interactable = Interactable {
@@ -72,9 +85,9 @@ impl Interactable {
                 facing_direction: 0.0,
             },
             sprite: Sprite {
-                default_texture_id: sprite_texture_id,
-                height: renderer_data.textures.get(&sprite_texture_id)?.height as f64,
-                width: renderer_data.textures.get(&sprite_texture_id)?.width as f64,
+                default_texture_id: interactable_type.get_texture_id(),
+                height: renderer_data.textures.get(&interactable_type.get_texture_id())?.height as f64,
+                width: renderer_data.textures.get(&interactable_type.get_texture_id())?.width as f64,
                 action_sprite_switcher: None,
                 walk_cycle_handler: None,
             },
