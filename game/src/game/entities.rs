@@ -84,10 +84,9 @@ impl EntityType {
     pub fn get_walk_animation_data(&self) -> Option<(usize, usize, usize)> {
         match self {
             // TODO insert proper values here
-            EntityType::MeleeEnemy => Some((0, 0, 15)),
-            EntityType::WeakEnemy => Some((0, 0, 15)),
-            EntityType::SummonerEnemy => Some((0, 0, 15)),
-            EntityType::Archer => Some((0, 0, 15)),
+            EntityType::MeleeEnemy => Some((9, 10, 8)),
+            EntityType::WeakEnemy => Some((17, 18, 8)),
+            EntityType::Archer => Some((0, 0, 8)),
             _ => None, // other types do not have walking animations
         }
     }
@@ -95,10 +94,10 @@ impl EntityType {
     pub fn get_action_animation_data(&self) -> Option<(usize, usize)> {
         match self {
             // TODO insert proper values here
-            EntityType::MeleeEnemy => Some((0, 15)),
-            EntityType::WeakEnemy => Some((0, 15)),
-            EntityType::SummonerEnemy => Some((0, 15)),
-            EntityType::RangedEnemy => Some((0, 15)),
+            EntityType::MeleeEnemy => Some((7, 15)),
+            EntityType::WeakEnemy => Some((15, 15)),
+            EntityType::SummonerEnemy => Some((19, 25)),
+            EntityType::RangedEnemy => Some((11, 15)),
             EntityType::Archer => Some((0, 15)),
             _ => None, // other types do not have walking animations
         }
@@ -107,18 +106,18 @@ impl EntityType {
     pub fn get_default_texture_id(&self) -> usize {
         match self {
             // TODO insert proper values here
-            EntityType::MeleeEnemy => 0,
-            EntityType::WeakEnemy => 0,
-            EntityType::SummonerEnemy => 0,
-            EntityType::RangedEnemy => 0,
+            EntityType::MeleeEnemy => 8,
+            EntityType::WeakEnemy => 16,
+            EntityType::SummonerEnemy => 20,
+            EntityType::RangedEnemy => 12,
             EntityType::Archer => 0,
-            EntityType::Dummy => 0,
-            EntityType::RedBarrel => 0,
-            EntityType::ExplodedRedBarrel => 0,
-            EntityType::EnemyBullet => 0,
-            EntityType::PlayerBullet => 0,
-            EntityType::EnemyArrow => 0,
-            EntityType::PlayerArrow => 0,
+            EntityType::Dummy => 5,
+            EntityType::RedBarrel => 13,
+            EntityType::ExplodedRedBarrel => 6,
+            EntityType::EnemyBullet => 3,
+            EntityType::PlayerBullet => 4,
+            EntityType::EnemyArrow => 2,
+            EntityType::PlayerArrow => 1,
             EntityType::Button => 0,
             _ => 0,
         }

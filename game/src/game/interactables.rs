@@ -18,11 +18,11 @@ pub enum InteractableType {
 impl InteractableType {
     pub fn get_texture_id(&self) -> usize {
         match self {
-            Self::Button(ButtonType::Map) => 0,
-            Self::Button(ButtonType::Spawner) => 1,
-            Self::Button(ButtonType::Heal) => 2,
-            Self::Elevator => 3,
-            Self::SlotMachine => 4,
+            Self::Button(ButtonType::Map) => 28,
+            Self::Button(ButtonType::Spawner) => 29,
+            Self::Button(ButtonType::Heal) => 27,
+            Self::Elevator => 26,
+            Self::SlotMachine => 30,
             _ => 0,
         }
     }
