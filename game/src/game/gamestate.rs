@@ -36,6 +36,7 @@ pub struct Game {
     pub map_grid: MapGrid,
     pub projectile_that_hit: Vec<usize>,
     pub map_index: usize,
+    pub last_map_index: usize,
 }
 
 impl Game {
@@ -63,6 +64,7 @@ impl Game {
             map_grid: MapGrid::new(MAP_GRID_CELL_SIZE),
             projectile_that_hit: Vec::new(),
             map_index: 0,
+            last_map_index:0,
         }
     }
 
@@ -158,6 +160,7 @@ impl Game {
             } else {
                 eprintln!("Error parsing player_pos");
             }
+            self.last_map_index = self.map_index;
             self.map_index = new_map_index;
             return;
         }

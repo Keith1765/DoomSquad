@@ -189,7 +189,9 @@ impl Interactable {
             let roll: u8 = rng.random_range(0..100);
 
             match roll {
-                n if n == 99 => println!("u won"), //TODO map swap
+                n if n == 99 => {
+                    game_state.map_swap(_renderer_data, 8); //for just 8
+                },
                 n if n < 30 => {
                     let enemy_type = map_enemy_type(self.parameter_1 as i32);
                     let entity = generate_entities(
