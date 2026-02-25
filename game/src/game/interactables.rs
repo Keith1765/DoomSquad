@@ -49,6 +49,7 @@ pub struct Interactable {
     pub interactable_type: InteractableType,
     pub parameter_1: f64,
     pub parameter_2: f64,
+    pub not_used: bool,
 }
 
 impl Interactable {
@@ -82,6 +83,7 @@ impl Interactable {
             last_player_state: false,
             parameter_1: parameter_1,
             parameter_2: parameter_2,
+            not_used: true,
         };
         Some(interactable)
     }
@@ -123,6 +125,7 @@ impl Interactable {
         if self.player_in_range //checking if player is in range and pressing interact
             && game_state.player.interacting //checking if player pressed F for interact
             && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0
+            && self.not_used
         //checking if player is on the same hight level
         {
             match button_type {
@@ -150,6 +153,7 @@ impl Interactable {
                     let player = &mut game_state.player;
                     player.hp = player.hp + self.parameter_1;
                     println!("Player healed! Current HP: {}", player.hp);
+                    self.not_used = false;
                 }
             }
         }
