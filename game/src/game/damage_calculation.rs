@@ -54,14 +54,14 @@ pub fn damage_check(game_state: &mut Game) {
 
             //check for verticall hitbox overlap
             if distance_to_bullet <= game_state.entities[j].size + game_state.entities[i].size {
-                println!("vertical: {}", game_state.entities[j].entity_type);
+                // println!("vertical: {}", game_state.entities[j].entity_type);
                 //check if horizontal hitbox overlap
-                let shooting_height = game_state.player.mover.view_level;
+                let shooting_height = game_state.entities[i].mover.foot_level; //foot lvl because these are bullets
                 let entity_bottom = game_state.entities[j].mover.foot_level;
                 let entity_top = game_state.entities[j].mover.height + entity_bottom;
 
                 if shooting_height <= entity_top && shooting_height >= entity_bottom {
-                    println!("horizontal: {}", game_state.entities[j].entity_type);
+                    // println!("horizontal: {}", game_state.entities[j].entity_type);
                     let damage = match game_state.entities[i].entity_type {
                         PlayerBullet => BULLET_DMG,
                         PlayerArrow => ARROW_DMG,
