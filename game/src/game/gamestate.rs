@@ -68,6 +68,7 @@ impl Game {
         }
     }
 
+    //updates per tick everything game related, sits at top lvl
     pub fn update(&mut self, window: &Window, renderer_data: &RendererData) {
         //update all interactables and add possible spawn events
         let mut interactables = std::mem::take(&mut self.interactables);
@@ -83,7 +84,7 @@ impl Game {
         let mut entity_spawns = Vec::new();
         //update player
         let event = self.player.update(window, &self.map, renderer_data);
-        //add possible spawn events
+        //add possible spawn events from player
         entity_spawns.extend(event);
 
         //update all entites and add possible spawn events
@@ -92,7 +93,7 @@ impl Game {
             entity_spawns.extend(event);
         }
 
-        //deal damage
+        //deal damage and check for interactable intersect
         damage_check(self);
 
         //on death behaviour
@@ -118,6 +119,7 @@ impl Game {
             }
         }
     }
+    
     pub fn map_swap(self: &mut Self, renderer_data: &RendererData, new_map_index: usize) {
         let path = Path::new("assets/maps/ggb");
         let entries_result = fs::read_dir(path);

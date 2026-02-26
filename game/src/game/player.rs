@@ -150,6 +150,7 @@ impl Player {
         }
     }
 
+    //updates every tick
     pub fn update(
         &mut self,
         window: &Window,
@@ -163,6 +164,7 @@ impl Player {
             self.interacting = true;
         }
 
+        //shooting, generates bullet entity and gives it as a spawn event to gamestate
         if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) || window.get_mouse_down(MouseButton::Left)) && self.bullet_cooldown == 0 {
             let bullet = generate_entities(
                 PlayerBullet,
@@ -176,10 +178,11 @@ impl Player {
             self.bullet_cooldown = BULLET_COOLDOWN;
         }
 
-         if self.bullet_cooldown > 0 {
+        if self.bullet_cooldown > 0 {
             self.bullet_cooldown -= 1;
         }
 
+        //shooting, generates arrow entity and gives it as a spawn event to gamestate
         if (window.is_key_pressed(Key::RightShift, KeyRepeat::No) || window.get_mouse_down(MouseButton::Right))&& self.arrow_cooldown == 0 {
             let arrow = generate_entities(
                 PlayerArrow,
@@ -197,6 +200,7 @@ impl Player {
             self.arrow_cooldown -= 1;
         }
 
+        //mouse movement and shooting
         //f32 cause window.get_mouse_pos gives us f32
         if let Some((mx,my)) = window.get_mouse_pos(MouseMode::Pass) {
             self.check_angle();
@@ -240,6 +244,7 @@ impl Player {
             self.update_dir();
         }
 
+        //std movement. Each directional iput is restricted if jump or slide was not initialized with it and forced if jump was intilized in that direction
         if (window.is_key_down(Key::W)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == W))
             || (self.is_jumping && (self.last_input == W))
@@ -268,6 +273,8 @@ impl Player {
             self.mover.step(self.move_speed, PI, map, self.godmode);
         }
 
+
+        //god mode controls (not relevant for user)
         if window.is_key_down(Key::Space) && self.godmode {
             self.mover.foot_level += FLY_UP_DOWN_SPEED;
         }
@@ -295,6 +302,7 @@ impl Player {
             }
         }
 
+        //slide has cooldown
         if (self.slide_cooldown > 0) && !window.is_key_down(Key::C) {
             self.slide_cooldown -= 1;
         }

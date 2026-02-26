@@ -38,6 +38,7 @@ impl MapGrid {
         //clear last frame
         self.grid.clear();
 
+        //push entities into new correct cells
         for (id, entity) in entities.iter().enumerate() {
             let cell = self.get_cell(entity.mover.position);
             self.grid.entry(cell).or_default().push(id);

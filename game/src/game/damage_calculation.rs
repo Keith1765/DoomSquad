@@ -8,16 +8,19 @@ use crate::game::entities::{
 use crate::game::gamestate::{Game, INTERACTABLE_RANGE};
 use crate::game::map_grid;
 
+//we create a grid and do proximity checks only for all entities in the same cell of a grid or its neighbours
 pub fn damage_check(game_state: &mut Game) {
-    //DMG calc for entities
 
-    //update grid
+    //DMG calc to entities
+
+    //clears grid and re-loads everything
     game_state.map_grid.update(&game_state.entities);
 
-    //let mut projectile_that_hit = Vec::new();
+    //prohibit proximity intersect between multiple entities
     game_state.projectile_that_hit.clear();
 
-    //damage calc for enemies
+
+    //iterate over only entities that can do dmg to entities
     for i in 0..game_state.entities.len() {
         if (game_state.entities[i].entity_type != PlayerBullet)
             && (game_state.entities[i].entity_type != PlayerArrow)
@@ -37,8 +40,6 @@ pub fn damage_check(game_state: &mut Game) {
                 PlayerBullet | PlayerArrow | ExplodedRedBarrel
             );
 
-            // println!("proximity: {}", game_state.entities[j].entity_type);
-            // println!("proximity: {}", game_state.entities[j].mover.view_level);
 
             //no self collision
             if i == j {
@@ -54,14 +55,14 @@ pub fn damage_check(game_state: &mut Game) {
 
             //check for verticall hitbox overlap
             if distance_to_bullet <= game_state.entities[j].size + game_state.entities[i].size {
-                // println!("vertical: {}", game_state.entities[j].entity_type);
+                
                 //check if horizontal hitbox overlap
                 let shooting_height = game_state.entities[i].mover.foot_level; //foot lvl because these are bullets
                 let entity_bottom = game_state.entities[j].mover.foot_level;
                 let entity_top = game_state.entities[j].mover.height + entity_bottom;
 
                 if shooting_height <= entity_top && shooting_height >= entity_bottom {
-                    // println!("horizontal: {}", game_state.entities[j].entity_type);
+                    
                     let damage = match game_state.entities[i].entity_type {
                         PlayerBullet => BULLET_DMG,
                         PlayerArrow => ARROW_DMG,
@@ -82,6 +83,7 @@ pub fn damage_check(game_state: &mut Game) {
             }
         }
     }
+
 
     //calc damage to player
     let player_position = game_state.player.mover.position;
@@ -145,7 +147,8 @@ pub fn damage_check(game_state: &mut Game) {
     for i in game_state.projectile_that_hit.clone() {
         game_state.entities[i].hp = 0.0; //o7
     }
-    //Interactables
+
+    //Interactables intersect 
 
     for i in 0..game_state.interactables.len() {
         game_state.map_grid.update_interactables(&game_state.interactables);

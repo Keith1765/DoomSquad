@@ -1,6 +1,5 @@
 use crate::game::entities::{
-    ARROW_COOLDOWN, ARROW_SPEED, BULLET_SPEED, ENEMY_HP, ENEMY_SIZE, Entity, EntityEvent,
-    MELEE_ENEMY_ATTACK_COOLDOWN, SHOOTING_COOLDOWN, SUMMONING_COOLDOWN,
+    ARROW_COOLDOWN, ARROW_SPEED, BULLET_SPEED, ENEMY_HP, ENEMY_SIZE, ENTITY_DEFAULT_VIEW_HEIGHT, Entity, EntityEvent, MELEE_ENEMY_ATTACK_COOLDOWN, SHOOTING_COOLDOWN, SUMMONING_COOLDOWN
 };
 
 use crate::game::entities::EntityEvent::*;
@@ -17,45 +16,48 @@ pub fn dummy_behaviour(entity: &mut Entity, map: &Map) {
     entity.gravity(map, 1.0);
 }
 pub fn player_bullet_behaviour(entity: &mut Entity, map: &Map) {
-    entity.hp -= 0.25;
+    entity.hp -= 0.25; //prevent long projectile life
     let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(BULLET_SPEED, 0.0, map, false);
-    entity.mover.foot_level -= entity.vertical_aim*BULLET_FLIGHT_COEFICIENT;
+    entity.mover.foot_level -= entity.vertical_aim*BULLET_FLIGHT_COEFICIENT; //adjust trajectory based on player aim
 
+    //if projectiles hits floor or hit a wall and stopped moving, we delete it for performance issues
     if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
         entity.hp = 0.0;
     }
 }
 
-//atm the same as player bullets
+
 pub fn enemy_bullet_behaviour(entity: &mut Entity, map: &Map) {
-    entity.hp -= 0.25;
+    entity.hp -= 0.25; //prevent long projectile life
     let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(BULLET_SPEED, 0.0, map, false);
 
+    //if projectiles hits floor or hit a wall and stopped moving, we delete it for performance issues
     if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
         entity.hp = 0.0;
     }
 }
 
 pub fn player_arrow_behaviour(entity: &mut Entity, map: &Map) {
-    entity.hp -= 0.25;
+    entity.hp -= 0.25; //prevent long projectile life
     let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(ARROW_SPEED, 0.0, map, false);
     entity.mover.foot_level -= entity.vertical_aim*ARROW_FLIGHT_COEFICIENT;
     entity.gravity(map, 0.1);
-    //terminate arrow when hits the floor
+
+    //if projectiles hits floor or hit a wall and stopped moving, we delete it for performance issues
     if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
         entity.hp = 0.0;
     }
 }
 //atm the same as player bullets
 pub fn enemy_arrow_behaviour(entity: &mut Entity, map: &Map) {
-    entity.hp -= 0.25;
+    entity.hp -= 0.25; //prevent long projectile life
     let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(ARROW_SPEED, 0.0, map, false);
     entity.gravity(map, 0.1);
-    //terminate arrow when hits the floor
+    //if projectiles hits floor or hit a wall and stopped moving, we delete it for performance issues
     if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
         entity.hp = 0.0;
     }
@@ -69,6 +71,7 @@ pub fn exploded_red_barrel_behaviour(entity: &mut Entity) {
     entity.hp -= 1.0;
 }
 
+//doesnt move, creates bullet entity and hands it over as an spawn event
 pub fn ranged_enemy_behaviour(
     entity: &mut Entity,
     map: &Map,
@@ -86,7 +89,7 @@ pub fn ranged_enemy_behaviour(
         let bullet = generate_entities(
             EnemyBullet,
             entity.mover.position,
-            15.0, //per default entities are generated at default view height plus this value, therfore should be 0.0
+            ENTITY_DEFAULT_VIEW_HEIGHT,
             direction_to_player,
             renderer_data,
             0.0,
@@ -99,6 +102,7 @@ pub fn ranged_enemy_behaviour(
     }
 }
 
+//doesnt move, creates arrow entity and hands it over as an spawn event
 pub fn archer_behaviour(
     entity: &mut Entity,
     map: &Map,
@@ -129,6 +133,7 @@ pub fn archer_behaviour(
     }
 }
 
+//doesnt move, creates weak enemy entity and hands it over as an spawn event
 pub fn summoner_enemy_behaviour(
     entity: &mut Entity,
     map: &Map,
@@ -159,6 +164,7 @@ pub fn summoner_enemy_behaviour(
     }
 }
 
+//moves towards player and deals damage with cooldown if in proximity (dmg handled by damage_calculation)
 pub fn melee_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Point) {
     entity.gravity(map, 1.0);
 
@@ -179,6 +185,7 @@ pub fn melee_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Po
     }
 }
 
+//melee enemy but weaker
 pub fn weak_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Point) {
     entity.gravity(map, 1.0);
     entity.normal_enemy_movement(map, player_position, MOVE_SPEED * 0.5);
@@ -198,6 +205,7 @@ pub fn weak_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Poi
     }
 }
 
+//handles death behaviour of entity and creates entities for Spawn event, originally planned for more entities, rn used just for exploded barrel
 pub fn death_behaviour(entity: &mut Entity, renderer_data: &RendererData) -> Vec<EntityEvent> {
     let mut events = Vec::new();
     match entity.entity_type {
