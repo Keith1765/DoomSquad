@@ -1,16 +1,16 @@
 use super::map::Map;
-use crate::game::{entities::{
-    ARROW_COOLDOWN, EntityEvent::{self, Spawn},
-    EntityType::{PlayerArrow, PlayerBullet},
-}, movement::find_blocks_were_currently_in};
+use crate::{SCREEN_HEIGHT, game::{entities::{
+    ARROW_COOLDOWN, BULLET_COOLDOWN, EntityEvent::{self, Spawn}, EntityType::{PlayerArrow, PlayerBullet}
+}, movement::find_blocks_were_currently_in}};
 use crate::game::generate_entities::generate_entities;
 use crate::game::player::LastInputDirection::*;
+
 use crate::{
     SCREEN_WIDTH,
     game::{map::Point, movement::Mover},
     render::RendererData,
 };
-use minifb::{Key, KeyRepeat, MouseMode, Window};
+use minifb::{Key, KeyRepeat, MouseButton, MouseMode, Window};
 use std::f64::consts::PI;
 
 const ROTATION_SPEED_MOUSE: f64 = 2.0;
@@ -19,7 +19,7 @@ pub const MOVE_SPEED: f64 = 3.0;
 const FLY_UP_DOWN_SPEED: f64 = 1.0;
 const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 pub const MAX_STEP_UP_HEIGHT: f64 = 6.0;
-const PLAYER_HEAD_HEIGHT: f64 = 15.0;
+const PLAYER_HEAD_HEIGHT: f64 = 20.0;
 pub const PLAYER_VIEW_HEIGHT: f64 = 15.0;
 const SPRINT_SPEED: f64 = 5.0;
 const CROUCH_HEIGHT_DIFF: f64 = 5.0;
@@ -28,7 +28,7 @@ const ROCKETLAUNCHER_COOLDOWN_TIME: i32 = 100;
 const STRAIFING_SPEED: f64 = 0.035;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
-const PLAYER_HP: f64 = 100.0; //was 100, set higher for testing
+const PLAYER_HP: f64 = 1000.0; //was 100, set higher for testing
 const PLAYER_SIZE: f64 = 3.0;
 const JUMP_SPEED_BOOST_MULTIPLICATOR: f64 = 0.4;
 const JUMP_SPEED_BOOST: f64 = 0.0;
@@ -37,6 +37,10 @@ const ROCKETLAUNCHER_SPEED_BOOST: f64 = 5.0;
 const ROCKETLAUNCHER_HEIGHT_BOOST: f64 = 5.0;
 const JUMPING_ALLOWED_TIMER_AMOUNT: i32 = 10;
 const DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING: f64 = 0.3;
+const PROJECTILE_OFFSET_TO_MATCH_SCREEN_MIDDLE: f64 = 3.0;
+const VERTICAL_AIM_SPEED: f64 = 0.1;
+const MOUSE_SENSE_X: f64 = 0.003;
+const MOUSE_SENSE_Y: f64 = 0.003;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum LastInputDirection {
@@ -52,6 +56,7 @@ pub struct Player {
     pub velocity_x: f64,
     pub velocity_y: f64,
     pub last_mouse_x: f32,
+    pub last_mouse_y: f32,
     pub godmode: bool,
     pub move_speed: f64,
     pub is_sliding: bool,
@@ -63,11 +68,13 @@ pub struct Player {
     pub rocketlauncher_cooldown: i32,
     pub hp: f64,
     pub arrow_cooldown: i32,
+    pub bullet_cooldown: i32,
     pub size: f64,
     pub using_rocketlauncher: bool,
     pub interacting: bool,
     pub jumping_allowed: bool,
     pub jumping_allowed_timer: i32,
+    pub vertcal_aim: f64,
 }
 
 impl Player {
@@ -85,6 +92,43 @@ impl Player {
             velocity_x: pa.cos() * ROTATION_SPEED_MOUSE,
             velocity_y: pa.sin() * ROTATION_SPEED_MOUSE,
             last_mouse_x: SCREEN_WIDTH as f32 / 2.0,
+            last_mouse_y: SCREEN_HEIGHT as f32 / 2.0,
+            godmode: false, // allows flying up and down, no collision (when those are implemented)
+            move_speed: 1.0,
+            is_sliding: false,
+            last_input: No,
+            slide_cooldown: 0,
+            is_jumping: false,
+            vertical_velocity: 0.0,
+            gravity: -1.0,
+            rocketlauncher_cooldown: 0,
+            hp: PLAYER_HP,
+            arrow_cooldown: 0,
+            bullet_cooldown: 0,
+            size: PLAYER_SIZE,
+            using_rocketlauncher: false,
+            interacting: false,
+            jumping_allowed: false,
+            jumping_allowed_timer: 0,
+            vertcal_aim: 0.0,
+        }
+    }
+
+    pub fn new_with_position(position: Point) -> Self {
+        let pa: f64 = 4.0;
+        Self {
+            mover: Mover {
+                position,
+                floor_level: 0.0,
+                foot_level: 0.0,
+                view_level: PLAYER_VIEW_HEIGHT,
+                height: PLAYER_HEAD_HEIGHT,
+                facing_direction: pa,
+            },
+            velocity_x: pa.cos() * ROTATION_SPEED_MOUSE,
+            velocity_y: pa.sin() * ROTATION_SPEED_MOUSE,
+            last_mouse_x: SCREEN_WIDTH as f32 / 2.0,
+            last_mouse_y: SCREEN_HEIGHT as f32 / 2.0,
             godmode: false, // allows flying up and down, no collision (when those are implemented)
             move_speed: 1.0,
             is_sliding: false,
@@ -101,6 +145,8 @@ impl Player {
             interacting: false,
             jumping_allowed: false,
             jumping_allowed_timer: 0,
+            bullet_cooldown: 0,
+            vertcal_aim: 0.0,
         }
     }
 
@@ -112,29 +158,36 @@ impl Player {
     ) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
         //reseting keyinput idfk how to do it an other way
-        self.interacting = false; 
-        if window.is_key_pressed(Key::F, KeyRepeat::No){
-           self.interacting = true; 
+        self.interacting = false;
+        if window.is_key_pressed(Key::F, KeyRepeat::No) {
+            self.interacting = true;
         }
 
-        if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) {
+        if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) || window.get_mouse_down(MouseButton::Left)) && self.bullet_cooldown == 0 {
             let bullet = generate_entities(
                 PlayerBullet,
                 self.mover.position,
-                self.mover.view_level, 
+                self.mover.view_level - PROJECTILE_OFFSET_TO_MATCH_SCREEN_MIDDLE, 
                 self.mover.facing_direction,
                 renderer_data,
+                self.vertcal_aim
             );
             events.push(Spawn(bullet));
+            self.bullet_cooldown = BULLET_COOLDOWN;
         }
 
-        if window.is_key_pressed(Key::RightShift, KeyRepeat::No) && self.arrow_cooldown == 0 {
+         if self.bullet_cooldown > 0 {
+            self.bullet_cooldown -= 1;
+        }
+
+        if (window.is_key_pressed(Key::RightShift, KeyRepeat::No) || window.get_mouse_down(MouseButton::Right))&& self.arrow_cooldown == 0 {
             let arrow = generate_entities(
                 PlayerArrow,
                 self.mover.position,
-                self.mover.height,
+                self.mover.height - PROJECTILE_OFFSET_TO_MATCH_SCREEN_MIDDLE,
                 self.mover.facing_direction,
                 renderer_data,
+                self.vertcal_aim,
             );
             events.push(Spawn(arrow));
             self.arrow_cooldown = ARROW_COOLDOWN;
@@ -144,12 +197,17 @@ impl Player {
             self.arrow_cooldown -= 1;
         }
 
-        if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
+        //f32 cause window.get_mouse_pos gives us f32
+        if let Some((mx,my)) = window.get_mouse_pos(MouseMode::Pass) {
             self.check_angle();
             let dx = mx - self.last_mouse_x; // mouse delta
-            self.mover.facing_direction += dx as f64 * 0.003; // sensitivity
+            let dy = my - self.last_mouse_y; // mouse delta
+            self.mover.facing_direction += dx as f64 * MOUSE_SENSE_X; // sensitivity
+
+            self.vertcal_aim = (self.vertcal_aim + dy  as f64 * MOUSE_SENSE_Y ).clamp(-1.0, 1.0 );
 
             self.last_mouse_x = mx; // store for next frame
+            self.last_mouse_y = my;
             self.update_dir();
         }
 
@@ -393,6 +451,15 @@ impl Player {
             self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT - CROUCH_HEIGHT_DIFF;
         } else {
             self.mover.view_level = self.mover.foot_level + PLAYER_VIEW_HEIGHT;
+        }
+
+        //aim (inverted controls because pixel grid is inverted too)
+        if window.is_key_down(Key::Up){
+            self.vertcal_aim = (self.vertcal_aim - VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 );
+        }
+
+        if window.is_key_down(Key::Down){
+            self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 );
         }
 
         return events;

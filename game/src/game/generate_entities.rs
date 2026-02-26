@@ -3,11 +3,11 @@ use core::f64;
 use crate::{
     game::{
         entities::{
-            DUMMY_HP, DUMMY_SIZE, ENEMY_HP, ENEMY_SIZE, EXPLODED_RED_BARREL_SIZE, Entity,
-            EntityType, PROJECTILE_HP, RED_BARREL_HP, RED_BARREL_SIZE, WEAK_ENEMY_MULTIPLICATOR,
+            DUMMY_HP, DUMMY_SIZE, ENEMY_HP, ENEMY_SIZE, EXPLODED_RED_BARREL_HP, EXPLODED_RED_BARREL_SIZE, Entity, EntityType, PROJECTILE_HP, RED_BARREL_HP, RED_BARREL_SIZE, WEAK_ENEMY_MULTIPLICATOR
         },
         map::Point,
-    }, render::RendererData
+    },
+    render::RendererData,
 };
 
 pub fn generate_entities(
@@ -16,6 +16,7 @@ pub fn generate_entities(
     height: f64,
     facing_direction: f64,
     renderer_data: &RendererData,
+    vertical_aim: f64,
 ) -> Entity {
     match entity_type {
         EntityType::PlayerBullet => Entity::new(
@@ -24,11 +25,12 @@ pub fn generate_entities(
             height,
             1.0,
             facing_direction,
-            1,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::PlayerBullet,
             PROJECTILE_HP,
             1.0,
+            vertical_aim
         )
         .unwrap(),
         EntityType::EnemyBullet => Entity::new(
@@ -37,11 +39,12 @@ pub fn generate_entities(
             height,
             1.0,
             facing_direction,
-            1,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::EnemyBullet,
             PROJECTILE_HP,
             1.0,
+            0.0
         )
         .unwrap(),
         EntityType::PlayerArrow => Entity::new(
@@ -50,11 +53,12 @@ pub fn generate_entities(
             height,
             1.0,
             facing_direction,
-            5,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::PlayerArrow,
             PROJECTILE_HP,
             1.0,
+            vertical_aim,
         )
         .unwrap(),
         EntityType::EnemyArrow => Entity::new(
@@ -63,11 +67,12 @@ pub fn generate_entities(
             height,
             1.0,
             facing_direction,
-            5,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::EnemyArrow,
             PROJECTILE_HP,
             1.0,
+            0.0,
         )
         .unwrap(),
         EntityType::Dummy => Entity::new(
@@ -76,11 +81,12 @@ pub fn generate_entities(
             height,
             DUMMY_SIZE,
             facing_direction,
-            0,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::Dummy,
             DUMMY_HP,
             DUMMY_SIZE,
+            0.0,
         )
         .unwrap(),
         EntityType::RangedEnemy => Entity::new(
@@ -89,11 +95,12 @@ pub fn generate_entities(
             height,
             ENEMY_SIZE,
             facing_direction,
-            3,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::RangedEnemy,
             ENEMY_HP,
             ENEMY_SIZE,
+            0.0,
         )
         .unwrap(),
         EntityType::Archer => Entity::new(
@@ -102,11 +109,12 @@ pub fn generate_entities(
             height,
             ENEMY_SIZE,
             facing_direction,
-            3,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::Archer,
             ENEMY_HP,
             ENEMY_SIZE,
+            0.0,
         )
         .unwrap(),
         EntityType::MeleeEnemy => Entity::new(
@@ -115,11 +123,12 @@ pub fn generate_entities(
             height,
             ENEMY_SIZE,
             facing_direction,
-            4,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::MeleeEnemy,
             ENEMY_HP,
             ENEMY_SIZE,
+            0.0,
         )
         .unwrap(),
         EntityType::SummonerEnemy => Entity::new(
@@ -128,11 +137,12 @@ pub fn generate_entities(
             height,
             ENEMY_SIZE,
             facing_direction,
-            6,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::SummonerEnemy,
             ENEMY_HP,
             ENEMY_SIZE,
+            0.0,
         )
         .unwrap(),
         EntityType::WeakEnemy => Entity::new(
@@ -141,11 +151,12 @@ pub fn generate_entities(
             0.0,
             ENEMY_SIZE,
             facing_direction,
-            7,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::WeakEnemy,
             ENEMY_HP * WEAK_ENEMY_MULTIPLICATOR,
             ENEMY_SIZE,
+            0.0,
         )
         .unwrap(),
         EntityType::RedBarrel => Entity::new(
@@ -154,11 +165,12 @@ pub fn generate_entities(
             height,
             RED_BARREL_SIZE,
             facing_direction,
-            2,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::RedBarrel,
             RED_BARREL_HP,
             RED_BARREL_SIZE,
+            0.0,
         )
         .unwrap(),
         EntityType::ExplodedRedBarrel => Entity::new(
@@ -167,11 +179,12 @@ pub fn generate_entities(
             height,
             RED_BARREL_SIZE,
             facing_direction,
-            12,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::ExplodedRedBarrel,
-            RED_BARREL_HP,
+            EXPLODED_RED_BARREL_HP,
             EXPLODED_RED_BARREL_SIZE,
+            0.0,
         )
         .unwrap(),
         _ => Entity::new(
@@ -180,11 +193,12 @@ pub fn generate_entities(
             height,
             1.0,
             facing_direction,
-            0,
+            entity_type.get_default_texture_id(),
             renderer_data,
             EntityType::Dummy,
             DUMMY_HP,
             DUMMY_SIZE,
+            0.0,
         )
         .unwrap(),
     }

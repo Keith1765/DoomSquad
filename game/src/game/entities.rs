@@ -21,7 +21,8 @@ const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 const GRAVITY_CONST: f64 = -0.8;
 pub const BULLET_SPEED: f64 = 30.0;
 pub const SHOOTING_COOLDOWN: i32 = 50;
-pub const ARROW_COOLDOWN: i32 = 75;
+pub const ARROW_COOLDOWN: i32 = 10;
+pub const BULLET_COOLDOWN: i32 = 5;
 pub const SUMMONING_COOLDOWN: i32 = 200;
 pub const PROJECTILE_HP: f64 = 30.0;
 pub const ENEMY_HP: f64 = 50.0;
@@ -35,7 +36,7 @@ pub const RED_BARREL_SIZE: f64 = 30.0;
 pub const BULLET_TRAVEL_COUNTDOWN: i32 = 2;
 pub const ARROW_SPEED: f64 = 15.0;
 pub const ARROW_DMG: f64 = 40.0;
-pub const EXPLODED_RED_BARREL_HP: f64 = 30.0;
+pub const EXPLODED_RED_BARREL_HP: f64 = 14.0;
 pub const RED_BARREL_DMG: f64 = 1000.0;
 pub const EXPLODED_RED_BARREL_SIZE: f64 = 20000.0;
 pub const MELEE_ENEMY_ATTACK_COOLDOWN: i32 = 20;
@@ -80,6 +81,49 @@ impl fmt::Display for EntityType {
         write!(f, "{}", text)
     }
 }
+impl EntityType {
+    pub fn get_walk_animation_data(&self) -> Option<(usize, usize, usize)> {
+        match self {
+            // TODO insert proper values here
+            EntityType::MeleeEnemy => Some((9, 10, 8)),
+            EntityType::WeakEnemy => Some((17, 18, 8)),
+            EntityType::Archer => Some((0, 0, 8)),
+            _ => None, // other types do not have walking animations
+        }
+    }
+
+    pub fn get_action_animation_data(&self) -> Option<(usize, usize)> {
+        match self {
+            // TODO insert proper values here
+            EntityType::MeleeEnemy => Some((7, 15)),
+            EntityType::WeakEnemy => Some((15, 15)),
+            EntityType::SummonerEnemy => Some((19, 25)),
+            EntityType::RangedEnemy => Some((11, 15)),
+            EntityType::Archer => Some((0, 15)),
+            _ => None, // other types do not have walking animations
+        }
+    }
+
+    pub fn get_default_texture_id(&self) -> usize {
+        match self {
+            // TODO insert proper values here
+            EntityType::MeleeEnemy => 8,
+            EntityType::WeakEnemy => 16,
+            EntityType::SummonerEnemy => 20,
+            EntityType::RangedEnemy => 12,
+            EntityType::Archer => 0,
+            EntityType::Dummy => 5,
+            EntityType::RedBarrel => 13,
+            EntityType::ExplodedRedBarrel => 6,
+            EntityType::EnemyBullet => 3,
+            EntityType::PlayerBullet => 4,
+            EntityType::EnemyArrow => 2,
+            EntityType::PlayerArrow => 1,
+            EntityType::Button => 0,
+            _ => 0,
+        }
+    }
+}
 #[derive(Clone)]
 pub enum EntityEvent {
     Spawn(Entity),
@@ -94,10 +138,11 @@ pub struct Entity {
     pub vertical_velocity: f64,
     pub entity_type: EntityType,
     pub orientation_lock: bool,
-    pub cooldown: i32,
+    pub action_cooldown: i32,
     pub hp: f64,
     pub size: f64,
     pub did_damage: bool,
+    pub vertical_aim: f64,
 }
 
 impl Entity {
@@ -112,6 +157,7 @@ impl Entity {
         entity_type: EntityType,
         hp: f64,
         size: f64,
+        vertical_aim: f64,
     ) -> Option<Self> {
         let entity = Entity {
             mover: Mover {
@@ -129,15 +175,16 @@ impl Entity {
                 width: renderer_data.textures.get(&sprite_texture_id)?.width as f64,
                 action_sprite_switcher: None,
                 walk_cycle_handler: None,
-            },
+                },
             gravity: GRAVITY_CONST,
             vertical_velocity: 0.0,
             entity_type: entity_type,
             orientation_lock: false,
-            cooldown: 0,
+            action_cooldown: 0,
             hp: hp,
             size: size,
             did_damage: false,
+            vertical_aim: vertical_aim,
         };
         Some(entity)
     }
@@ -185,8 +232,22 @@ impl Entity {
         }
 
         //set view level correctly (excluded projectiles)
-        if !matches!(self.entity_type, EntityType::EnemyArrow | EntityType::EnemyBullet | EntityType::PlayerArrow | EntityType::PlayerBullet){
+        if !matches!(
+            self.entity_type,
+            EntityType::EnemyArrow
+                | EntityType::EnemyBullet
+                | EntityType::PlayerArrow
+                | EntityType::PlayerBullet
+        ) {
             self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
+        }
+
+        if let Some(switcher) = &mut self.sprite.action_sprite_switcher {
+            if switcher.countdown == 0 {
+                self.sprite.action_sprite_switcher = None;
+            } else {
+                switcher.countdown -= 1;
+            }
         }
 
         return events;
@@ -203,7 +264,12 @@ impl Entity {
         }
         //entities never move when very close to player
         if self.mover.position.distance_to(&player_position) > self.size + MELEE_ENEMY_RANGE - 0.1 {
-            self.mover.step(move_speed, 0.0, map, false);
+            let step_succesful = self.mover.step(move_speed, 0.0, map, false);
+            if step_succesful {
+                self.sprite.continue_or_start_walk_cycle(&self.entity_type);
+            } else {
+                self.sprite.walk_cycle_handler = None; // if cant step, stop walk animation
+            }
         }
     }
 
