@@ -37,8 +37,8 @@ pub fn damage_check(game_state: &mut Game) {
                 PlayerBullet | PlayerArrow | ExplodedRedBarrel
             );
 
-            println!("proximity: {}", game_state.entities[j].entity_type);
-            println!("proximity: {}", game_state.entities[j].mover.view_level);
+            // println!("proximity: {}", game_state.entities[j].entity_type);
+            // println!("proximity: {}", game_state.entities[j].mover.view_level);
 
             //no self collision
             if i == j {

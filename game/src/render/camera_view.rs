@@ -155,16 +155,17 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
 
     // create entity (sprite) tasks, put them into the taskings
     for entity in &game.entities {
-        if let Some(mut instruction) = task_sprite(game, &entity.sprite, &entity.mover, renderer_data) {
+        if let Some(mut instruction) =
+            task_sprite(game, &entity.sprite, &entity.mover, renderer_data)
+        {
             let sprite_width = instruction.sprite_right_screen_x - instruction.sprite_left_screen_x;
             for x in 0..sprite_width {
                 if x < 0 || x > SCREEN_WIDTH - 1 {
                     continue;
                 }
 
-                if let Some(cts) = &mut columns_tasked[instruction.sprite_right_screen_x-x-1]
-                    && let Some(sprite_task) =
-                        instruction.tasks.pop()
+                if let Some(cts) = &mut columns_tasked[instruction.sprite_right_screen_x - x - 1]
+                    && let Some(sprite_task) = instruction.tasks.pop()
                     && sprite_task.distance <= cts.wall_distance
                 {
                     cts.tasks.push(sprite_task);
@@ -176,16 +177,20 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     // create entity (sprite) tasks, put them into the taskings
     // practically identical to above
     for interactable in &game.interactables {
-        if let Some(mut instruction) = task_sprite(game, &interactable.sprite, &interactable.mover, renderer_data) {
+        if let Some(mut instruction) = task_sprite(
+            game,
+            &interactable.sprite,
+            &interactable.mover,
+            renderer_data,
+        ) {
             let sprite_width = instruction.sprite_right_screen_x - instruction.sprite_left_screen_x;
             for x in 0..sprite_width {
                 if x < 0 || x > SCREEN_WIDTH - 1 {
                     continue;
                 }
 
-                if let Some(cts) = &mut columns_tasked[instruction.sprite_right_screen_x-x-1]
-                    && let Some(sprite_task) =
-                        instruction.tasks.pop()
+                if let Some(cts) = &mut columns_tasked[instruction.sprite_right_screen_x - x - 1]
+                    && let Some(sprite_task) = instruction.tasks.pop()
                     && sprite_task.distance <= cts.wall_distance
                 {
                     cts.tasks.push(sprite_task);
@@ -224,10 +229,8 @@ fn draw_tasks(
         );
         // try to render a texture, if the task has one
         if let Some(texture_column) = task.texture_column {
-            //println!("{}",texture_column.len());
             for screen_y in onscreen_bottom..onscreen_top {
                 if onscreen_top > renderer_data.screen_height_as_isize {
-                    println!("hi");
                 }
                 let column_v = screen_y - onscreen_bottom;
                 if let Some(pixel_color) = texture_column.get(column_v as usize) {

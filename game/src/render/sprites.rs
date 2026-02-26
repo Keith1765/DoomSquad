@@ -1,5 +1,6 @@
 use std::{f64::consts::PI, rc::Rc};
 
+use crate::game::entities::EntityType;
 use crate::game::movement::Mover;
 use crate::render::textures::Texture;
 use crate::{
@@ -13,7 +14,7 @@ use crate::{
 #[derive(Clone)]
 pub struct ActionSpriteSwitcher {
     pub texture_id: usize,
-    pub countdown: usize
+    pub countdown: usize,
 }
 
 #[derive(Clone)]
@@ -21,7 +22,7 @@ pub struct WalkCycleHandler {
     pub current_texture_id: usize,
     pub other_texture_id: usize,
     pub countdown: usize,
-    pub countdown_full_value: usize
+    pub countdown_full_value: usize,
 }
 
 #[derive(Clone)]
@@ -36,6 +37,7 @@ pub struct Sprite {
 impl Sprite {
     pub fn get_current_sprite_texture_id(&self) -> usize {
         if let Some(switcher) = &self.action_sprite_switcher {
+            //println!("{}", switcher.countdown);
             return switcher.texture_id;
         } else if let Some(handler) = &self.walk_cycle_handler {
             return handler.current_texture_id;
@@ -52,7 +54,7 @@ impl Sprite {
         self.action_sprite_switcher = Some(switcher);
     }
 
-    pub fn continue_walk_cycle(&mut self) {
+    pub fn continue_or_start_walk_cycle(&mut self, entity_type: &EntityType) {
         if let Some(handler) = &mut self.walk_cycle_handler {
             if handler.countdown == 0 {
                 let temp_texture_id = handler.current_texture_id;
@@ -62,9 +64,21 @@ impl Sprite {
             } else {
                 handler.countdown -= 1;
             }
+        } else { // if we are currently not animating a walk cycle, start one
+            self.walk_cycle_handler = start_walk_cycle(entity_type);
         }
     }
 }
+
+pub fn start_walk_cycle(entity_type: &EntityType) -> Option<WalkCycleHandler> {
+        let (current_texture_id, other_texture_id, switch_time) = entity_type.get_walk_animation_data()?;
+        return Some(WalkCycleHandler {
+            current_texture_id,
+            other_texture_id,
+            countdown: switch_time,
+            countdown_full_value: switch_time,
+        });
+    }
 
 // currently unused
 struct SpriteSlice {
@@ -87,13 +101,9 @@ pub fn task_sprite(
     renderer_data: &RendererData,
 ) -> Option<SpriteInstruction> {
     // return the leftmost x of the sprite, and all the tasks to be rendered right of that
-    let angle_off_player_view = game.player.mover.position.angle_to(&mover.position)
-        - game.player.mover.facing_direction; // TODO abort if sprite out of FOV
-    let distance: f64 = game
-        .player
-        .mover
-        .position
-        .distance_to(&mover.position);
+    let angle_off_player_view =
+        game.player.mover.position.angle_to(&mover.position) - game.player.mover.facing_direction; // TODO abort if sprite out of FOV
+    let distance: f64 = game.player.mover.position.distance_to(&mover.position);
     let normalized_distance = distance * angle_off_player_view.cos();
 
     // TODO temporary, find cleaner solution ?
@@ -102,10 +112,10 @@ pub fn task_sprite(
         return None;
     }
 
-    let onscreen_width = ((sprite.width / normalized_distance)
-        * renderer_data.render_scale_coefficient) as isize;
-    let onscreen_height = ((sprite.height / normalized_distance)
-        * renderer_data.render_scale_coefficient) as isize;
+    let onscreen_width =
+        ((sprite.width / normalized_distance) * renderer_data.render_scale_coefficient) as isize;
+    let onscreen_height =
+        ((sprite.height / normalized_distance) * renderer_data.render_scale_coefficient) as isize;
     let onscreen_bottom: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
         + ((mover.foot_level / normalized_distance)
         - (game.player.mover.view_level / normalized_distance)) // adjust for view hieght
@@ -125,7 +135,9 @@ pub fn task_sprite(
         + 0.5)
         .clamp(0.2, 1.0);
 
-    let texture = renderer_data.textures.get(&sprite.get_current_sprite_texture_id());
+    let texture = renderer_data
+        .textures
+        .get(&sprite.get_current_sprite_texture_id());
     let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width.max(0) as usize);
 
     if let Some(texture) = texture {
@@ -133,17 +145,17 @@ pub fn task_sprite(
         let onscreen_width_f64 = onscreen_width as f64;
 
         // will be memoized when possible for optimization
-        let mut texture_column: Option<Vec<u32>> = Some(Vec::with_capacity(onscreen_height as usize));
+        let mut texture_column: Option<Vec<u32>> =
+            Some(Vec::with_capacity(onscreen_height as usize));
 
         // for determining if we can reuse texture_column, initialize with value well never actualy reach
-        let mut prev_texture_u: usize = usize::MAX; 
+        let mut prev_texture_u: usize = usize::MAX;
 
         for x in left_screen_x.clamp(0, renderer_data.screen_width_as_isize)
             ..(left_screen_x + onscreen_width).clamp(0, renderer_data.screen_width_as_isize)
         {
-
-            let texture_u = ((x - left_screen_x) as f64
-                * (sprite.width / onscreen_width_f64)) as usize
+            let texture_u = ((x - left_screen_x) as f64 * (sprite.width / onscreen_width_f64))
+                as usize
                 % texture.width;
 
             // if we've gone into a new pixel column on the texture, we need to recalculate texture_column
@@ -177,7 +189,8 @@ pub fn task_sprite(
     return Some(SpriteInstruction {
         // .clamp() is mainly to prevent overflow into fvery high numbers when casting to usize
         sprite_left_screen_x: left_screen_x.clamp(0, renderer_data.screen_width_as_isize) as usize,
-        sprite_right_screen_x: (left_screen_x + onscreen_width).clamp(0, renderer_data.screen_width_as_isize) as usize,
+        sprite_right_screen_x: (left_screen_x + onscreen_width)
+            .clamp(0, renderer_data.screen_width_as_isize) as usize,
         tasks,
     });
 }

@@ -15,7 +15,14 @@ pub struct Mover {
 
 impl Mover {
     // TODO test this properly
-    pub fn step(&mut self, step_size: f64, relative_direction: f64, map: &Map, godmode: bool) {
+    // returns whether a step was made or blocked
+    pub fn step(
+        &mut self,
+        step_size: f64,
+        relative_direction: f64,
+        map: &Map,
+        godmode: bool,
+    ) -> bool {
         //println!("{}", self.floor_level);
 
         let absolute_direction = self.facing_direction + relative_direction;
@@ -27,7 +34,7 @@ impl Mover {
                 && !godmode
             // in godmode, we can walk through walls
             {
-                return;
+                return false;
             }
         }
 
@@ -57,7 +64,7 @@ impl Mover {
             {
                 //println!("blocked completely");
                 if !godmode {
-                    return;
+                    return false;
                 } // if we are in godmode, we dont let ourselves get blocked
                 continue;
             }
@@ -83,11 +90,13 @@ impl Mover {
 
         // if our new floor level would result in us bumping our head into the ceiling, we dont make a step
         if height_to_step_to + self.height >= lowest_ceiling_level {
-            return;
+            return false;
         }
 
         self.position = new_position;
         self.floor_level = height_to_step_to;
+
+        true
     }
 }
 

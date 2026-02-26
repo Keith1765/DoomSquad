@@ -1,10 +1,14 @@
 use super::map::Map;
-use crate::game::{entities::{
-    ARROW_COOLDOWN, EntityEvent::{self, Spawn},
-    EntityType::{PlayerArrow, PlayerBullet},
-}, movement::find_blocks_were_currently_in};
 use crate::game::generate_entities::generate_entities;
 use crate::game::player::LastInputDirection::*;
+use crate::game::{
+    entities::{
+        ARROW_COOLDOWN,
+        EntityEvent::{self, Spawn},
+        EntityType::{PlayerArrow, PlayerBullet},
+    },
+    movement::find_blocks_were_currently_in,
+};
 use crate::{
     SCREEN_WIDTH,
     game::{map::Point, movement::Mover},
@@ -28,7 +32,7 @@ const ROCKETLAUNCHER_COOLDOWN_TIME: i32 = 100;
 const STRAIFING_SPEED: f64 = 0.035;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
-const PLAYER_HP: f64 = 100.0; //was 100, set higher for testing
+const PLAYER_HP: f64 = 1000.0; //was 100, set higher for testing
 const PLAYER_SIZE: f64 = 3.0;
 const JUMP_SPEED_BOOST_MULTIPLICATOR: f64 = 0.4;
 const JUMP_SPEED_BOOST: f64 = 0.0;
@@ -145,16 +149,16 @@ impl Player {
     ) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
         //reseting keyinput idfk how to do it an other way
-        self.interacting = false; 
-        if window.is_key_pressed(Key::F, KeyRepeat::No){
-           self.interacting = true; 
+        self.interacting = false;
+        if window.is_key_pressed(Key::F, KeyRepeat::No) {
+            self.interacting = true;
         }
 
         if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) {
             let bullet = generate_entities(
                 PlayerBullet,
                 self.mover.position,
-                self.mover.view_level, 
+                self.mover.view_level,
                 self.mover.facing_direction,
                 renderer_data,
             );

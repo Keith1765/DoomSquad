@@ -144,7 +144,6 @@ fn read_values_for_button(
                 floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
                 parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
                 parameter_2.ok_or(Error::msg("Pasrser Error at parameter 2"))?,
-                17,
                 &renderer_data,
             )
             .ok_or(Error::msg("Pasrser Error at interactable"))?;
@@ -160,7 +159,6 @@ fn read_values_for_button(
                 floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
                 parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
                 parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
-                18,
                 &renderer_data,
             )
             .ok_or(Error::msg("Pasrser Error at interactable"))?;
@@ -176,7 +174,6 @@ fn read_values_for_button(
                 floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
                 parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
                 parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
-                16,
                 &renderer_data,
             )
             .ok_or(Error::msg("Pasrser Error at interactable"))?;
@@ -239,7 +236,6 @@ fn read_values_for_rest(
                 floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
                 parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
                 parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
-                15,
                 &renderer_data,
             )
             .ok_or(Error::msg("Pasrser Error at interactable"))?;
@@ -255,7 +251,6 @@ fn read_values_for_rest(
                 floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
                 parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
                 parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
-                19,
                 &renderer_data,
             )
             .ok_or(Error::msg("Pasrser Error at interactable"))?;
