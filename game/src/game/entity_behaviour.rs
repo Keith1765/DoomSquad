@@ -18,9 +18,11 @@ pub fn dummy_behaviour(entity: &mut Entity, map: &Map) {
 }
 pub fn player_bullet_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
+    let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(BULLET_SPEED, 0.0, map, false);
     entity.mover.foot_level -= entity.vertical_aim*BULLET_FLIGHT_COEFICIENT;
-    if entity.mover.foot_level <= entity.mover.floor_level {
+
+    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
         entity.hp = 0.0;
     }
 }
@@ -28,26 +30,33 @@ pub fn player_bullet_behaviour(entity: &mut Entity, map: &Map) {
 //atm the same as player bullets
 pub fn enemy_bullet_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
+    let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(BULLET_SPEED, 0.0, map, false);
+
+    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
+        entity.hp = 0.0;
+    }
 }
 
 pub fn player_arrow_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
+    let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(ARROW_SPEED, 0.0, map, false);
     entity.mover.foot_level -= entity.vertical_aim*ARROW_FLIGHT_COEFICIENT;
     entity.gravity(map, 0.1);
     //terminate arrow when hits the floor
-    if entity.mover.foot_level <= entity.mover.floor_level {
+    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
         entity.hp = 0.0;
     }
 }
 //atm the same as player bullets
 pub fn enemy_arrow_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
+    let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(ARROW_SPEED, 0.0, map, false);
     entity.gravity(map, 0.1);
     //terminate arrow when hits the floor
-    if entity.mover.foot_level <= entity.mover.floor_level {
+    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
         entity.hp = 0.0;
     }
 }
