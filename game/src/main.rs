@@ -25,7 +25,6 @@ const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.005;
 const WALL_DEFAULT_COLOR: u32 = 0x00ff00;
 const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
-const AUDIO_ENABLED: bool = true; 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //I commented game init to test parser first
@@ -74,29 +73,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Err("Error parsing map".into());
     }
 
-    let mut audio = if AUDIO_ENABLED { Audio::init() } else { None };
+    let mut audio = Audio::init();
 
     let mut prev_keys = (false, false, false, false, false); // (W, A, S, D, Space)
 
     while window.is_open() && !window.is_key_down(Key::Escape) && (game.player.hp > 0.0) {
         let (_, _, _, _, prev_space) = prev_keys;
 
-        // let cur_w = window.is_key_down(Key::W);
-        // let cur_a = window.is_key_down(Key::A);
-        // let cur_s = window.is_key_down(Key::S);
-        // let cur_d = window.is_key_down(Key::D);
-        // let cur_space = window.is_key_down(Key::Space);
+        let cur_w = window.is_key_down(Key::W);
+        let cur_a = window.is_key_down(Key::A);
+        let cur_s = window.is_key_down(Key::S);
+        let cur_d = window.is_key_down(Key::D);
+        let cur_space = window.is_key_down(Key::Space);
 
-        // if let Some(a) = &mut audio {
-        //     let is_moving = cur_w || cur_a || cur_s || cur_d;
-        //     let just_jumped = cur_space && !prev_space;
-            
-        //     a.handle_input(is_moving, just_jumped);
-        // }
+        let is_moving = cur_w || cur_a || cur_s || cur_d;
+        let just_jumped = cur_space && !prev_space;
+        
+        audio.handle_input(is_moving, just_jumped);
 
-        // prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
+        prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
 
-        game.update(&window, &renderer_data);
+        game.update(&window, &renderer_data, &mut audio);
         render::draw_screen(&mut buffer, &renderer_data, &game);
 
         //fps calc

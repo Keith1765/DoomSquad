@@ -6,7 +6,11 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use crate::game::map::Point;
+
 const AUDIO_DISTANCE_SCALE_COEFFICIENT: f32 = 0.025;
+const AUDIO_ENABLED: bool = true; 
+const MUSIC_VOLUME: f32 = 0.0;
 
 pub struct Audio {
     _stream: OutputStream, // must stay alive
@@ -31,24 +35,26 @@ impl Audio {
     }
 
     // Initialisiert Audio und lädt direkt alle Assets
-    pub fn init() -> Option<Self> {
-        let mut audio = Self::new().ok()?;
+    pub fn init() -> Self {
+        // ! accept unwrap; if audio totally broken, crashing is okay; should never fail anyway
+        let mut audio = Self::new().ok().unwrap(); 
+        if !AUDIO_ENABLED {return audio;} // if audio not enabled, return empty
 
         let _ = audio.load_sfx("step", "assets/audio/step.wav");
         let _ = audio.load_sfx("jump", "assets/audio/jump.wav");
-        let _ = audio.play_music_loop("assets/audio/music.wav", 0.6);
+        let _ = audio.play_music_loop("assets/music/dramatic_music.wav", MUSIC_VOLUME);
 
-        Some(audio)
+        audio
     }
 
     pub fn handle_input(&mut self, is_moving: bool, just_jumped: bool) {
-        if is_moving {
-            self.play_step();
-        }
+        // if is_moving {
+        //     self.play_step(1.0);
+        // }
 
-        if just_jumped {
-            self.play_sfx("jump", 1.0);
-        }
+        // if just_jumped {
+        //     self.play_sfx("jump", 1.0);
+        // }
     }
 
     pub fn load_sfx<P: AsRef<Path>>(
@@ -85,28 +91,29 @@ impl Audio {
         }
     }
 
-    pub fn play_sfx(&self, name: &str, volume: f32) {
-        let data = match self.sfx_data.get(name) {
-            Some(d) => d,
-            None => return,
-        };
-        let cursor = Cursor::new(Arc::clone(data));
-        if let (Ok(decoder), Ok(sink)) = (
-            Decoder::new(BufReader::new(cursor)),
-            Sink::try_new(&self.handle),
-        ) {
-            sink.set_volume(volume);
-            sink.append(decoder);
-            sink.detach();
-        }
+    pub fn play_sfx(&mut self, name: &str, volume: f32) {
+
+        if let Some(data) = self.sfx_data.get(name) {
+            let cursor = Cursor::new(Arc::clone(data));
+            if let (Ok(decoder), Ok(sink)) = (
+                Decoder::new(BufReader::new(cursor)),
+                Sink::try_new(&self.handle),
+            ) {
+                sink.set_volume(volume);
+                sink.append(decoder);
+                sink.detach();
+                println!("hi");
+            }
+        } 
     }
 
-    pub fn play_sfx_distance_scaled(&self, name: &str, distance: f32) {
+    pub fn play_sfx_distance_scaled(&mut self, name: &str, player_position: Point, other_position: Point) {
+        let distance = player_position.distance_to(&other_position) as f32;
         let volume = (1.0 / (distance.max(0.01) * AUDIO_DISTANCE_SCALE_COEFFICIENT)).min(1.0);
         self.play_sfx(name, volume);
     }
 
-    pub fn play_step(&mut self) {
+    pub fn play_step(&mut self, volume: f32) {
         let now = Instant::now();
         if now.duration_since(self.last_step_time) < self.step_interval {
             return;
@@ -118,10 +125,16 @@ impl Audio {
                 Decoder::new(BufReader::new(cursor)),
                 Sink::try_new(&self.handle),
             ) {
-                sink.set_volume(0.5); // half volume
+                sink.set_volume(volume);
                 sink.append(decoder);
                 sink.detach();
             }
         }
+    }
+
+    pub fn play_step_distance_scaled(&mut self, player_position: Point, other_position: Point) {
+        let distance = player_position.distance_to(&other_position) as f32;
+        let volume = (1.0 / (distance.max(0.01) * AUDIO_DISTANCE_SCALE_COEFFICIENT)).min(1.0);
+        self.play_step(volume);
     }
 }
