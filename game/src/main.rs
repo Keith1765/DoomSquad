@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         SURFACE_DEFAULT_COLOR,
     );
 
-    // ! this unwrap is acceptable, if the whole game is broken then crashin is pretty reasonably
+    // ! this unwrap is acceptable, if the whole game is broken then crashing is pretty reasonable
     let mut game = game::Game::new_game(&renderer_data).unwrap();
 
     // //TODO TEST
