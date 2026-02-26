@@ -91,7 +91,7 @@ pub fn ranged_enemy_behaviour(
             renderer_data,
             0.0,
         );
-        events.push(Spawn(bullet));
+        if let Some(bullet) = bullet { events.push(Spawn(bullet)); }
         // attack animation
         if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
             entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
@@ -121,7 +121,7 @@ pub fn archer_behaviour(
             renderer_data,
             0.0,
         );
-        events.push(Spawn(arrow));
+        if let Some(arrow) = arrow { events.push(Spawn(arrow)); }
         // attack animation
         if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
             entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
@@ -149,7 +149,7 @@ pub fn summoner_enemy_behaviour(
             renderer_data,
             0.0,
         );
-        events.push(Spawn(melee_enemy));
+        if let Some(melee_enemy) = melee_enemy { events.push(Spawn(melee_enemy)); }
         // attack animation
         if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
             entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
@@ -210,7 +210,7 @@ pub fn death_behaviour(entity: &mut Entity, renderer_data: &RendererData) -> Vec
                 renderer_data,
                 0.0,
             );
-            events.push(Spawn(explosion));
+            if let Some(explosion) = explosion { events.push(Spawn(explosion)); }
         }
 
         _ => {}

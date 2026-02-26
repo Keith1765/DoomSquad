@@ -128,7 +128,7 @@ fn read_point(
         0.0,
     );
 
-    player_vec.push(entities_pushing);
+    if let Some(entities_pushing) = entities_pushing {player_vec.push(entities_pushing);}
     Ok(())
 }
 
