@@ -22,6 +22,7 @@ const GRAVITY_CONST: f64 = -0.8;
 pub const BULLET_SPEED: f64 = 30.0;
 pub const SHOOTING_COOLDOWN: i32 = 50;
 pub const ARROW_COOLDOWN: i32 = 10;
+pub const BULLET_COOLDOWN: i32 = 5;
 pub const SUMMONING_COOLDOWN: i32 = 200;
 pub const PROJECTILE_HP: f64 = 30.0;
 pub const ENEMY_HP: f64 = 50.0;

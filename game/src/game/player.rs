@@ -1,7 +1,6 @@
 use super::map::Map;
 use crate::{SCREEN_HEIGHT, game::{entities::{
-    ARROW_COOLDOWN, EntityEvent::{self, Spawn},
-    EntityType::{PlayerArrow, PlayerBullet},
+    ARROW_COOLDOWN, BULLET_COOLDOWN, EntityEvent::{self, Spawn}, EntityType::{PlayerArrow, PlayerBullet}
 }, movement::find_blocks_were_currently_in}};
 use crate::game::generate_entities::generate_entities;
 use crate::game::player::LastInputDirection::*;
@@ -10,7 +9,7 @@ use crate::{
     game::{map::Point, movement::Mover},
     render::RendererData,
 };
-use minifb::{Key, KeyRepeat, MouseMode, Window};
+use minifb::{Key, KeyRepeat, MouseButton, MouseMode, Window};
 use std::f64::consts::PI;
 
 const ROTATION_SPEED_MOUSE: f64 = 2.0;
@@ -68,6 +67,7 @@ pub struct Player {
     pub rocketlauncher_cooldown: i32,
     pub hp: f64,
     pub arrow_cooldown: i32,
+    pub bullet_cooldown: i32,
     pub size: f64,
     pub using_rocketlauncher: bool,
     pub interacting: bool,
@@ -103,6 +103,7 @@ impl Player {
             rocketlauncher_cooldown: 0,
             hp: PLAYER_HP,
             arrow_cooldown: 0,
+            bullet_cooldown: 0,
             size: PLAYER_SIZE,
             using_rocketlauncher: false,
             interacting: false,
@@ -125,7 +126,7 @@ impl Player {
            self.interacting = true; 
         }
 
-        if window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) {
+        if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) || window.get_mouse_down(MouseButton::Left)) && self.bullet_cooldown == 0 {
             let bullet = generate_entities(
                 PlayerBullet,
                 self.mover.position,
@@ -135,9 +136,14 @@ impl Player {
                 self.vertcal_aim
             );
             events.push(Spawn(bullet));
+            self.bullet_cooldown = BULLET_COOLDOWN;
         }
 
-        if window.is_key_pressed(Key::RightShift, KeyRepeat::No) && self.arrow_cooldown == 0 {
+         if self.bullet_cooldown > 0 {
+            self.bullet_cooldown -= 1;
+        }
+
+        if (window.is_key_pressed(Key::RightShift, KeyRepeat::No) || window.get_mouse_down(MouseButton::Right))&& self.arrow_cooldown == 0 {
             let arrow = generate_entities(
                 PlayerArrow,
                 self.mover.position,
