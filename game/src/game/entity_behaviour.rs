@@ -10,14 +10,19 @@ use crate::game::map::{Map, Point};
 use crate::game::player::MOVE_SPEED;
 use crate::render::RendererData;
 
+const BULLET_FLIGHT_COEFICIENT: f64 = 7.0;
+const ARROW_FLIGHT_COEFICIENT: f64 = 3.0;
+
 pub fn dummy_behaviour(entity: &mut Entity, map: &Map) {
     entity.gravity(map, 1.0);
 }
 pub fn player_bullet_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
     entity.mover.step(BULLET_SPEED, 0.0, map, false);
-    entity.mover.foot_level -= entity.vertical_aim*10.0;
-    entity.gravity(map, 0.0);
+    entity.mover.foot_level -= entity.vertical_aim*BULLET_FLIGHT_COEFICIENT;
+    if entity.mover.foot_level <= entity.mover.floor_level {
+        entity.hp = 0.0;
+    }
 }
 
 //atm the same as player bullets
@@ -29,6 +34,7 @@ pub fn enemy_bullet_behaviour(entity: &mut Entity, map: &Map) {
 pub fn player_arrow_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
     entity.mover.step(ARROW_SPEED, 0.0, map, false);
+    entity.mover.foot_level -= entity.vertical_aim*ARROW_FLIGHT_COEFICIENT;
     entity.gravity(map, 0.1);
     //terminate arrow when hits the floor
     if entity.mover.foot_level <= entity.mover.floor_level {

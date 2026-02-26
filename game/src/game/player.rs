@@ -37,7 +37,7 @@ const ROCKETLAUNCHER_SPEED_BOOST: f64 = 5.0;
 const ROCKETLAUNCHER_HEIGHT_BOOST: f64 = 5.0;
 const JUMPING_ALLOWED_TIMER_AMOUNT: i32 = 10;
 const DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING: f64 = 0.3;
-const BULLET_OFFSET_TO_MATCH_SCREEN_MIDDLE: f64 = 3.0;
+const PROJECTILE_OFFSET_TO_MATCH_SCREEN_MIDDLE: f64 = 3.0;
 const VERTICAL_AIM_SPEED: f64 = 0.1;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -125,7 +125,7 @@ impl Player {
             let bullet = generate_entities(
                 PlayerBullet,
                 self.mover.position,
-                self.mover.view_level - BULLET_OFFSET_TO_MATCH_SCREEN_MIDDLE, 
+                self.mover.view_level - PROJECTILE_OFFSET_TO_MATCH_SCREEN_MIDDLE, 
                 self.mover.facing_direction,
                 renderer_data,
                 self.vertcal_aim
@@ -137,7 +137,7 @@ impl Player {
             let arrow = generate_entities(
                 PlayerArrow,
                 self.mover.position,
-                self.mover.height,
+                self.mover.height - PROJECTILE_OFFSET_TO_MATCH_SCREEN_MIDDLE,
                 self.mover.facing_direction,
                 renderer_data,
                 self.vertcal_aim,
