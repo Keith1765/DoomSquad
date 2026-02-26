@@ -74,7 +74,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Err("Error parsing map".into());
     }
 
-
     let mut audio: Option<Audio> = None;
     if AUDIO_ENABLED {
         audio = Audio::new().ok();

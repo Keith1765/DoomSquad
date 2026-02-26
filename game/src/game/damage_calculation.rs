@@ -5,7 +5,8 @@ use crate::game::entities::{
     ARROW_DMG, BULLET_DMG, MEELE_ENEMY_DMG, MELEE_ENEMY_RANGE, RED_BARREL_DMG,
     WEAK_ENEMY_MULTIPLICATOR,
 };
-use crate::game::gamestate::Game;
+use crate::game::gamestate::{Game, INTERACTABLE_RANGE};
+use crate::game::map_grid;
 
 pub fn damage_check(game_state: &mut Game) {
     //DMG calc for entities
@@ -98,7 +99,7 @@ pub fn damage_check(game_state: &mut Game) {
         {
             //check if horizontal overlap of hitbox
             let shooting_height = game_state.entities[j].mover.view_level;
-            let player_bottom = game_state.player.mover.foot_level ;
+            let player_bottom = game_state.player.mover.foot_level;
             let player_top = game_state.player.mover.height + player_bottom;
 
             if shooting_height <= player_top && shooting_height >= player_bottom {
@@ -144,4 +145,27 @@ pub fn damage_check(game_state: &mut Game) {
     for i in game_state.projectile_that_hit.clone() {
         game_state.entities[i].hp = 0.0; //o7
     }
+    //Interactables
+
+    for i in 0..game_state.interactables.len() {
+        game_state.map_grid.update_interactables(&game_state.interactables);
+
+        for interactable in &mut game_state.interactables {
+            interactable.player_in_range = false;
+        }
+
+        let player_position = game_state.player.mover.position;
+
+        let neighbours = game_state.map_grid.get_interactable_neighbours(player_position);
+
+        for j in neighbours {
+            let interactable_position = game_state.interactables[j].mover.position;
+            let distance_from_player_to_interactable =
+                player_position.distance_to(&interactable_position);
+            if distance_from_player_to_interactable <= INTERACTABLE_RANGE {
+                game_state.interactables[j].player_in_range = true;
+            }
+        }
+    }
+    
 }

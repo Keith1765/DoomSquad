@@ -81,6 +81,49 @@ impl fmt::Display for EntityType {
         write!(f, "{}", text)
     }
 }
+impl EntityType {
+    pub fn get_walk_animation_data(&self) -> Option<(usize, usize, usize)> {
+        match self {
+            // TODO insert proper values here
+            EntityType::MeleeEnemy => Some((9, 10, 8)),
+            EntityType::WeakEnemy => Some((17, 18, 8)),
+            EntityType::Archer => Some((0, 0, 8)),
+            _ => None, // other types do not have walking animations
+        }
+    }
+
+    pub fn get_action_animation_data(&self) -> Option<(usize, usize)> {
+        match self {
+            // TODO insert proper values here
+            EntityType::MeleeEnemy => Some((7, 15)),
+            EntityType::WeakEnemy => Some((15, 15)),
+            EntityType::SummonerEnemy => Some((19, 25)),
+            EntityType::RangedEnemy => Some((11, 15)),
+            EntityType::Archer => Some((0, 15)),
+            _ => None, // other types do not have walking animations
+        }
+    }
+
+    pub fn get_default_texture_id(&self) -> usize {
+        match self {
+            // TODO insert proper values here
+            EntityType::MeleeEnemy => 8,
+            EntityType::WeakEnemy => 16,
+            EntityType::SummonerEnemy => 20,
+            EntityType::RangedEnemy => 12,
+            EntityType::Archer => 0,
+            EntityType::Dummy => 5,
+            EntityType::RedBarrel => 13,
+            EntityType::ExplodedRedBarrel => 6,
+            EntityType::EnemyBullet => 3,
+            EntityType::PlayerBullet => 4,
+            EntityType::EnemyArrow => 2,
+            EntityType::PlayerArrow => 1,
+            EntityType::Button => 0,
+            _ => 0,
+        }
+    }
+}
 #[derive(Clone)]
 pub enum EntityEvent {
     Spawn(Entity),
@@ -95,7 +138,7 @@ pub struct Entity {
     pub vertical_velocity: f64,
     pub entity_type: EntityType,
     pub orientation_lock: bool,
-    pub cooldown: i32,
+    pub action_cooldown: i32,
     pub hp: f64,
     pub size: f64,
     pub did_damage: bool,
@@ -137,7 +180,7 @@ impl Entity {
             vertical_velocity: 0.0,
             entity_type: entity_type,
             orientation_lock: false,
-            cooldown: 0,
+            action_cooldown: 0,
             hp: hp,
             size: size,
             did_damage: false,
@@ -189,8 +232,22 @@ impl Entity {
         }
 
         //set view level correctly (excluded projectiles)
-        if !matches!(self.entity_type, EntityType::EnemyArrow | EntityType::EnemyBullet | EntityType::PlayerArrow | EntityType::PlayerBullet){
+        if !matches!(
+            self.entity_type,
+            EntityType::EnemyArrow
+                | EntityType::EnemyBullet
+                | EntityType::PlayerArrow
+                | EntityType::PlayerBullet
+        ) {
             self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
+        }
+
+        if let Some(switcher) = &mut self.sprite.action_sprite_switcher {
+            if switcher.countdown == 0 {
+                self.sprite.action_sprite_switcher = None;
+            } else {
+                switcher.countdown -= 1;
+            }
         }
 
         return events;
@@ -207,7 +264,12 @@ impl Entity {
         }
         //entities never move when very close to player
         if self.mover.position.distance_to(&player_position) > self.size + MELEE_ENEMY_RANGE - 0.1 {
-            self.mover.step(move_speed, 0.0, map, false);
+            let step_succesful = self.mover.step(move_speed, 0.0, map, false);
+            if step_succesful {
+                self.sprite.continue_or_start_walk_cycle(&self.entity_type);
+            } else {
+                self.sprite.walk_cycle_handler = None; // if cant step, stop walk animation
+            }
         }
     }
 

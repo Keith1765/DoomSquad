@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{
-    render::textures::{Texture, load_textures},
-};
+use crate::render::textures::{Texture, load_textures};
 
 pub struct RendererData {
     pub screen_width_as_f64: f64,

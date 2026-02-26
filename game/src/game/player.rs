@@ -4,6 +4,7 @@ use crate::{SCREEN_HEIGHT, game::{entities::{
 }, movement::find_blocks_were_currently_in}};
 use crate::game::generate_entities::generate_entities;
 use crate::game::player::LastInputDirection::*;
+
 use crate::{
     SCREEN_WIDTH,
     game::{map::Point, movement::Mover},
@@ -27,7 +28,7 @@ const ROCKETLAUNCHER_COOLDOWN_TIME: i32 = 100;
 const STRAIFING_SPEED: f64 = 0.035;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
-const PLAYER_HP: f64 = 100.0; //was 100, set higher for testing
+const PLAYER_HP: f64 = 1000.0; //was 100, set higher for testing
 const PLAYER_SIZE: f64 = 3.0;
 const JUMP_SPEED_BOOST_MULTIPLICATOR: f64 = 0.4;
 const JUMP_SPEED_BOOST: f64 = 0.0;
@@ -113,6 +114,42 @@ impl Player {
         }
     }
 
+    pub fn new_with_position(position: Point) -> Self {
+        let pa: f64 = 4.0;
+        Self {
+            mover: Mover {
+                position,
+                floor_level: 0.0,
+                foot_level: 0.0,
+                view_level: PLAYER_VIEW_HEIGHT,
+                height: PLAYER_HEAD_HEIGHT,
+                facing_direction: pa,
+            },
+            velocity_x: pa.cos() * ROTATION_SPEED_MOUSE,
+            velocity_y: pa.sin() * ROTATION_SPEED_MOUSE,
+            last_mouse_x: SCREEN_WIDTH as f32 / 2.0,
+            last_mouse_y: SCREEN_HEIGHT as f32 / 2.0,
+            godmode: false, // allows flying up and down, no collision (when those are implemented)
+            move_speed: 1.0,
+            is_sliding: false,
+            last_input: No,
+            slide_cooldown: 0,
+            is_jumping: false,
+            vertical_velocity: 0.0,
+            gravity: -1.0,
+            rocketlauncher_cooldown: 0,
+            hp: PLAYER_HP,
+            arrow_cooldown: 0,
+            size: PLAYER_SIZE,
+            using_rocketlauncher: false,
+            interacting: false,
+            jumping_allowed: false,
+            jumping_allowed_timer: 0,
+            bullet_cooldown: 0,
+            vertcal_aim: 0.0,
+        }
+    }
+
     pub fn update(
         &mut self,
         window: &Window,
@@ -121,9 +158,9 @@ impl Player {
     ) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
         //reseting keyinput idfk how to do it an other way
-        self.interacting = false; 
-        if window.is_key_pressed(Key::F, KeyRepeat::No){
-           self.interacting = true; 
+        self.interacting = false;
+        if window.is_key_pressed(Key::F, KeyRepeat::No) {
+            self.interacting = true;
         }
 
         if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) || window.get_mouse_down(MouseButton::Left)) && self.bullet_cooldown == 0 {
