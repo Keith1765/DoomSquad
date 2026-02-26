@@ -1,8 +1,8 @@
 use super::map::Map;
-use crate::game::{entities::{
+use crate::{SCREEN_HEIGHT, game::{entities::{
     ARROW_COOLDOWN, EntityEvent::{self, Spawn},
     EntityType::{PlayerArrow, PlayerBullet},
-}, movement::find_blocks_were_currently_in};
+}, movement::find_blocks_were_currently_in}};
 use crate::game::generate_entities::generate_entities;
 use crate::game::player::LastInputDirection::*;
 use crate::{
@@ -39,6 +39,8 @@ const JUMPING_ALLOWED_TIMER_AMOUNT: i32 = 10;
 const DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING: f64 = 0.3;
 const PROJECTILE_OFFSET_TO_MATCH_SCREEN_MIDDLE: f64 = 3.0;
 const VERTICAL_AIM_SPEED: f64 = 0.1;
+const MOUSE_SENSE_X: f64 = 0.003;
+const MOUSE_SENSE_Y: f64 = 0.003;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum LastInputDirection {
@@ -54,6 +56,7 @@ pub struct Player {
     pub velocity_x: f64,
     pub velocity_y: f64,
     pub last_mouse_x: f32,
+    pub last_mouse_y: f32,
     pub godmode: bool,
     pub move_speed: f64,
     pub is_sliding: bool,
@@ -88,6 +91,7 @@ impl Player {
             velocity_x: pa.cos() * ROTATION_SPEED_MOUSE,
             velocity_y: pa.sin() * ROTATION_SPEED_MOUSE,
             last_mouse_x: SCREEN_WIDTH as f32 / 2.0,
+            last_mouse_y: SCREEN_HEIGHT as f32 / 2.0,
             godmode: false, // allows flying up and down, no collision (when those are implemented)
             move_speed: 1.0,
             is_sliding: false,
@@ -150,12 +154,17 @@ impl Player {
             self.arrow_cooldown -= 1;
         }
 
-        if let Some((mx, _my)) = window.get_mouse_pos(MouseMode::Pass) {
+        //f32 cause window.get_mouse_pos gives us f32
+        if let Some((mx,my)) = window.get_mouse_pos(MouseMode::Pass) {
             self.check_angle();
             let dx = mx - self.last_mouse_x; // mouse delta
-            self.mover.facing_direction += dx as f64 * 0.003; // sensitivity
+            let dy = my - self.last_mouse_y; // mouse delta
+            self.mover.facing_direction += dx as f64 * MOUSE_SENSE_X; // sensitivity
+
+            self.vertcal_aim = (self.vertcal_aim + dy  as f64 * MOUSE_SENSE_Y ).clamp(-1.0, 1.0 );
 
             self.last_mouse_x = mx; // store for next frame
+            self.last_mouse_y = my;
             self.update_dir();
         }
 
