@@ -40,8 +40,6 @@ pub fn render_init(
     // would be the sam with height / vertical_fov: can be used for both horizontal and vertical scaling
     let render_scale_coefficient: f64 = (screen_width as f64 / 2.0) / (horizontal_fov / 2.0).tan();
 
-    // we accept this unwrap for now, if textures not working just crash, it's fine for now
-    // TODO remove necessity for unwrap
     let textures = load_textures().unwrap_or(HashMap::new());
 
     RendererData {

@@ -16,7 +16,7 @@ pub fn generate_entities(
     height: f64,
     facing_direction: f64,
     renderer_data: &RendererData,
-) -> Entity {
+) -> Option<Entity> {
     match entity_type {
         EntityType::PlayerBullet => Entity::new(
             position,
@@ -29,8 +29,7 @@ pub fn generate_entities(
             EntityType::PlayerBullet,
             PROJECTILE_HP,
             1.0,
-        )
-        .unwrap(),
+        ),
         EntityType::EnemyBullet => Entity::new(
             position,
             0.0,
@@ -42,8 +41,7 @@ pub fn generate_entities(
             EntityType::EnemyBullet,
             PROJECTILE_HP,
             1.0,
-        )
-        .unwrap(),
+        ),
         EntityType::PlayerArrow => Entity::new(
             position,
             0.0,
@@ -55,8 +53,7 @@ pub fn generate_entities(
             EntityType::PlayerArrow,
             PROJECTILE_HP,
             1.0,
-        )
-        .unwrap(),
+        ),
         EntityType::EnemyArrow => Entity::new(
             position,
             0.0,
@@ -68,8 +65,7 @@ pub fn generate_entities(
             EntityType::EnemyArrow,
             PROJECTILE_HP,
             1.0,
-        )
-        .unwrap(),
+        ),
         EntityType::Dummy => Entity::new(
             position,
             0.0,
@@ -81,8 +77,7 @@ pub fn generate_entities(
             EntityType::Dummy,
             DUMMY_HP,
             DUMMY_SIZE,
-        )
-        .unwrap(),
+        ),
         EntityType::RangedEnemy => Entity::new(
             position,
             0.0,
@@ -94,8 +89,7 @@ pub fn generate_entities(
             EntityType::RangedEnemy,
             ENEMY_HP,
             ENEMY_SIZE,
-        )
-        .unwrap(),
+        ),
         EntityType::Archer => Entity::new(
             position,
             0.0,
@@ -107,8 +101,7 @@ pub fn generate_entities(
             EntityType::Archer,
             ENEMY_HP,
             ENEMY_SIZE,
-        )
-        .unwrap(),
+        ),
         EntityType::MeleeEnemy => Entity::new(
             position,
             0.0,
@@ -120,8 +113,7 @@ pub fn generate_entities(
             EntityType::MeleeEnemy,
             ENEMY_HP,
             ENEMY_SIZE,
-        )
-        .unwrap(),
+        ),
         EntityType::SummonerEnemy => Entity::new(
             position,
             0.0,
@@ -133,8 +125,7 @@ pub fn generate_entities(
             EntityType::SummonerEnemy,
             ENEMY_HP,
             ENEMY_SIZE,
-        )
-        .unwrap(),
+        ),
         EntityType::WeakEnemy => Entity::new(
             position,
             0.0,
@@ -146,8 +137,7 @@ pub fn generate_entities(
             EntityType::WeakEnemy,
             ENEMY_HP * WEAK_ENEMY_MULTIPLICATOR,
             ENEMY_SIZE,
-        )
-        .unwrap(),
+        ),
         EntityType::RedBarrel => Entity::new(
             position,
             0.0,
@@ -159,8 +149,7 @@ pub fn generate_entities(
             EntityType::RedBarrel,
             RED_BARREL_HP,
             RED_BARREL_SIZE,
-        )
-        .unwrap(),
+        ),
         EntityType::ExplodedRedBarrel => Entity::new(
             position,
             0.0,
@@ -172,8 +161,7 @@ pub fn generate_entities(
             EntityType::ExplodedRedBarrel,
             EXPLODED_RED_BARREL_HP,
             EXPLODED_RED_BARREL_SIZE,
-        )
-        .unwrap(),
+        ),
         _ => Entity::new(
             position,
             0.0,
@@ -185,7 +173,6 @@ pub fn generate_entities(
             EntityType::Dummy,
             DUMMY_HP,
             DUMMY_SIZE,
-        )
-        .unwrap(),
+        ),
     }
 }

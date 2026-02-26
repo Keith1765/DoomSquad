@@ -40,32 +40,56 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new_test_game(renderer_data: &RendererData) -> Self {
-        Self {
-            player: Player::new_with_position(
-                parse_player_position(
-                    "assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string(),
+    pub fn new_game(renderer_data: &RendererData) -> Option<Self> {
+        let path = Path::new("assets/maps/ggb");
+        let entries_result = fs::read_dir(path);
+        let mut entries: Vec<_> = match entries_result {
+            Ok(read_dir) => read_dir.filter_map(Result::ok).collect(),
+            Err(e) => {
+                eprintln!("Error when reading directory: {}", e);
+                return None;
+            }
+        };
+        entries.sort_by_key(|e| e.path());
+        if let Some(entry) = entries.get(0) { // we initially load the first map, index 0
+            let path_buf = entry.path();
+
+            let path = match path_buf.to_str() {
+                Some(p) => p,
+                None => {
+                    eprintln!("Invalid path");
+                    return None;
+                }
+            };
+            let game = Self {
+                player: Player::new_with_position(
+                    parse_player_position(
+                        path.to_string(),
+                        &renderer_data,
+                    )
+                    .ok()?,
+                ),
+                entities: parse_entities(
+                    path.to_string(),
                     &renderer_data,
                 )
-                .unwrap(),
-            ),
-            entities: parse_entities(
-                "assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string(),
-                &renderer_data,
-            )
-            .unwrap(),
-            interactables: parse_interactables(
-                "assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string(),
-                &renderer_data,
-            )
-            .unwrap(),
-            map: Map::new_test_map().unwrap(), // TODO remove unwrap
-            despawn_timer: DESPAWN_TIME,
-            map_grid: MapGrid::new(MAP_GRID_CELL_SIZE),
-            projectile_that_hit: Vec::new(),
-            map_index: 0,
-            last_map_index:0,
-        }
+                .ok()?,
+                interactables: parse_interactables(
+                    path.to_string(),
+                    &renderer_data,
+                )
+                .ok()?,
+                map: parse_map(path.to_string()).ok()?, // TODO remove unwrap
+                despawn_timer: DESPAWN_TIME,
+                map_grid: MapGrid::new(MAP_GRID_CELL_SIZE),
+                projectile_that_hit: Vec::new(),
+                map_index: 0,
+                last_map_index:0,
+            };
+
+            return Some(game);
+
+        } else {None}
     }
 
     pub fn update(&mut self, window: &Window, renderer_data: &RendererData) {

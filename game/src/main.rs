@@ -64,15 +64,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         BLOCK_DEFAULT_COLOR,
         SURFACE_DEFAULT_COLOR,
     );
-    let mut game = game::Game::new_test_game(&renderer_data);
 
-    //TODO TEST
-    let map = parse_map("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string());
-    if let Ok(map) = map {
-        game.map = map;
-    } else {
-        return Err("Error parsing map".into());
-    }
+    // ! this unwrap is acceptable, if the whole game is broken then crashin is pretty reasonably
+    let mut game = game::Game::new_game(&renderer_data).unwrap();
+
+    // //TODO TEST
+    // let map = parse_map("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string());
+    // if let Ok(map) = map {
+    //     game.map = map;
+    // } else {
+    //     return Err("Error parsing map".into());
+    // }
 
     let mut audio: Option<Audio> = None;
     if AUDIO_ENABLED {

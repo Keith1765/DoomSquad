@@ -162,7 +162,7 @@ impl Player {
                 self.mover.facing_direction,
                 renderer_data,
             );
-            events.push(Spawn(bullet));
+            if let Some(bullet) = bullet { events.push(Spawn(bullet));}
         }
 
         if window.is_key_pressed(Key::RightShift, KeyRepeat::No) && self.arrow_cooldown == 0 {
@@ -173,7 +173,7 @@ impl Player {
                 self.mover.facing_direction,
                 renderer_data,
             );
-            events.push(Spawn(arrow));
+            if let Some(arrow) = arrow {events.push(Spawn(arrow));}
             self.arrow_cooldown = ARROW_COOLDOWN;
         }
 

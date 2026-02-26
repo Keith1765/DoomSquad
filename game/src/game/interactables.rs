@@ -159,7 +159,7 @@ impl Interactable {
                         0.0,
                         _renderer_data,
                     );
-                    game_state.entities.push(entity);
+                    if let Some(entity) = entity { game_state.entities.push(entity); }
                 }
                 ButtonType::Heal => {
                     println!("Player health before: {}", game_state.player.hp);
@@ -217,7 +217,7 @@ impl Interactable {
                         0.0,
                         _renderer_data,
                     );
-                    game_state.entities.push(entity);
+                    if let Some(entity) = entity { game_state.entities.push(entity); }
                 },
                 n if n >= 30 => {
                     let player = &mut game_state.player;
