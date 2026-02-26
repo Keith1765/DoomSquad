@@ -98,6 +98,7 @@ pub struct Entity {
     pub hp: f64,
     pub size: f64,
     pub did_damage: bool,
+    pub vertical_aim: f64,
 }
 
 impl Entity {
@@ -112,6 +113,7 @@ impl Entity {
         entity_type: EntityType,
         hp: f64,
         size: f64,
+        vertical_aim: f64,
     ) -> Option<Self> {
         let entity = Entity {
             mover: Mover {
@@ -138,6 +140,7 @@ impl Entity {
             hp: hp,
             size: size,
             did_damage: false,
+            vertical_aim: vertical_aim,
         };
         Some(entity)
     }

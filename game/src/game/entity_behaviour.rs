@@ -16,7 +16,10 @@ pub fn dummy_behaviour(entity: &mut Entity, map: &Map) {
 pub fn player_bullet_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
     entity.mover.step(BULLET_SPEED, 0.0, map, false);
+    entity.mover.foot_level -= entity.vertical_aim*10.0;
+    entity.gravity(map, 0.0);
 }
+
 //atm the same as player bullets
 pub fn enemy_bullet_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
@@ -71,6 +74,7 @@ pub fn ranged_enemy_behaviour(
             15.0, //per default entities are generated at default view height plus this value, therfore should be 0.0
             direction_to_player,
             renderer_data,
+            0.0,
         );
         events.push(Spawn(bullet));
     }
@@ -96,6 +100,7 @@ pub fn archer_behaviour(
             entity.mover.height,
             direction_to_player,
             renderer_data,
+            0.0,
         );
         events.push(Spawn(arrow));
     }
@@ -119,6 +124,7 @@ pub fn summoner_enemy_behaviour(
             entity.mover.height,
             direction_to_player,
             renderer_data,
+            0.0,
         );
         events.push(Spawn(melee_enemy));
     } else {
@@ -167,6 +173,7 @@ pub fn death_behaviour(entity: &mut Entity, renderer_data: &RendererData) -> Vec
                 entity.mover.foot_level,
                 0.0,
                 renderer_data,
+                0.0,
             );
             events.push(Spawn(explosion));
         }

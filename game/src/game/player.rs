@@ -128,6 +128,7 @@ impl Player {
                 self.mover.view_level - BULLET_OFFSET_TO_MATCH_SCREEN_MIDDLE, 
                 self.mover.facing_direction,
                 renderer_data,
+                self.vertcal_aim
             );
             events.push(Spawn(bullet));
         }
@@ -139,6 +140,7 @@ impl Player {
                 self.mover.height,
                 self.mover.facing_direction,
                 renderer_data,
+                self.vertcal_aim,
             );
             events.push(Spawn(arrow));
             self.arrow_cooldown = ARROW_COOLDOWN;

@@ -126,6 +126,7 @@ fn read_point(reader: &mut Reader<&[u8]>, buf: &mut Vec<u8>, entities: &mut Vec<
         floor_level.unwrap(),
         facing_direction.unwrap(),
         renderer_data,
+        0.0,
     );
 
     entities.push(entities_pushing);
