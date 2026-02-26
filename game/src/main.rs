@@ -5,7 +5,7 @@ mod game;
 mod parser;
 mod render;
 
-use crate::audio::Audio;
+use crate::audio::audio::Audio;
 use crate::render::{RendererData, render_init};
 use minifb::{Key, Window, WindowOptions};
 use std::f64::consts::PI;
