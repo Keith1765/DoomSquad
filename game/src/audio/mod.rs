@@ -6,6 +6,8 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+const AUDIO_DISTANCE_SCALE_COEFFICIENT: f32 = 0.025;
+
 pub struct Audio {
     _stream: OutputStream, // must stay alive
     handle: OutputStreamHandle,
@@ -97,6 +99,11 @@ impl Audio {
             sink.append(decoder);
             sink.detach();
         }
+    }
+
+    pub fn play_sfx_distance_scaled(&self, name: &str, distance: f32) {
+        let volume = (1.0 / (distance * AUDIO_DISTANCE_SCALE_COEFFICIENT)).min(1.0);
+        self.play_sfx(name, volume);
     }
 
     pub fn play_step(&mut self) {
