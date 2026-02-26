@@ -272,7 +272,7 @@ impl Player {
         }
 
         // if we moved, play step sound
-        if step_successful {
+        if step_successful && !self.is_sliding && !((self.mover.foot_level - self.mover.floor_level).abs() > 0.3 ) {
             audio.play_step(1.0);
         }
 
