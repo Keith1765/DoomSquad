@@ -158,6 +158,7 @@ impl Interactable {
                         self.mover.floor_level,
                         0.0,
                         _renderer_data,
+                        0.0,
                     );
                     game_state.entities.push(entity);
                 }
@@ -216,6 +217,7 @@ impl Interactable {
                         self.mover.floor_level,
                         0.0,
                         _renderer_data,
+                        0.0,
                     );
                     game_state.entities.push(entity);
                 },

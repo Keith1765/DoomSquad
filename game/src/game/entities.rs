@@ -21,7 +21,8 @@ const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 const GRAVITY_CONST: f64 = -0.8;
 pub const BULLET_SPEED: f64 = 30.0;
 pub const SHOOTING_COOLDOWN: i32 = 50;
-pub const ARROW_COOLDOWN: i32 = 75;
+pub const ARROW_COOLDOWN: i32 = 10;
+pub const BULLET_COOLDOWN: i32 = 5;
 pub const SUMMONING_COOLDOWN: i32 = 200;
 pub const PROJECTILE_HP: f64 = 30.0;
 pub const ENEMY_HP: f64 = 50.0;
@@ -141,6 +142,7 @@ pub struct Entity {
     pub hp: f64,
     pub size: f64,
     pub did_damage: bool,
+    pub vertical_aim: f64,
 }
 
 impl Entity {
@@ -155,6 +157,7 @@ impl Entity {
         entity_type: EntityType,
         hp: f64,
         size: f64,
+        vertical_aim: f64,
     ) -> Option<Self> {
         let entity = Entity {
             mover: Mover {
@@ -181,6 +184,7 @@ impl Entity {
             hp: hp,
             size: size,
             did_damage: false,
+            vertical_aim: vertical_aim,
         };
         Some(entity)
     }

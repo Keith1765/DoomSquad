@@ -125,6 +125,7 @@ fn read_point(
         floor_level.ok_or(Error::msg("Error Parsing entity at floor_level"))?,
         facing_direction.ok_or(Error::msg("Error Parsing entity at facing_direction"))?,
         renderer_data,
+        0.0,
     );
 
     player_vec.push(entities_pushing);

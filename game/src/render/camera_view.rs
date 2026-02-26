@@ -4,6 +4,7 @@ use std::collections::BinaryHeap;
 
 use crate::game::{Game, player};
 use crate::render::blocks_walls::task_column;
+use crate::render::crosshair::draw_crosshair;
 use crate::render::player_hp_bar::draw_player_hp_bar;
 // TODO LEVEL_HEIGHT and other map data into sth similar to renderer_data?
 use crate::render::raycast::{MapSlice, raycast};
@@ -117,6 +118,9 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
 
     //draw playwer hp bar
     draw_player_hp_bar(buffer,&renderer_data, game.player.hp);
+
+    //draw crosshair
+    draw_crosshair(buffer, game.player.vertcal_aim, &renderer_data);
 
 }
 

@@ -10,35 +10,53 @@ use crate::game::map::{Map, Point};
 use crate::game::player::MOVE_SPEED;
 use crate::render::RendererData;
 
+const BULLET_FLIGHT_COEFICIENT: f64 = 7.0;
+const ARROW_FLIGHT_COEFICIENT: f64 = 3.0;
+
 pub fn dummy_behaviour(entity: &mut Entity, map: &Map) {
     entity.gravity(map, 1.0);
 }
 pub fn player_bullet_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
+    let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(BULLET_SPEED, 0.0, map, false);
+    entity.mover.foot_level -= entity.vertical_aim*BULLET_FLIGHT_COEFICIENT;
+
+    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
+        entity.hp = 0.0;
+    }
 }
+
 //atm the same as player bullets
 pub fn enemy_bullet_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
+    let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(BULLET_SPEED, 0.0, map, false);
+
+    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
+        entity.hp = 0.0;
+    }
 }
 
 pub fn player_arrow_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
+    let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(ARROW_SPEED, 0.0, map, false);
+    entity.mover.foot_level -= entity.vertical_aim*ARROW_FLIGHT_COEFICIENT;
     entity.gravity(map, 0.1);
     //terminate arrow when hits the floor
-    if entity.mover.foot_level <= entity.mover.floor_level {
+    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
         entity.hp = 0.0;
     }
 }
 //atm the same as player bullets
 pub fn enemy_arrow_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25;
+    let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(ARROW_SPEED, 0.0, map, false);
     entity.gravity(map, 0.1);
     //terminate arrow when hits the floor
-    if entity.mover.foot_level <= entity.mover.floor_level {
+    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
         entity.hp = 0.0;
     }
 }
@@ -71,6 +89,7 @@ pub fn ranged_enemy_behaviour(
             15.0, //per default entities are generated at default view height plus this value, therfore should be 0.0
             direction_to_player,
             renderer_data,
+            0.0,
         );
         events.push(Spawn(bullet));
         // attack animation
@@ -100,6 +119,7 @@ pub fn archer_behaviour(
             entity.mover.height,
             direction_to_player,
             renderer_data,
+            0.0,
         );
         events.push(Spawn(arrow));
         // attack animation
@@ -127,6 +147,7 @@ pub fn summoner_enemy_behaviour(
             entity.mover.height,
             direction_to_player,
             renderer_data,
+            0.0,
         );
         events.push(Spawn(melee_enemy));
         // attack animation
@@ -187,6 +208,7 @@ pub fn death_behaviour(entity: &mut Entity, renderer_data: &RendererData) -> Vec
                 entity.mover.foot_level,
                 0.0,
                 renderer_data,
+                0.0,
             );
             events.push(Spawn(explosion));
         }
