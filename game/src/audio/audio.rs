@@ -40,9 +40,9 @@ impl Audio {
         let mut audio = Self::new().ok().unwrap(); 
         if !AUDIO_ENABLED {return audio;} // if audio not enabled, return empty
 
-        let _ = audio.load_sfx("step", "assets/audio/step.wav");
-        let _ = audio.load_sfx("jump", "assets/audio/jump.wav");
-        let _ = audio.play_music_loop("assets/music/dramatic_music.wav", MUSIC_VOLUME);
+        let _ = audio.load_sfx("step", "assets/soundeffects/step.wav");
+        let _ = audio.load_sfx("jump", "assets/soundeffects/jump.wav");
+        let _ = audio.play_music_loop("assets/music/dungeon_music_spooky.wav", MUSIC_VOLUME);
 
         audio
     }
