@@ -10,7 +10,7 @@ use crate::game::map::Point;
 
 const AUDIO_DISTANCE_SCALE_COEFFICIENT: f32 = 0.025;
 const AUDIO_ENABLED: bool = true; 
-const BACKGROUND_MUSIC_VOLUME: f32 = 0.0;
+const BACKGROUND_MUSIC_VOLUME: f32 = 0.2;
 
 pub struct Audio {
     _stream: OutputStream, // must stay alive
