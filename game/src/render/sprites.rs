@@ -38,11 +38,11 @@ impl Sprite {
     pub fn get_current_sprite_texture_id(&self) -> usize {
         if let Some(switcher) = &self.action_sprite_switcher {
             //println!("{}", switcher.countdown);
-            return switcher.texture_id;
+            switcher.texture_id
         } else if let Some(handler) = &self.walk_cycle_handler {
-            return handler.current_texture_id;
+            handler.current_texture_id
         } else {
-            return self.default_texture_id;
+            self.default_texture_id
         }
     }
 
@@ -72,12 +72,12 @@ impl Sprite {
 
 pub fn start_walk_cycle(entity_type: &EntityType) -> Option<WalkCycleHandler> {
         let (current_texture_id, other_texture_id, switch_time) = entity_type.get_walk_animation_data()?;
-        return Some(WalkCycleHandler {
+        Some(WalkCycleHandler {
             current_texture_id,
             other_texture_id,
             countdown: switch_time,
             countdown_full_value: switch_time,
-        });
+        })
     }
 
 // currently unused
@@ -186,11 +186,11 @@ pub fn task_sprite(
         }
     }
 
-    return Some(SpriteInstruction {
+    Some(SpriteInstruction {
         // .clamp() is mainly to prevent overflow into fvery high numbers when casting to usize
         sprite_left_screen_x: left_screen_x.clamp(0, renderer_data.screen_width_as_isize) as usize,
         sprite_right_screen_x: (left_screen_x + onscreen_width)
             .clamp(0, renderer_data.screen_width_as_isize) as usize,
         tasks,
-    });
+    })
 }

@@ -275,7 +275,8 @@ impl Player {
             step_successful = self.mover.step(self.move_speed, PI, map, self.godmode);
         }
 
-        // if we moved, play step sound
+        // if we moved, play step 
+        #[allow(clippy::neg_cmp_op_on_partial_ord)]
         if step_successful && !self.is_sliding && !((self.mover.foot_level - self.mover.floor_level).abs() > 0.3 ) {
             audio.play_step(1.0);
         }
@@ -315,13 +316,12 @@ impl Player {
             && !self.is_sliding
             && !self.godmode
             && self.slide_cooldown == 0
+            && self.move_speed > 1.5 
         {
-            if self.move_speed > 1.5 {
                 audio.play_sfx("slide", 1.0);
                 self.move_speed += 5.0;
                 self.is_sliding = true;
                 self.save_input(window);
-            }
         }
 
         //during slide speed decreases
@@ -453,7 +453,7 @@ impl Player {
                 <= (lowest_ceiling_level - self.mover.height)
             {
                 // if we didnt bump our head, we just go up normally
-                self.mover.foot_level = self.mover.foot_level + self.vertical_velocity;
+                self.mover.foot_level += self.vertical_velocity;
             } else {
                 // if we bumped our head, we only go up to the ceiling and lose vertical velocity
                 self.mover.foot_level = lowest_ceiling_level - self.mover.height;
@@ -482,22 +482,18 @@ impl Player {
             self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 );
         }
 
-        return events;
+        events
     }
 
     fn save_input(&mut self, window: &Window) {
         if window.is_key_down(Key::D) {
             self.last_input = D;
-            return;
         } else if window.is_key_down(Key::A) {
             self.last_input = A;
-            return;
         } else if window.is_key_down(Key::S) {
             self.last_input = S;
-            return;
         } else if window.is_key_down(Key::W) {
             self.last_input = W;
-            return;
         } else {
             self.last_input = No
         }

@@ -62,8 +62,7 @@ pub fn parse_map(path: String) -> Result<map::Map> {
     let mut xml_file = archive.by_name("geogebra.xml")?;
 
     // XML-Inhalt lesen
-    let map = reading_attr_from_ggb(&mut xml_file);
-    map
+    reading_attr_from_ggb(&mut xml_file)
 }
 
 fn reading_attr_from_ggb(xml_file: &mut ZipFile<File>) -> Result<map::Map> {

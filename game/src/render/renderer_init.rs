@@ -18,6 +18,7 @@ pub struct RendererData {
     pub textures: HashMap<usize, Texture>,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn render_init(
     screen_width: usize,
     screen_height: usize,
@@ -40,7 +41,7 @@ pub fn render_init(
     // would be the sam with height / vertical_fov: can be used for both horizontal and vertical scaling
     let render_scale_coefficient: f64 = (screen_width_as_f64 / 2.0) / (horizontal_fov / 2.0).tan();
 
-    let textures = load_textures().unwrap_or(HashMap::new());
+    let textures = load_textures().unwrap_or_default();
 
     RendererData {
         screen_width_as_f64,
