@@ -1,5 +1,6 @@
 use minifb::{Key, Window};
 
+use crate::audio::audio::Audio;
 use crate::game::entities::EntityType::*;
 use crate::game::entity_behaviour::{
     archer_behaviour, dummy_behaviour, enemy_arrow_behaviour, enemy_bullet_behaviour,
@@ -195,6 +196,7 @@ impl Entity {
         map: &Map,
         player_mover: &Mover,
         renderer_data: &RendererData,
+        audio: &mut Audio,
     ) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
         if window.is_key_pressed(Key::L, minifb::KeyRepeat::No) {
@@ -212,20 +214,21 @@ impl Entity {
             RedBarrel => red_barrel_behaviour(self, map),
             ExplodedRedBarrel => exploded_red_barrel_behaviour(self),
             RangedEnemy => {
-                ranged_enemy_behaviour(self, map, player_mover.position, renderer_data, &mut events)
+                ranged_enemy_behaviour(self, map, player_mover.position, renderer_data, &mut events, audio)
             }
             Archer => {
                 archer_behaviour(self, map, player_mover.position, renderer_data, &mut events)
             }
-            MeleeEnemy => melee_enemy_behaviour(self, map, player_mover.position),
+            MeleeEnemy => melee_enemy_behaviour(self, map, player_mover.position, audio),
             SummonerEnemy => summoner_enemy_behaviour(
                 self,
                 map,
                 player_mover.position,
                 renderer_data,
                 &mut events,
+                audio,
             ),
-            WeakEnemy => weak_enemy_behaviour(self, map, player_mover.position),
+            WeakEnemy => weak_enemy_behaviour(self, map, player_mover.position, audio),
             EnemyArrow => enemy_arrow_behaviour(self, map),
             PlayerArrow => player_arrow_behaviour(self, map),
             _ => dummy_behaviour(self, map),

@@ -86,7 +86,7 @@ impl Game {
 
         //update all entites and add possible spawn events
         for entity in &mut self.entities {
-            let event = entity.update(window, &self.map, &self.player.mover, renderer_data);
+            let event = entity.update(window, &self.map, &self.player.mover, renderer_data, audio);
             entity_spawns.extend(event);
         }
 
@@ -96,7 +96,7 @@ impl Game {
         //on death behaviour
         for entity in &mut self.entities {
             if entity.hp <= 0.0 {
-                entity_spawns.extend(death_behaviour(entity, renderer_data));
+                entity_spawns.extend(death_behaviour(entity, renderer_data,self.player.mover.position, audio));
             }
         }
 

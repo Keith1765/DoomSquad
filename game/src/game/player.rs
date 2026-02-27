@@ -165,6 +165,7 @@ impl Player {
         }
 
         if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) || window.get_mouse_down(MouseButton::Left)) && self.bullet_cooldown == 0 {
+            audio.play_sfx("shoot", 1.0);
             let bullet = generate_entities(
                 PlayerBullet,
                 self.mover.position,
@@ -182,6 +183,7 @@ impl Player {
         }
 
         if (window.is_key_pressed(Key::RightShift, KeyRepeat::No) || window.get_mouse_down(MouseButton::Right))&& self.arrow_cooldown == 0 {
+            audio.play_sfx("arrow", 2.0);
             let arrow = generate_entities(
                 PlayerArrow,
                 self.mover.position,
@@ -313,6 +315,7 @@ impl Player {
             && self.slide_cooldown == 0
         {
             if self.move_speed > 1.5 {
+                audio.play_sfx("slide", 1.0);
                 self.move_speed += 5.0;
                 self.is_sliding = true;
                 self.save_input(window);
@@ -380,7 +383,7 @@ impl Player {
             //rocketlauncher
             if window.is_key_pressed(Key::R, KeyRepeat::No) && (self.rocketlauncher_cooldown == 0) {
 
-                audio.play_sfx("jump", 1.0); //TODO give this its own sound
+                audio.play_sfx("rocketlauncher", 1.0); 
 
                 self.using_rocketlauncher = true;
                 self.move_speed +=
