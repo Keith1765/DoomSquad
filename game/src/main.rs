@@ -4,16 +4,17 @@ mod audio;
 mod game;
 mod parser;
 mod render;
+mod menu;
 
 use crate::audio::audio::Audio;
 use crate::render::{RendererData, render_init};
+use crate::menu::menu::{Menu, AppState};
 use minifb::{Key, Window, WindowOptions};
 use std::f64::consts::PI;
 use std::time::Instant;
 
 use crate::parser::entities_parser::*;
 use crate::parser::map_parser::*;
-
 use crate::game::interactables::*;
 
 const SCREEN_WIDTH: usize = 800;
@@ -27,89 +28,110 @@ const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    //I commented game init to test parser first
-    //for fps count
     let mut last_time = Instant::now();
     let mut frame_count = 0;
     let mut fps_value;
 
-    //creates window Safely
-    let mut window = match Window::new(
-        "game",
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
-        WindowOptions::default(),
-    ) {
+    let mut window = match Window::new("DoomSquad", SCREEN_WIDTH, SCREEN_HEIGHT, WindowOptions::default()) {
         Ok(w) => w,
         Err(e) => {
             eprint!("failed to create Window");
             return Err(Box::new(e));
         }
     };
-    window.set_cursor_visibility(false); // hide mouse 
-
-    //to reduce CPU load by decreasing refresh rate oder so lol
+    
     window.set_target_fps(TARGET_FPS);
-
     let mut buffer: Vec<u32> = vec![0; SCREEN_WIDTH * SCREEN_HEIGHT];
 
     let renderer_data: RendererData = render_init(
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
-        HORIZONTAL_FOV,
-        BACKGROUND_COLOR,
-        DISTANCE_DARKNESS_COEFFICIENT,
-        WALL_DEFAULT_COLOR,
-        BLOCK_DEFAULT_COLOR,
-        SURFACE_DEFAULT_COLOR,
+        SCREEN_WIDTH, SCREEN_HEIGHT, HORIZONTAL_FOV, BACKGROUND_COLOR, DISTANCE_DARKNESS_COEFFICIENT,
+        WALL_DEFAULT_COLOR, BLOCK_DEFAULT_COLOR, SURFACE_DEFAULT_COLOR,
     );
 
-    // ! this unwrap is acceptable, if the whole game is broken then crashing is pretty reasonable
     let mut game = game::Game::new_game(&renderer_data).unwrap();
-
-    // //TODO TEST
-    // let map = parse_map("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string());
-    // if let Ok(map) = map {
-    //     game.map = map;
-    // } else {
-    //     return Err("Error parsing map".into());
-    // }
-
     let mut audio = Audio::init();
+    let mut menu = Menu::new();
+    
+    let mut app_state = AppState::StartScreen;
+    
+    let mut is_audio_enabled = true;
+    let mut prev_audio_enabled = true;
+    
+    let mut prev_keys = (false, false, false, false, false);
+    let mut prev_escape = false;
 
-    let mut prev_keys = (false, false, false, false, false); // (W, A, S, D, Space)
+    while window.is_open() {
+        let cur_escape = window.is_key_down(Key::Escape);
+        let escape_clicked = cur_escape && !prev_escape;
+        prev_escape = cur_escape;
 
-    while window.is_open() && !window.is_key_down(Key::Escape) && (game.player.hp > 0.0) {
-        let (_, _, _, _, prev_space) = prev_keys;
-
-        let cur_w = window.is_key_down(Key::W);
-        let cur_a = window.is_key_down(Key::A);
-        let cur_s = window.is_key_down(Key::S);
-        let cur_d = window.is_key_down(Key::D);
-        let cur_space = window.is_key_down(Key::Space);
-
-        let is_moving = cur_w || cur_a || cur_s || cur_d;
-        let just_jumped = cur_space && !prev_space;
-        
-        audio.handle_input(is_moving, just_jumped);
-
-        prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
-
-        game.update(&window, &renderer_data, &mut audio);
-        render::draw_screen(&mut buffer, &renderer_data, &game);
-
-        //fps calc
-        frame_count += 1;
-        let elapsed = last_time.elapsed().as_secs_f32();
-
-        if elapsed >= 1.0 {
-            fps_value = frame_count as f32 / elapsed;
-            frame_count = 0;
-            last_time = Instant::now();
-            window.set_title(&format!("My Window | FPS: {:.1}", fps_value));
+        if is_audio_enabled != prev_audio_enabled {
+            audio.set_muted(!is_audio_enabled); 
+            prev_audio_enabled = is_audio_enabled;
         }
 
-        //show buffer safely
+        match app_state {
+            AppState::StartScreen => {
+                window.set_cursor_visibility(true);
+                if escape_clicked { break; } 
+                
+                app_state = menu.update_and_draw(&mut window, &mut buffer, &mut game, &renderer_data, &mut is_audio_enabled);
+            }
+
+            AppState::Playing => {
+                window.set_cursor_visibility(false);
+                
+                if escape_clicked {
+                    app_state = AppState::StartScreen;
+                    continue;
+                }
+                
+                if game.player.hp <= 0.0 {
+                    app_state = AppState::GameOver;
+                    continue;
+                }
+
+                let (_, _, _, _, prev_space) = prev_keys;
+                let cur_w = window.is_key_down(Key::W);
+                let cur_a = window.is_key_down(Key::A);
+                let cur_s = window.is_key_down(Key::S);
+                let cur_d = window.is_key_down(Key::D);
+                let cur_space = window.is_key_down(Key::Space);
+
+                let is_moving = cur_w || cur_a || cur_s || cur_d;
+                let just_jumped = cur_space && !prev_space;
+                
+                audio.handle_input(is_moving, just_jumped);
+                prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
+
+                game.update(&window, &renderer_data, &mut audio);
+                render::draw_screen(&mut buffer, &renderer_data, &game);
+
+                frame_count += 1;
+                let elapsed = last_time.elapsed().as_secs_f32();
+                if elapsed >= 1.0 {
+                    fps_value = frame_count as f32 / elapsed;
+                    frame_count = 0;
+                    last_time = Instant::now();
+                    window.set_title(&format!("DoomSquad | FPS: {:.1}", fps_value));
+                }
+            }
+
+            AppState::GameOver => {
+                window.set_cursor_visibility(true);
+                if escape_clicked {
+                    app_state = AppState::StartScreen;
+                    continue;
+                }
+                
+                app_state = menu.update_and_draw_game_over(&mut window, &mut buffer, &mut game);
+            }
+
+            AppState::Quit => {
+                break; 
+            }
+        }
+
         if let Err(e) = window.update_with_buffer(&buffer, SCREEN_WIDTH, SCREEN_HEIGHT) {
             eprintln!("failed to update the window: {e}");
             return Err(Box::new(e));
