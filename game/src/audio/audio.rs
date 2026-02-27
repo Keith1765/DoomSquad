@@ -52,6 +52,7 @@ impl Audio {
         let _ = audio.load_sfx("rocketlauncher", "assets/soundeffects/rocketlauncher.wav");
         let _ = audio.load_sfx("shoot", "assets/soundeffects/shoot.wav");
         let _ = audio.load_sfx("slide", "assets/soundeffects/slide.wav");
+        let _ = audio.load_sfx("slotmachine", "assets/soundeffects/slotmachine.wav");
         let _ = audio.load_sfx("spider_attack", "assets/soundeffects/spider_attack.wav");
         let _ = audio.load_sfx("step", "assets/soundeffects/step.wav");
         let _ = audio.load_sfx("summoner", "assets/soundeffects/summoner.wav");

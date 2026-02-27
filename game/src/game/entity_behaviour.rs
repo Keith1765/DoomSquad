@@ -218,7 +218,7 @@ pub fn death_behaviour(entity: &mut Entity, renderer_data: &RendererData, player
                 0.0,
             );
             events.push(Spawn(explosion));
-            audio.play_sfx_distance_scaled("explosion", 1.0, player_position, entity.mover.position);
+            audio.play_sfx_distance_scaled("explosion", 3.0, player_position, entity.mover.position);
         }
 
         _ => {}

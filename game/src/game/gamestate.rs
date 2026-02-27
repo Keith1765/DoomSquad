@@ -72,7 +72,7 @@ impl Game {
         let mut interactables_spawns = Vec::new();
 
         for interactable in &mut interactables {
-            let event = interactable.update(window, renderer_data, self);
+            let event = interactable.update(window, renderer_data, self, audio);
             interactables_spawns.extend(event);
         }
 
