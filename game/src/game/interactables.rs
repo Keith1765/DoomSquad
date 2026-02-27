@@ -208,7 +208,6 @@ impl Interactable {
             && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0
         //checking if player is on the same hight level
         {
-            //TODO add proper sound
             audio.play_sfx("slotmachine", 1.0);
             let mut rng = rand::rng();
 
