@@ -174,8 +174,10 @@ impl Player {
                 renderer_data,
                 self.vertcal_aim
             );
-            events.push(Spawn(bullet));
-            self.bullet_cooldown = BULLET_COOLDOWN;
+            if let Some(bullet) = bullet {
+                events.push(Spawn(bullet));
+                self.bullet_cooldown = BULLET_COOLDOWN;
+            }
         }
 
          if self.bullet_cooldown > 0 {
@@ -192,7 +194,7 @@ impl Player {
                 renderer_data,
                 self.vertcal_aim,
             );
-            events.push(Spawn(arrow));
+            if let Some(arrow) = arrow {events.push(Spawn(arrow));}
             self.arrow_cooldown = ARROW_COOLDOWN;
         }
 
