@@ -73,12 +73,14 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
                     //DAMAGE THAT BITCH
                     game_state.entities[j].hp -= damage;
 
-                    audio.play_sfx_distance_scaled(
+                    if damage > 0.0{
+                        audio.play_sfx_distance_scaled(
                         "hit",
                         1.0,
                         game_state.player.mover.position,
                         game_state.entities[j].mover.position
                     );
+                    }
 
                     //projectiles go brr
                     if game_state.entities[i].entity_type != ExplodedRedBarrel {
@@ -132,17 +134,16 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
                 //DAMAGE THAT BITCH
                 game_state.player.hp -= damage;
 
-                audio.play_sfx(
-                        "hit",
-                        1.0,
-                    );
-
                 if damage > 0.0 {
                     match game_state.entities[j].entity_type {
                         MeleeEnemy => game_state.entities[j].did_damage = true,
                         WeakEnemy => game_state.entities[j].did_damage = true,
                         _ => {}
                     }
+                    audio.play_sfx(
+                        "hit",
+                        1.0,
+                    );
                 }
 
                 //bullet go brr
