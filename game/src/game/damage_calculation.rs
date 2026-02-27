@@ -1,3 +1,5 @@
+use crate::audio;
+use crate::audio::audio::Audio;
 use crate::game::entities::EntityType::{
     EnemyArrow, EnemyBullet, ExplodedRedBarrel, MeleeEnemy, PlayerArrow, PlayerBullet, WeakEnemy,
 };
@@ -8,7 +10,7 @@ use crate::game::entities::{
 use crate::game::gamestate::{Game, INTERACTABLE_RANGE};
 use crate::game::map_grid;
 
-pub fn damage_check(game_state: &mut Game) {
+pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
     //DMG calc for entities
 
     //update grid
@@ -71,6 +73,13 @@ pub fn damage_check(game_state: &mut Game) {
                     //DAMAGE THAT BITCH
                     game_state.entities[j].hp -= damage;
 
+                    audio.play_sfx_distance_scaled(
+                        "hit",
+                        1.0,
+                        game_state.player.mover.position,
+                        game_state.entities[j].mover.position
+                    );
+
                     //projectiles go brr
                     if game_state.entities[i].entity_type != ExplodedRedBarrel {
                         game_state.projectile_that_hit.push(i);
@@ -122,6 +131,11 @@ pub fn damage_check(game_state: &mut Game) {
                 };
                 //DAMAGE THAT BITCH
                 game_state.player.hp -= damage;
+
+                audio.play_sfx(
+                        "hit",
+                        1.0,
+                    );
 
                 if damage > 0.0 {
                     match game_state.entities[j].entity_type {

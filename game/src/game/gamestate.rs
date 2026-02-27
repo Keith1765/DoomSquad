@@ -115,7 +115,7 @@ impl Game {
         }
 
         //deal damage
-        damage_check(self);
+        damage_check(self, audio);
 
         //on death behaviour
         for entity in &mut self.entities {
