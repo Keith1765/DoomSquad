@@ -55,7 +55,6 @@ pub fn read_interactables_from_file(
                 let interactable_string_type = split_string_uppercase(label.as_str());
                 if interactable_string_type[0] == "Interactable" {
                     match interactable_string_type[1].as_str() {
-                        //todo
                         "Button" => read_values_for_button(
                             &mut reader,
                             &mut buf,
@@ -63,21 +62,13 @@ pub fn read_interactables_from_file(
                             renderer_data,
                             interactable_string_type.clone(),
                         )?,
-                        "Elevator" => read_values_for_rest(
+                        "Elevator" | "Slotmaschine" => read_values_for_rest(
                             &mut reader,
                             &mut buf,
                             &mut interactable_vector,
                             renderer_data,
                             interactable_string_type,
                         )?,
-                        "Slotmaschine" => read_values_for_rest(
-                            &mut reader,
-                            &mut buf,
-                            &mut interactable_vector,
-                            renderer_data,
-                            interactable_string_type,
-                        )?,
-
                         _ => {}
                     }
                 }
@@ -133,56 +124,30 @@ fn read_values_for_button(
         buf.clear();
     }
     //TODO make generate Interactables
-    match interactable_string_type[2].as_str() {
-        "Map" => {
-            let interactable = Interactable::new(
-                InteractableType::Button(ButtonType::Map),
-                Point {
-                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
-                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
-                },
-                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
-                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
-                parameter_2.ok_or(Error::msg("Pasrser Error at parameter 2"))?,
-                &renderer_data,
-            )
-            .ok_or(Error::msg("Pasrser Error at interactable"))?;
-            interactable_vector.push(interactable);
-        }
-        "Spawner" => {
-            let interactable = Interactable::new(
-                InteractableType::Button(ButtonType::Spawner),
-                Point {
-                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
-                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
-                },
-                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
-                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
-                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
-                &renderer_data,
-            )
-            .ok_or(Error::msg("Pasrser Error at interactable"))?;
-            interactable_vector.push(interactable);
-        }
-        "Heal" => {
-            let interactable = Interactable::new(
-                InteractableType::Button(ButtonType::Heal),
-                Point {
-                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
-                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
-                },
-                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
-                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
-                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
-                &renderer_data,
-            )
-            .ok_or(Error::msg("Pasrser Error at interactable"))?;
-            interactable_vector.push(interactable);
-        }
-        _ => {}
+    let interactable_type: Option<InteractableType> = match interactable_string_type[2].as_str() {
+        "Map" => Some(InteractableType::Button(ButtonType::Map)),
+        "Spawner" => Some(InteractableType::Button(ButtonType::Spawner)),
+        "Heal" => Some(InteractableType::Button(ButtonType::Heal)),
+        _ => None,
+    };
+    if let Some(interactable_type) = interactable_type {
+        let interactable = Interactable::new(
+            interactable_type,
+            Point {
+                x: x.ok_or(Error::msg("Parser Error at x"))? * SCALING_FACTOR,
+                y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
+            },
+            floor_level.ok_or(Error::msg("Parser Error at floor_level"))?,
+            parameter_1.ok_or(Error::msg("Parser Error at parameter_1"))?,
+            parameter_2.ok_or(Error::msg("Parser Error at parameter 2"))?,
+            &renderer_data,
+        )
+        .ok_or(Error::msg("Parser Error at interactable"))?;
+        interactable_vector.push(interactable);
     }
     Ok(())
 }
+
 fn read_values_for_rest(
     reader: &mut Reader<&[u8]>,
     buf: &mut Vec<u8>,
@@ -225,41 +190,29 @@ fn read_values_for_rest(
         }
         buf.clear();
     }
-    match interactable_string_type[1].as_str() {
-        "Elevator" =>{
-            let interactable = Interactable::new(
-                InteractableType::Elevator,
-                Point {
-                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
-                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
-                },
-                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
-                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
-                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
-                &renderer_data,
-            )
-            .ok_or(Error::msg("Pasrser Error at interactable"))?;
-            interactable_vector.push(interactable);
-        }
-        "Slotmaschine" =>{
-            let interactable = Interactable::new(
-                InteractableType::SlotMachine,
-                Point {
-                    x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
-                    y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
-                },
-                floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
-                parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
-                parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
-                &renderer_data,
-            )
-            .ok_or(Error::msg("Pasrser Error at interactable"))?;
-            interactable_vector.push(interactable);
-        }
-        _ =>{}
+    let interactable_type: Option<InteractableType> = match interactable_string_type[1].as_str() {
+        "Elevator" => Some(InteractableType::Elevator),
+        "Slotmaschine" => Some(InteractableType::SlotMachine),
+        _ => None,
+    };
+    if let Some(interactable_type) = interactable_type {
+        let interactable = Interactable::new(
+            interactable_type,
+            Point {
+                x: x.ok_or(Error::msg("Pasrser Error at x"))? * SCALING_FACTOR,
+                y: y.ok_or(Error::msg("Pasrser Error at y"))? * SCALING_FACTOR,
+            },
+            floor_level.ok_or(Error::msg("Pasrser Error at floor_level"))?,
+            parameter_1.ok_or(Error::msg("Pasrser Error at parameter_1"))?,
+            parameter_2.ok_or(Error::msg("Pasrser Error at parameter_2"))?,
+            &renderer_data,
+        )
+        .ok_or(Error::msg("Pasrser Error at interactable"))?;
+        interactable_vector.push(interactable);
     }
     Ok(())
 }
+
 pub fn split_string_uppercase(input: &str) -> Vec<String> {
     let cleaned = if let Some(prefix) = input.strip_suffix('}') {
         if let Some(pos) = prefix.rfind("_{") {
