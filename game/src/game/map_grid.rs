@@ -34,6 +34,7 @@ impl MapGrid {
     }
 
     //implemented for entities
+    #[allow(clippy::ptr_arg)]
     pub fn update(&mut self, entities: &Vec<Entity>) {
         //clear last frame
         self.grid.clear();
@@ -65,6 +66,7 @@ impl MapGrid {
         entities
     }
     //implemetation for interactables
+    #[allow(clippy::ptr_arg)]
     pub fn update_interactables(&mut self, interactables: &Vec<Interactable>) {
         self.grid.clear();
 

@@ -147,6 +147,7 @@ pub struct Entity {
 }
 
 impl Entity {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         position: Point,
         start_floor_level: f64,
@@ -253,7 +254,7 @@ impl Entity {
             }
         }
 
-        return events;
+        events
     }
 
     pub fn normal_enemy_movement(

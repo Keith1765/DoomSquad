@@ -110,7 +110,7 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     for px in buffer.iter_mut() {
         *px = renderer_data.background_color;
     }
-    draw_camera_view(buffer, &renderer_data, game);
+    draw_camera_view(buffer, renderer_data, game);
     //draw grid of reference points spaced each 50 pixels for debugging
     if game.player.godmode {
         draw_reference_points(buffer);
@@ -118,10 +118,10 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     //draw_texture_bottom_left(buffer, renderer_data.textures.get(&0).unwrap());
 
     //draw playwer hp bar
-    draw_player_hp_bar(buffer,&renderer_data, game.player.hp);
+    draw_player_hp_bar(buffer,renderer_data, game.player.hp);
 
     //draw crosshair
-    draw_crosshair(buffer, game.player.vertcal_aim, &renderer_data);
+    draw_crosshair(buffer, game.player.vertcal_aim, renderer_data);
 
 }
 

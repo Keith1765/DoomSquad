@@ -57,10 +57,7 @@ impl Sprite {
     pub fn continue_or_start_walk_cycle(&mut self, entity_type: &EntityType) {
         if let Some(handler) = &mut self.walk_cycle_handler {
             if handler.countdown == 0 {
-                let temp_texture_id = handler.current_texture_id;
-                handler.current_texture_id = handler.other_texture_id;
-                handler.other_texture_id = temp_texture_id;
-                handler.countdown = handler.countdown_full_value;
+                std::mem::swap(&mut handler.current_texture_id, &mut handler.other_texture_id);
             } else {
                 handler.countdown -= 1;
             }

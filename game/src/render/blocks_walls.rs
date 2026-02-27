@@ -24,7 +24,7 @@ pub fn task_column(
     let mut tasks: BinaryHeap<RenderTaskOrderer> = BinaryHeap::new();
 
     if let Some(wall_hit) = &map_slice.wall_hit
-        && let Some(wall_task) = task_side(&wall_hit, angle_relative_to_player, renderer_data, game)
+        && let Some(wall_task) = task_side(wall_hit, angle_relative_to_player, renderer_data, game)
     {
         tasks.push(wall_task); // default return value: empty column
     }
@@ -90,7 +90,7 @@ pub fn task_side(
     game: &Game,
 ) -> Option<RenderTaskOrderer> {
     let (side_bottom_onscreen, side_top_onscreen) =
-        calculate_side_bottom_top(&side_hit, angle_relative_to_player, renderer_data, game);
+        calculate_side_bottom_top(side_hit, angle_relative_to_player, renderer_data, game);
 
     let brightness = (side_hit.side.angle_in_world.cos() * 0.5
         / (side_hit.distance * renderer_data.distance_darkness_coefficient)
@@ -240,7 +240,7 @@ pub fn task_partial_surface(
     }
 
     let (exit_bottom_onscreen, exit_top_onscreen) =
-        calculate_side_bottom_top(&exit_hit, angle_relative_to_player, renderer_data, game);
+        calculate_side_bottom_top(exit_hit, angle_relative_to_player, renderer_data, game);
 
     let brightness = 0.5 + (exit_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
 
