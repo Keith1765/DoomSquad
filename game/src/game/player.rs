@@ -1,5 +1,5 @@
 use super::map::Map;
-use crate::{SCREEN_HEIGHT, game::{entities::{
+use crate::{SCREEN_HEIGHT, audio::audio::Audio, game::{entities::{
     ARROW_COOLDOWN, BULLET_COOLDOWN, EntityEvent::{self, Spawn}, EntityType::{PlayerArrow, PlayerBullet}
 }, movement::find_blocks_were_currently_in}};
 use crate::game::generate_entities::generate_entities;
@@ -155,6 +155,7 @@ impl Player {
         window: &Window,
         map: &Map,
         renderer_data: &RendererData,
+        audio: &mut Audio,
     ) -> Vec<EntityEvent> {
         let mut events: Vec<EntityEvent> = Vec::new();
         //reseting keyinput idfk how to do it an other way
@@ -164,6 +165,7 @@ impl Player {
         }
 
         if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) || window.get_mouse_down(MouseButton::Left)) && self.bullet_cooldown == 0 {
+            audio.play_sfx("shoot", 1.0);
             let bullet = generate_entities(
                 PlayerBullet,
                 self.mover.position,
@@ -183,6 +185,7 @@ impl Player {
         }
 
         if (window.is_key_pressed(Key::RightShift, KeyRepeat::No) || window.get_mouse_down(MouseButton::Right))&& self.arrow_cooldown == 0 {
+            audio.play_sfx("arrow", 2.0);
             let arrow = generate_entities(
                 PlayerArrow,
                 self.mover.position,
@@ -242,24 +245,26 @@ impl Player {
             self.update_dir();
         }
 
+        let mut step_successful: bool = false;
+
         if (window.is_key_down(Key::W)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == W))
             || (self.is_jumping && (self.last_input == W))
         {
-            self.mover.step(self.move_speed, 0.0, map, self.godmode);
+            step_successful = self.mover.step(self.move_speed, 0.0, map, self.godmode);
         }
         if (window.is_key_down(Key::A)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == A))
             || (self.is_jumping && (self.last_input == A))
         {
-            self.mover
+            step_successful = self.mover
                 .step(self.move_speed, -PI / 2.0, map, self.godmode);
         }
         if (window.is_key_down(Key::D)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == D))
             || (self.is_jumping && (self.last_input == D))
         {
-            self.mover
+            step_successful = self.mover
                 .step(self.move_speed, PI / 2.0, map, self.godmode);
         }
 
@@ -267,7 +272,12 @@ impl Player {
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == S))
             || (self.is_jumping && (self.last_input == S))
         {
-            self.mover.step(self.move_speed, PI, map, self.godmode);
+            step_successful = self.mover.step(self.move_speed, PI, map, self.godmode);
+        }
+
+        // if we moved, play step sound
+        if step_successful && !self.is_sliding && !((self.mover.foot_level - self.mover.floor_level).abs() > 0.3 ) {
+            audio.play_step(1.0);
         }
 
         if window.is_key_down(Key::Space) && self.godmode {
@@ -307,6 +317,7 @@ impl Player {
             && self.slide_cooldown == 0
         {
             if self.move_speed > 1.5 {
+                audio.play_sfx("slide", 1.0);
                 self.move_speed += 5.0;
                 self.is_sliding = true;
                 self.save_input(window);
@@ -351,6 +362,7 @@ impl Player {
                 || self.jumping_allowed))
             || window.is_key_pressed(Key::R, KeyRepeat::No)
         {
+
             self.gravity = GRAVITY_CONST;
             self.is_jumping = true;
             if self.is_sliding {
@@ -361,6 +373,9 @@ impl Player {
             }
             //normal jump init
             if window.is_key_pressed(Key::Space, KeyRepeat::No) {
+
+                audio.play_sfx("jump", 1.0);
+                
                 self.move_speed += self.move_speed * JUMP_SPEED_BOOST_MULTIPLICATOR;
                 let speed_bonus = self.move_speed * 0.8;
                 self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
@@ -369,6 +384,9 @@ impl Player {
 
             //rocketlauncher
             if window.is_key_pressed(Key::R, KeyRepeat::No) && (self.rocketlauncher_cooldown == 0) {
+
+                audio.play_sfx("rocketlauncher", 1.0); 
+
                 self.using_rocketlauncher = true;
                 self.move_speed +=
                     self.move_speed * JUMP_SPEED_BOOST_MULTIPLICATOR + ROCKETLAUNCHER_SPEED_BOOST;
