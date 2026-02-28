@@ -124,7 +124,7 @@ impl Interactable {
                 self.jump_pad_behaviour(window, _renderer_data, game_state, audio);
             }
             InteractableType::SlotMachine => {
-                self.slot_maschine_behaviour(window, _renderer_data, game_state, audio);
+                self.slot_maschine_behaviour(window, _renderer_data, game_state, audio, &mut events);
             }
         }
         events
@@ -146,7 +146,9 @@ impl Interactable {
         {
             match button_type {
                 ButtonType::Map => {
-                    events.push(InteractableEvent::SpawnMap(self.parameter_1 as usize));
+                    if game_state.entities.len() <= 1{
+                        events.push(InteractableEvent::SpawnMap(self.parameter_1 as usize));
+                    }
                     audio.play_sfx("button_press", 1.0);
                 }
                 ButtonType::Spawner => {
@@ -197,6 +199,7 @@ impl Interactable {
         _renderer_data: &RendererData,
         game_state: &mut game::Game,
         audio: &mut Audio,
+        events: &mut Vec<InteractableEvent>,
     ) {
         if self.player_in_range //checking if player is in range and pressing interact
             && game_state.player.interacting //checking if player pressed F for interact
@@ -210,7 +213,7 @@ impl Interactable {
 
             match roll {
                 n if n > 90 =>{
-                    game_state.map_swap(_renderer_data, 0); //swap to easteregg (testmap)
+                    events.push(InteractableEvent::SpawnMap(0)); //swap to easteregg (testmap)
                 },
                 n if n < 30 => {
                     let enemy_type = map_enemy_type(self.parameter_1 as i32);
