@@ -79,7 +79,7 @@ impl Sprite {
     }
 }
 
-// egins a walk animatioon cylce by initializign a handler
+// begins a walk animatioon cylce by initializign a handler
 fn start_walk_cycle(entity_type: &EntityType) -> Option<WalkCycleHandler> {
         let (current_texture_id, other_texture_id, switch_time) = entity_type.get_walk_animation_data()?;
         Some(WalkCycleHandler {
@@ -144,6 +144,8 @@ pub fn task_sprite(
     let texture = renderer_data
         .textures
         .get(&sprite.get_current_sprite_texture_id());
+    
+    // the tasks, one of which will be added to each of the appropriate columns of the screen
     let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width.max(0) as usize);
 
     if let Some(texture) = texture {
@@ -165,7 +167,9 @@ pub fn task_sprite(
                 % texture.width;
 
             // if we've gone into a new pixel column on the texture, we need to recalculate texture_column
+            // otherwise, just remember from last time
             if texture_u != prev_texture_u {
+                // the scaled texture column => is as it will be shown on screen
                 texture_column = texture.get_texture_column(
                     texture_u,
                     onscreen_bottom,

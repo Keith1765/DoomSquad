@@ -11,7 +11,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    // returns the column of a texture, scaled
+    // returns the column of a texture, scaled to the size it will be on screen
     pub fn get_texture_column(
         &self,
         u: usize,
@@ -35,11 +35,14 @@ impl Texture {
             }
         }
 
+        // how big it will be on scren
         let onscreen_height = onscreen_top - onscreen_bottom;
         let onscreen_height_as_f64 = onscreen_height as f64;
         let mut scaled_column: Vec<u32> = Vec::with_capacity(
             onscreen_height.clamp(0, renderer_data.screen_height_as_isize) as usize,
         );
+
+        // scale the texture column
         let inworld_onscreen_ratio = inworld_height / onscreen_height_as_f64;
         for onscreen_y in onscreen_bottom.clamp(0, renderer_data.screen_height_as_isize)
             ..onscreen_top.clamp(0, renderer_data.screen_height_as_isize)
@@ -56,6 +59,7 @@ impl Texture {
     }
 }
 
+/// initializes all textures at startup
 pub fn load_textures() -> Option<HashMap<usize, Texture>> {
     let mut textures = HashMap::new();
 
@@ -71,8 +75,10 @@ pub fn load_textures() -> Option<HashMap<usize, Texture>> {
             .clone();
         let (width, height) = image_buffer.dimensions();
 
+        // the pixels of the texture in long row
         let mut pixels: Vec<u32> = Vec::with_capacity((width * height) as usize);
 
+        // convert the pixel into our format, then put it into pixels
         for p in image_buffer.pixels() {
             let r: u32 = p.0[0] as u32;
             let g: u32 = p.0[1] as u32;
