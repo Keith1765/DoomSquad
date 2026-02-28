@@ -39,9 +39,9 @@ impl PartialOrd for RayHitOrderer {
 impl Ord for RayHitOrderer {
     fn cmp(&self, other: &Self) -> Ordering {
         // we need some tolerance for floating point impercition, thus te 0.1
-        if (self.rh.distance - other.rh.distance) < 0.1 {
+        if (self.rh.distance - other.rh.distance) > 0.1 {
             Ordering::Greater
-        } else if (self.rh.distance - other.rh.distance) > 0.1 {
+        } else if (self.rh.distance - other.rh.distance) < -0.1 {
             Ordering::Less
         } else {
             Ordering::Equal
