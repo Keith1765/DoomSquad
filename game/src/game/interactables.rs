@@ -213,8 +213,8 @@ impl Interactable {
             let roll: u8 = rng.random_range(0..100);
 
             match roll {
-                99 => {
-                    game_state.map_swap(_renderer_data, 8); //for just 8
+                n if n > 90 =>{
+                    game_state.map_swap(_renderer_data, 0); //swap to easteregg (testmap)
                 },
                 n if n < 30 => {
                     let enemy_type = map_enemy_type(self.parameter_1 as i32);
