@@ -126,7 +126,7 @@ pub fn generate_entities(
         EntityType::SummonerEnemy => Entity::new(
             position,
             0.0,
-            0.0,
+            height,
             ENEMY_SIZE,
             facing_direction,
             entity_type.get_default_texture_id(),
