@@ -140,6 +140,7 @@ impl Map {
 
     /// a test map used throughhout development; star shaped wall, 
     /// some blocks, a little stair with some obstacles to test movement/collisions, test entities
+    /// outdated an unnecessary now that we have the parser
     pub fn new_test_map() -> Option<Self> {
         let mut map = Self {
             id: 0,
@@ -399,8 +400,7 @@ impl Map {
         Some(map)
     }
 
-    // returns the sides in the shape and the shape itself as tuple
-    // add side vector from tuple into side list and shape into shape list
+    /// takes a list of points to form a shape (block or wall) with other relevant data to add the shape to the map
     #[allow(clippy::too_many_arguments)]
     pub fn add_shape_from_points(
         &mut self,
