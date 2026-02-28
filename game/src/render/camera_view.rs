@@ -121,7 +121,7 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     draw_player_hp_bar(buffer,renderer_data, game.player.hp);
 
     //draw crosshair
-    draw_crosshair(buffer, game.player.vertcal_aim, renderer_data);
+    draw_crosshair(buffer, game.player.vertcal_aim, renderer_data, game.player.aim_mode);
 
 }
 
