@@ -17,7 +17,6 @@ pub struct Point {
 }
 
 impl Point {
-    // TODO tests for this function
     pub fn distance_to(self, other: &Self) -> f64 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
@@ -25,7 +24,6 @@ impl Point {
         (dx.powf(2.0) + dy.powf(2.0)).sqrt()
     }
 
-    // TODO tests for this function
     pub fn angle_to(self, other: &Self) -> f64 {
         let dx = other.x - self.x;
         let dy = other.y - self.y;
@@ -484,4 +482,34 @@ fn test_angle() {
 
     let p9 = Point { x: 10.0, y: -10.0 };
     assert!((p1.angle_to(&p9) - 7.0 * (PI / 4.0)).abs() < 0.1);
+}
+
+#[test]
+fn test_distance_to_symmetry() {
+    let p1 = Point { x: -1.0, y: 2.0 };
+    let p2 = Point { x: 4.0, y: 6.0 };
+
+    let d1 = p1.distance_to(&p2);
+    let d2 = p2.distance_to(&p1);
+
+    assert!((d1 - d2).abs() < 1e-10);
+}
+
+#[test]
+fn test_distance_to_basic() {
+    let p1 = Point { x: 0.0, y: 0.0 };
+    let p2 = Point { x: 3.0, y: 4.0 };
+
+    let d = p1.distance_to(&p2);
+
+    assert!((d - 5.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_distance_to_same_point() {
+    let p = Point { x: 1.5, y: -2.3 };
+
+    let d = p.distance_to(&p);
+
+    assert_eq!(d, 0.0);
 }
