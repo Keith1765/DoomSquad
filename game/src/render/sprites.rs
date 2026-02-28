@@ -57,6 +57,7 @@ impl Sprite {
         if let Some(handler) = &mut self.walk_cycle_handler {
             if handler.countdown == 0 {
                 std::mem::swap(&mut handler.current_texture_id, &mut handler.other_texture_id);
+                handler.countdown = handler.countdown_full_value;
             } else {
                 handler.countdown -= 1;
             }
