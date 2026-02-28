@@ -164,7 +164,7 @@ impl Entity {
                 position, // Point { x: 230.0, y: 210.0 },
                 floor_level: start_floor_level,
                 foot_level: start_foot_level,
-                view_level: ENTITY_DEFAULT_VIEW_HEIGHT,
+                view_level: start_foot_level + ENTITY_DEFAULT_VIEW_HEIGHT,
                 height: collision_height,
                 facing_direction,
             },
