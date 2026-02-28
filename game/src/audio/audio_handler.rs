@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 use crate::game::map::Point;
 
 const AUDIO_DISTANCE_SCALE_COEFFICIENT: f32 = 0.025;
-const AUDIO_ENABLED: bool = true; 
+const AUDIO_ENABLED: bool = false; 
 const BACKGROUND_MUSIC_VOLUME: f32 = 0.2;
 
 pub struct Audio {
