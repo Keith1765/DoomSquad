@@ -195,12 +195,13 @@ pub fn task_surface(
         ShapeType::Wall => None, // null value, should never happen
     };
 
-    // varies between 0.5 and 1.0 depending on height in level; temporary
+    // varies between 0.5 and 1.0 depending on height in level
     let brightness = 0.5 + (slice.entry_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
 
     if let Some((onscreen_bottom, onscreen_top)) = onscreen_dimensions
         && let Some(vertical_distance_value) = vertical_distance
     {
+        // create the tasks
         let task: RenderTask = RenderTask {
             texture_column: None,
             color: slice.entry_hit.side.shape.surface_color,
@@ -208,8 +209,6 @@ pub fn task_surface(
             onscreen_bottom,
             onscreen_top,
         };
-
-        //println!("{}|{}", task.onscreen_bottom, task.onscreen_top);
 
         let task_type: RenderTaskType = match &slice.entry_hit.side.shape.shape_type {
             ShapeType::Block => {
@@ -224,7 +223,7 @@ pub fn task_surface(
                 }
             }
             ShapeType::Wall => {
-                return None;
+                return None; // should never hapen
             }
         };
 
@@ -234,28 +233,32 @@ pub fn task_surface(
             task_type,
         ))
     } else {
+        // if we couldnt get dimensions, vertical distance, something went wrong and we render nothing
         None
     }
 }
 
-// TODO optimize? kinda laggy for some reason rn;
-// TODO i know its this function lagging because if i comment out the invocation in task_column al lot less lag spikes happen
+// TODO optimize? kinda laggy for some reason rn
+/// creates the tasking for a surface which is not fully visible, because we are standing on its block 
+/// (=> some of it offcreen), meaning it wil go into the offscreen
 pub fn task_partial_surface(
     exit_hit: &RayHit,
     angle_relative_to_player: f64,
     renderer_data: &RendererData,
     game: &Game,
 ) -> Option<RenderTaskOrderer> {
-    // if we are inside the block (no just horizontalll, but also vertically)
+    // if we are inside the block (not just horizontally, but also vertically), we dont want to draw anything
     if exit_hit.side.shape.bottom < game.player.mover.view_level
         && exit_hit.side.shape.bottom + exit_hit.side.shape.height > game.player.mover.view_level
     {
         return None;
     }
 
+    // we only need exit (contrary to above, because we do not have a rayhit entinring into the block; we are inside the block already)
     let (exit_bottom_onscreen, exit_top_onscreen) =
         calculate_side_bottom_top(exit_hit, angle_relative_to_player, renderer_data, game);
 
+    // as in function above
     let brightness = 0.5 + (exit_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
 
     // if we are above the block (case floor)
@@ -266,7 +269,7 @@ pub fn task_partial_surface(
             texture_column: None,
             color: exit_hit.side.shape.surface_color,
             brightness,
-            onscreen_bottom: 0,
+            onscreen_bottom: 0, // we draw the partial surface down to the screen edge
             onscreen_top: exit_top_onscreen,
         };
         Some(RenderTaskOrderer {
@@ -282,7 +285,7 @@ pub fn task_partial_surface(
             color: exit_hit.side.shape.surface_color,
             brightness,
             onscreen_bottom: exit_bottom_onscreen,
-            onscreen_top: SCREEN_HEIGHT as isize,
+            onscreen_top: SCREEN_HEIGHT as isize, // we draw the partial surface up to the screen edge
         };
         Some(RenderTaskOrderer {
             task,
@@ -301,10 +304,10 @@ pub fn calculate_side_bottom_top(
     let normalized_distance_to_side = rh.distance * angle_relative_to_player.cos(); // cos for anti-fisheye effect
 
     let side_height_onscreen = ((rh.side.shape.height / normalized_distance_to_side)
-        * renderer_data.render_scale_coefficient) as isize; // must be addable to bottom_onscreen
+        * renderer_data.render_scale_coefficient) as isize; // must be addable to bottom_onscreen, thus the type
 
     let side_bottom_onscreen: isize = ((renderer_data.screen_height_as_f64 / 2.0) // middle of screen
-        + ((rh.side.shape.bottom / normalized_distance_to_side)
+        + ((rh.side.shape.bottom / normalized_distance_to_side) // find "base" position
         - (game.player.mover.view_level / normalized_distance_to_side)) // adjust for view hieght
         * renderer_data.render_scale_coefficient) // scale correctly
         as isize;

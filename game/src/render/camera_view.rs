@@ -14,14 +14,17 @@ use crate::{SCREEN_HEIGHT, SCREEN_WIDTH}; // TODO fully move this into renderer_
 
 pub type VerticalDisctance = f64;
 
+/// types of renderer tasks: we always draw a floor or ceiling, a side of a block7wall, or a sprite
 #[derive(Clone, Copy, PartialEq)]
 pub enum RenderTaskType {
     Floor(VerticalDisctance), // vert dist is needed for sorting between surface tasks
     Ceiling(VerticalDisctance),
-    SpriteUnicolor,
+    Sprite,
     SideTexture,
 }
 
+/// a render task is an instruction for the renderer to draw something on a part of the screen; they are orederd by an orderer
+/// so that only the frontmost are visible in the end
 #[derive(Clone)]
 pub struct RenderTask {
     pub texture_column: Option<Vec<u32>>, // texture and color will never both be used
@@ -31,6 +34,7 @@ pub struct RenderTask {
     pub onscreen_top: isize,
 }
 
+/// a wrapper for a task to order it, as explained above
 #[derive(Clone)]
 pub struct RenderTaskOrderer {
     pub task: RenderTask,
@@ -100,11 +104,13 @@ impl RenderTaskOrderer {
     }
 }
 
+// the collection of tasks for a column of the screen, with the furthest distance behind which nothing is rendered, becasue theres a wall there
 pub struct ColumnTasks {
     pub tasks: BinaryHeap<RenderTaskOrderer>,
     pub wall_distance: f64,
 }
 
+// draws the whole screen into the buffer, to be drawn by library into the window later
 pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
     //write grey plane as background to overwrite past frames
     for px in buffer.iter_mut() {
@@ -115,7 +121,6 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     if game.player.godmode {
         draw_reference_points(buffer);
     }
-    //draw_texture_bottom_left(buffer, renderer_data.textures.get(&0).unwrap());
 
     //draw playwer hp bar
     draw_player_hp_bar(buffer,renderer_data, game.player.hp);
@@ -125,9 +130,15 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
 
 }
 
+/// draws the camera view (screen without hud and such)
 fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
-    // for every column of the screen, create a slice of the map
+
+    // for every column of the screen, create a slice of the map with a raycast
+
+    // stores every map slice together with the angle relative to the player with which it was cast
+    // this angle will be needed for distortion correction
     let mut map_slices_and_angles: [Option<(MapSlice, f64)>; SCREEN_WIDTH] = [const { None }; SCREEN_WIDTH];
+
     #[allow(clippy::needless_range_loop)]
     for x in 0..SCREEN_WIDTH {
         let pixel_distance_from_screen_middle: f64 = x as f64 - SCREEN_WIDTH as f64 / 2.0;
@@ -146,7 +157,10 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     }
 
     // convert every mapslice into taskings
+
+    // the taskings for each column of the screen
     let mut columns_tasked: [Option<ColumnTasks>; SCREEN_WIDTH] = [const { None }; SCREEN_WIDTH];
+
     for x in 0..SCREEN_WIDTH {
         if let Some((map_slice, angle_relative_to_player)) = &map_slices_and_angles[x] {
             columns_tasked[x] = Some(task_column(
@@ -160,26 +174,28 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
 
     // create entity (sprite) tasks, put them into the taskings
     for entity in &game.entities {
+        // get a entity tasking instruction
         if let Some(mut instruction) =
             task_sprite(game, &entity.sprite, &entity.mover, renderer_data)
         {
+            // draw the columns of that instructon into the correct columns of the screen
             let sprite_width = instruction.sprite_right_screen_x - instruction.sprite_left_screen_x;
             for x in 0..sprite_width {
                 if x > SCREEN_WIDTH - 1 {
                     continue;
                 }
 
-                if let Some(cts) = &mut columns_tasked[instruction.sprite_right_screen_x - x - 1]
+                if let Some(column_tasks) = &mut columns_tasked[instruction.sprite_right_screen_x - x - 1]
                     && let Some(sprite_task) = instruction.tasks.pop()
-                    && sprite_task.distance <= cts.wall_distance
+                    && sprite_task.distance <= column_tasks.wall_distance
                 {
-                    cts.tasks.push(sprite_task);
+                    column_tasks.tasks.push(sprite_task);
                 }
             }
         }
     }
 
-    // create entity (sprite) tasks, put them into the taskings
+    // create interactable (sprite) tasks, put them into the taskings
     // practically identical to above
     for interactable in &game.interactables {
         if let Some(mut instruction) = task_sprite(
@@ -207,9 +223,10 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     // draw all the tasks into the buffer
     for x in 0..SCREEN_WIDTH {
         if let Some(column_tasks) = &mut columns_tasked[x] {
+            // create a column of pixels in which the tasks are drawn
             let column = draw_tasks(column_tasks, renderer_data);
 
-            //draw column into buffer
+            //then draw that column into  thebuffer
             for y in 0..column.len() {
                 // read columns in reverse vertical order; that way other functions can pretend y=0 is botto of screen
                 buffer[(SCREEN_HEIGHT - (y + 1)) * SCREEN_WIDTH + x] = column[y];
@@ -218,6 +235,7 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
     }
 }
 
+// draws a renderer task to actual pixels
 fn draw_tasks(
     column_tasks: &mut ColumnTasks,
     renderer_data: &RendererData,
@@ -265,7 +283,7 @@ fn draw_tasks(
             continue; // go back to beginning of loop, otherwise will get overwritten by color drawing code below
         }
 
-        // render the color instead if the task has no texture
+        // render the unicolor instead if the task has no texture
         for onscreen_y in task
             .onscreen_bottom
             .clamp(0, renderer_data.screen_height_as_isize)
@@ -292,18 +310,8 @@ fn draw_tasks(
     screen_column
 }
 
-// // TODO add positioning to make actualyl useful
-// // TODO this whole thing is temporary mostly
-// fn draw_texture_bottom_left(buffer: &mut [u32], texture: &Texture) {
-//     for x in 0..texture.width {
-//         let column = texture.get_column(x).unwrap(); // ! TODO get rid of unwrap
-//         for y in 0..column.len() - 1 {
-//             buffer[(y * SCREEN_WIDTH) + x] = *column.get(y).unwrap(); // ! TODO get rid of unwrap
-//         }
-//     }
-// }
 
-//draw refernce points spaced 50 pixels apart for debugging
+///draw refernce points spaced 50 pixels apart for debugging
 fn draw_reference_points(buffer: &mut [u32]) {
     for x in 0..SCREEN_WIDTH {
         for y in 0..SCREEN_HEIGHT {
@@ -313,157 +321,6 @@ fn draw_reference_points(buffer: &mut [u32]) {
         }
     }
 }
-
-////! this func is a random chatgbt function, rewrite if we want to use it in the final code
-fn draw_line(buffer: &mut [u32], x0: usize, y0: usize, x1: usize, y1: usize, color: u32) {
-    // Convert to signed for math (avoids underflow)
-    let mut x0 = x0 as isize;
-    let mut y0 = y0 as isize;
-    let x1 = x1 as isize;
-    let y1 = y1 as isize;
-
-    let dx = (x1 - x0).abs();
-    let sx = if x0 < x1 { 1 } else { -1 };
-    let dy = -(y1 - y0).abs();
-    let sy = if y0 < y1 { 1 } else { -1 };
-    let mut err = dx + dy;
-
-    loop {
-        // Only draw inside the screen
-        if x0 >= 0 && x0 < SCREEN_WIDTH as isize && y0 >= 0 && y0 < SCREEN_HEIGHT as isize {
-            buffer[y0 as usize * SCREEN_WIDTH + x0 as usize] = color;
-        }
-
-        if x0 == x1 && y0 == y1 {
-            break;
-        }
-
-        let e2 = 2 * err;
-
-        if e2 >= dy {
-            err += dy;
-            x0 += sx;
-        }
-        if e2 <= dx {
-            err += dx;
-            y0 += sy;
-        }
-    }
-}
-
-// fn point_in_polygon (shape: &Option<Shape>, point: Point) -> Option<bool> {
-//     // let mut side1 : Side;
-//     let shape_content: Shape = (*shape).clone()?; // TODO remove necessity for clone() maybe?
-//     let mut intersects = false;
-//     for side in shape_content.sides {
-//         if intersect(point, 0.0, side).is_some() {
-//             intersects=!intersects;
-//         }
-//     }
-//     Some(intersects)
-// }
-
-// fn draw_dimensional_cast(
-//     buffer: &mut [u32],
-//     distance_to_wall: f64,
-//     ray_angle_relative_to_player_angle: f64,
-//     angle_of_wall: f64,
-// ) {
-//     let normalized_distance_to_wall =
-//         (distance_to_wall * ray_angle_relative_to_player_angle.cos()) / WALLSCALING; // cos for anti-fisheye effect
-
-//     let wall_heigth = (HEIGHT as f64 / normalized_distance_to_wall).clamp(0.0, HEIGHT as f64);
-//     //find out what ray we are currently casting to know where on the x axis to draw the line in the 2.5 view
-//     let center_x = WIDTH as f64 * 0.5;
-//     let proj_dist = center_x / (FOV * 0.5).tan();
-//     let x = (center_x + ray_angle_relative_to_player_angle.tan() * proj_dist) as usize;
-
-//     let draw_srting_point = (HEIGHT as f64 - wall_heigth) / 2.0;
-
-//     //draw the vertical line; shading based on angle of the side
-//     for y in
-//         draw_srting_point as usize..(draw_srting_point + wall_heigth).min(HEIGHT as f64) as usize
-//     {
-//         let brightness = (angle_of_wall.cos() * 0.5 + 0.5).clamp(0.2, 1.0);
-//         let color = 0x00ff00;
-//         // 2. Extract channels
-//         let a = (color >> 24) & 0xFF;
-//         let r = (color >> 16) & 0xFF;
-//         let g = (color >> 8) & 0xFF;
-//         let b = color & 0xFF;
-
-//         // 3. Scale each channel
-//         let r = (r as f64 * brightness) as u32;
-//         let g = (g as f64 * brightness) as u32;
-//         let b = (b as f64 * brightness) as u32;
-
-//         // 4. Repack
-
-//         buffer[y * WIDTH + x] = (a << 24) | (r << 16) | (g << 8) | b;
-//     }
-// }
-
-//save all points from the screen that are in the polygon of the map boarder and note that map is loaded now
-////! right now load map is working not as intended in the game, because right now it loads the init of map, so right now it just means that we init the map, later however it will indicate what map was loaded into the map boarder
-// fn load_map (game: & mut Game) -> Result<(),Box<dyn  std::error::Error>>{
-//     for x in 0..WIDTH {
-//         for y in 0..HEIGHT{
-//             if point_in_polygon(&game.map.walls, Point { x: x as f64, y: y as f64 }){
-//                 game.map.points_in_border.push(Point{x: x as f64, y: y as f64});
-//             }
-//         }
-//     }
-//     game.map.loaded_map=1;
-//     Ok(())
-// }
-
-//draw the top down view of the map init
-// fn draw_map (buffer: &mut [u32], game: &Game) -> Result<(),Box<dyn  std::error::Error>>{
-//     for points in game.map.points_in_border.clone() {
-//             if point_in_polygon(&game.map.walls, Point { x: points.x as f64, y: points.y as f64 }){
-//                 buffer[points.y as usize*WIDTH+points.x as usize] = 0x00ff00;
-//         }
-//         //draw object
-//         if point_in_polygon(&game.map.blocks.get(0).unwrap(), Point { x: points.x as f64, y: points.y as f64 }){
-//                 buffer[points.y as usize*WIDTH+points.x as usize] = 0x0000ff;
-//         }
-//     }
-//     Ok(())
-// }
-
-// fn draw_player (buffer: &mut [u32], game: &Game) {
-//     //make player thicccker but have to check for out of bounds
-//     let x = game.player.position_x as isize;
-//     let y = game.player.position_y as isize;
-
-//     for dx in -1..=1 {
-//         for dy in -1..=1 {
-//             let px = x + dx;
-//             let py = y + dy;
-
-//             if px >= 0 && px < WIDTH as isize && py >= 0 && py < HEIGHT as isize {
-//                 let ux = px as usize;
-//                 let uy = py as usize;
-//                 let index = uy * WIDTH + ux;
-//                 buffer[index] = 0xff0000;
-//             }
-//         }
-//     }
-//     //draw direction of player looking as a small line
-//     let x1f = game.player.position_x+game.player.velocity_x*5.0;
-//     let y1f = game.player.position_y+game.player.velocity_y*5.0;
-
-//     let x1 = x1f.clamp(0.0, (WIDTH - 1) as f64) as usize;
-//     let y1 = y1f.clamp(0.0, (HEIGHT - 1) as f64) as usize;
-//     let x0 = game.player.position_x.clamp(0.0, (WIDTH-1) as f64) as usize;
-//     let y0 = game.player.position_y.clamp(0.0, (HEIGHT-1) as f64) as usize;
-
-//     draw_line(buffer, x0, y0, x1, y1, 0x00ffff);
-// }
-
-//
-
-//draw the vertical line for the ray that renders the the 2.5 view
 
 #[cfg(test)]
 mod test {
