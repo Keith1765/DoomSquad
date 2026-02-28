@@ -42,6 +42,7 @@ pub const EXPLODED_RED_BARREL_SIZE: f64 = 20000.0;
 pub const MELEE_ENEMY_ATTACK_COOLDOWN: i32 = 20;
 pub const MEELE_ENEMY_DMG: f64 = 25.0;
 pub const MELEE_ENEMY_RANGE: f64 = 5.0;
+pub const SUMMONER_HEIGHT: f64 = 50.0;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType {

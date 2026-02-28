@@ -72,7 +72,7 @@ Rendered in the same way as entities; can be interacted with using F for various
 -   Spawner: has a yellow warning icon, spawns a Dummy TODO change
 -   Heal Station: red heart icon; restores a small amount of health; onyl usable once
 -   Jump Pad (sometimes called Elevator in Code): propels the player upwards
--   Slot Machine: randomly either restores some health, or spawns a melee enemy; very small chance of swapping map (1%)
+-   Slot Machine: randomly either restores some health, or spawns a melee enemy; small chance of swapping map to old test map that was used during development (10%)
 
   
 
