@@ -9,7 +9,7 @@ mod menu;
 use crate::audio::audio::Audio;
 use crate::render::{RendererData, render_init};
 use crate::menu::menu::{Menu, AppState};
-use minifb::{Key, Window, WindowOptions};
+use minifb::{KeyRepeat, Key, Window, WindowOptions};
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -53,78 +53,77 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut menu = Menu::new();
     
     let mut app_state = AppState::StartScreen;
-    
-    let mut is_audio_enabled = true;
-    let mut prev_audio_enabled = true;
-    
+
     let mut prev_keys = (false, false, false, false, false);
-    let mut prev_escape = false;
 
     while window.is_open() {
-        let cur_escape = window.is_key_down(Key::Escape);
-        let escape_clicked = cur_escape && !prev_escape;
-        prev_escape = cur_escape;
-
-        if is_audio_enabled != prev_audio_enabled {
-            audio.set_muted(!is_audio_enabled); 
-            prev_audio_enabled = is_audio_enabled;
-        }
+        let escape_clicked = window.is_key_pressed(Key::Escape, KeyRepeat::No);
 
         match app_state {
             AppState::StartScreen => {
                 window.set_cursor_visibility(true);
-                if escape_clicked { break; } 
                 
-                app_state = menu.update_and_draw(&mut window, &mut buffer, &mut game, &renderer_data, &mut is_audio_enabled);
+                if escape_clicked { 
+                    break; 
+                } else {
+                    app_state = menu.update_and_draw_start_menu(&mut window, &mut buffer, &mut game, &renderer_data, &mut audio);
+                }
             }
 
             AppState::Playing => {
                 window.set_cursor_visibility(false);
                 
                 if escape_clicked {
-                    app_state = AppState::StartScreen;
-                    continue;
-                }
-                
-                if game.player.hp <= 0.0 {
+                    app_state = AppState::GameExited;
+                } else if game.player.hp <= 0.0 {
                     app_state = AppState::GameOver;
-                    continue;
+                } else {
+
+                    let (_, _, _, _, prev_space) = prev_keys;
+                    let cur_w = window.is_key_down(Key::W);
+                    let cur_a = window.is_key_down(Key::A);
+                    let cur_s = window.is_key_down(Key::S);
+                    let cur_d = window.is_key_down(Key::D);
+                    let cur_space = window.is_key_down(Key::Space);
+
+                    let is_moving = cur_w || cur_a || cur_s || cur_d;
+                    let just_jumped = cur_space && !prev_space;
+                    
+                    audio.handle_input(is_moving, just_jumped);
+                    prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
+
+                    game.update(&window, &renderer_data, &mut audio);
+                    render::draw_screen(&mut buffer, &renderer_data, &game);
+
+                    frame_count += 1;
+                    let elapsed = last_time.elapsed().as_secs_f32();
+                    if elapsed >= 1.0 {
+                        fps_value = frame_count as f32 / elapsed;
+                        frame_count = 0;
+                        last_time = Instant::now();
+                        window.set_title(&format!("DoomSquad | FPS: {:.1}", fps_value));
+                    }
                 }
+            }
 
-                let (_, _, _, _, prev_space) = prev_keys;
-                let cur_w = window.is_key_down(Key::W);
-                let cur_a = window.is_key_down(Key::A);
-                let cur_s = window.is_key_down(Key::S);
-                let cur_d = window.is_key_down(Key::D);
-                let cur_space = window.is_key_down(Key::Space);
-
-                let is_moving = cur_w || cur_a || cur_s || cur_d;
-                let just_jumped = cur_space && !prev_space;
+            AppState::GameExited => {
+                window.set_cursor_visibility(true);
                 
-                audio.handle_input(is_moving, just_jumped);
-                prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
-
-                game.update(&window, &renderer_data, &mut audio);
-                render::draw_screen(&mut buffer, &renderer_data, &game);
-
-                frame_count += 1;
-                let elapsed = last_time.elapsed().as_secs_f32();
-                if elapsed >= 1.0 {
-                    fps_value = frame_count as f32 / elapsed;
-                    frame_count = 0;
-                    last_time = Instant::now();
-                    window.set_title(&format!("DoomSquad | FPS: {:.1}", fps_value));
+                if escape_clicked {
+                    app_state = AppState::StartScreen;
+                } else {
+                    app_state = menu.update_and_draw_game_exited(&mut window, &mut buffer, &mut game, &mut audio);
                 }
             }
 
             AppState::GameOver => {
                 window.set_cursor_visibility(true);
+                
                 if escape_clicked {
                     app_state = AppState::StartScreen;
-                    continue;
+                } else {
+                    app_state = menu.update_and_draw_game_over(&mut window, &mut buffer, &mut game);
                 }
-                
-                app_state = menu.update_and_draw_game_over(&mut window, &mut buffer, &mut game);
             }
 
             AppState::Quit => {

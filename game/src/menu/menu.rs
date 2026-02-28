@@ -1,13 +1,19 @@
 use font8x8::{BASIC_FONTS, UnicodeFonts};
-use minifb::{Key, MouseButton, MouseMode, Window};
+use minifb::{Key, KeyRepeat, MouseButton, MouseMode, Window};
 use std::fs;
 
 use crate::game::gamestate::Game;
 use crate::render::RendererData;
+use crate::audio::audio::Audio; 
+
+const SCREEN_WIDTH: usize = 800;
+const SCREEN_HEIGHT: usize = 450;
 
 const COL_BG_MAIN: u32 = 0x111111;
 const COL_BG_GAMEOVER: u32 = 0x330000;
+const COL_BG_EXITED: u32 = 0x002244; 
 const COL_TITLE_RED: u32 = 0xCC0000;
+const COL_TITLE_BLUE: u32 = 0x44AAFF; 
 const COL_BTN_NORMAL: u32 = 0x444444;
 const COL_BTN_HOVER: u32 = 0xAA0000;
 const COL_TEXT_WHITE: u32 = 0xFFFFFF;
@@ -16,6 +22,7 @@ pub enum AppState {
     StartScreen,
     Playing,
     GameOver,
+    GameExited,
     Quit,
 }
 
@@ -28,90 +35,50 @@ struct ButtonDef {
 }
 
 pub struct Menu {
-    was_mouse_down: bool,
-    was_key1_down: bool,
-    was_key2_down: bool,
-    was_key3_down: bool,
+    was_mouse_down: bool, 
 }
 
 impl Menu {
     pub fn new() -> Self {
         Self {
             was_mouse_down: false,
-            was_key1_down: false,
-            was_key2_down: false,
-            was_key3_down: false,
         }
     }
 
-    pub fn update_and_draw(
+
+    pub fn update_and_draw_start_menu(
         &mut self,
         window: &mut Window,
         buffer: &mut [u32],
         game: &mut Game,
         renderer_data: &RendererData,
-        is_audio_enabled: &mut bool,
+        audio: &mut Audio, 
     ) -> AppState {
         buffer.fill(COL_BG_MAIN);
 
         let (mx, my, clicked) = self.get_mouse_state(window);
-        let k1 = window.is_key_down(Key::Key1);
-        let k2 = window.is_key_down(Key::Key2);
-        let k3 = window.is_key_down(Key::Key3);
+        
+        let click1 = window.is_key_pressed(Key::Key1, KeyRepeat::No);
+        let click2 = window.is_key_pressed(Key::Key2, KeyRepeat::No);
+        let click3 = window.is_key_pressed(Key::Key3, KeyRepeat::No);
 
-        let click1 = k1 && !self.was_key1_down;
-        let click2 = k2 && !self.was_key2_down;
-        let click3 = k3 && !self.was_key3_down;
+        Self::draw_text_centered(buffer, SCREEN_WIDTH, SCREEN_HEIGHT, "DOOMSQUAD", 50, 6, COL_TITLE_RED);
+        Self::draw_text_centered(buffer, SCREEN_WIDTH, SCREEN_HEIGHT, "MAIN MENU", 105, 2, COL_TEXT_WHITE);
 
-        self.was_key1_down = k1;
-        self.was_key2_down = k2;
-        self.was_key3_down = k3;
+        let btn_start = ButtonDef { x: 230, y: 160, w: 340, h: 50, text: "[1] NEW GAME".to_string() };
+        let btn_load  = ButtonDef { x: 230, y: 230, w: 340, h: 50, text: "[2] LOAD MAP".to_string() };
 
-        Self::draw_text_centered(buffer, 800, 450, "DOOMSQUAD", 50, 6, COL_TITLE_RED);
-        Self::draw_text_centered(buffer, 800, 450, "MAIN MENU", 105, 2, COL_TEXT_WHITE);
+        let audio_text = if !audio.is_muted { "[3] SOUND: ON" } else { "[3] SOUND: OFF" };
+        let btn_audio = ButtonDef { x: 230, y: 300, w: 340, h: 50, text: audio_text.to_string() };
 
-        let btn_start = ButtonDef {
-            x: 230,
-            y: 160,
-            w: 340,
-            h: 50,
-            text: "[1] NEW GAME".to_string(),
-        };
-        let btn_load = ButtonDef {
-            x: 230,
-            y: 230,
-            w: 340,
-            h: 50,
-            text: "[2] LOAD MAP".to_string(),
-        };
-        let audio_text = if *is_audio_enabled {
-            "[3] SOUND: ON"
-        } else {
-            "[3] SOUND: OFF"
-        };
-        let btn_audio = ButtonDef {
-            x: 230,
-            y: 300,
-            w: 340,
-            h: 50,
-            text: audio_text.to_string(),
-        };
-        let btn_quit = ButtonDef {
-            x: 230,
-            y: 370,
-            w: 340,
-            h: 50,
-            text: "[ESC] QUIT TO DESKTOP".to_string(),
-        };
+        let btn_quit = ButtonDef { x: 230, y: 370, w: 340, h: 50, text: "[ESC] QUIT GAME".to_string() };
 
-        // BUTTON new game
-        if self.draw_flat_button(buffer, 800, 450, &btn_start, mx, my) && clicked || click1 {
+        if self.draw_flat_button(buffer, &btn_start, mx, my) && clicked || click1 {
             *game = Game::new_game(renderer_data).unwrap();
             return AppState::Playing;
         }
 
-        // BUTTON load game
-        if self.draw_flat_button(buffer, 800, 450, &btn_load, mx, my) && clicked || click2 {
+        if self.draw_flat_button(buffer, &btn_load, mx, my) && clicked || click2 {
             if let Ok(content) = fs::read_to_string("savegame.txt") {
                 if let Ok(index) = content.trim().parse::<usize>() {
                     *game = Game::new_game(renderer_data).unwrap();
@@ -124,14 +91,12 @@ impl Menu {
             }
         }
 
-        // BUTTON audio
-        if self.draw_flat_button(buffer, 800, 450, &btn_audio, mx, my) && clicked || click3 {
-            *is_audio_enabled = !*is_audio_enabled;
+        if self.draw_flat_button(buffer, &btn_audio, mx, my) && clicked || click3 {
+            audio.set_muted(!audio.is_muted);
             return AppState::StartScreen;
         }
 
-        // BUTTON quit
-        if self.draw_flat_button(buffer, 800, 450, &btn_quit, mx, my) && clicked {
+        if self.draw_flat_button(buffer, &btn_quit, mx, my) && clicked {
             return AppState::Quit;
         }
 
@@ -147,55 +112,87 @@ impl Menu {
         buffer.fill(COL_BG_GAMEOVER);
 
         let (mx, my, clicked) = self.get_mouse_state(window);
-        let k1 = window.is_key_down(Key::Key1);
-        let click1 = k1 && !self.was_key1_down;
-        self.was_key1_down = k1;
+        let click1 = window.is_key_pressed(Key::Key1, KeyRepeat::No);
 
-        Self::draw_text_centered(buffer, 800, 450, "YOU DIED", 80, 6, COL_TITLE_RED);
+        Self::draw_text_centered(buffer, SCREEN_WIDTH, SCREEN_HEIGHT, "YOU DIED", 80, 6, COL_TITLE_RED);
 
-        let btn_save = ButtonDef {
-            x: 230,
-            y: 220,
-            w: 340,
-            h: 60,
-            text: "[1] SAVE MAP INDEX".to_string(),
-        };
-        let btn_menu = ButtonDef {
-            x: 230,
-            y: 300,
-            w: 340,
-            h: 60,
-            text: "[ESC] MAIN MENU".to_string(),
-        };
+        let btn_save = ButtonDef { x: 230, y: 220, w: 340, h: 60, text: "[1] SAVE MAP INDEX".to_string() };
+        let btn_menu = ButtonDef { x: 230, y: 300, w: 340, h: 60, text: "[ESC] MAIN MENU".to_string() };
 
-        // BUTTON save map index
-        if self.draw_flat_button(buffer, 800, 450, &btn_save, mx, my) && clicked || click1 {
+        if self.draw_flat_button(buffer, &btn_save, mx, my) && clicked || click1 {
             let _ = fs::write("savegame.txt", game.map_index.to_string());
             println!("Map-Index {} gespeichert!", game.map_index);
             return AppState::StartScreen;
         }
 
-        // BUTTON back to main menu
-        if self.draw_flat_button(buffer, 800, 450, &btn_menu, mx, my) && clicked {
+        if self.draw_flat_button(buffer, &btn_menu, mx, my) && clicked {
             return AppState::StartScreen;
         }
 
         AppState::GameOver
     }
 
+    pub fn update_and_draw_game_exited(
+        &mut self,
+        window: &mut Window,
+        buffer: &mut [u32],
+        game: &mut Game,
+        audio: &mut Audio, 
+    ) -> AppState {
+        buffer.fill(COL_BG_EXITED);
+
+        let (mx, my, clicked) = self.get_mouse_state(window);
+
+        let click1 = window.is_key_pressed(Key::Key1, KeyRepeat::No);
+        let click2 = window.is_key_pressed(Key::Key2, KeyRepeat::No);
+        let click3 = window.is_key_pressed(Key::Key3, KeyRepeat::No);
+
+        Self::draw_text_centered(buffer, SCREEN_WIDTH, SCREEN_HEIGHT, "GAME PAUSED", 60, 6, COL_TITLE_BLUE);
+
+        let audio_text = if !audio.is_muted { "[3] SOUND: ON" } else { "[3] SOUND: OFF" };
+
+        let btn_resume = ButtonDef { x: 230, y: 150, w: 340, h: 50, text: "[1] RESUME GAME".to_string() };
+        let btn_save   = ButtonDef { x: 230, y: 210, w: 340, h: 50, text: "[2] SAVE & EXIT".to_string() };
+        let btn_audio  = ButtonDef { x: 230, y: 270, w: 340, h: 50, text: audio_text.to_string() };
+        let btn_menu   = ButtonDef { x: 230, y: 330, w: 340, h: 50, text: "[ESC] MAIN MENU".to_string() };
+
+        if self.draw_flat_button(buffer, &btn_resume, mx, my) && clicked || click1 {
+            return AppState::Playing;
+        }
+
+        if self.draw_flat_button(buffer, &btn_save, mx, my) && clicked || click2 {
+            let _ = std::fs::write("savegame.txt", game.map_index.to_string());
+            println!("Map-Index {} gespeichert! Gehe ins Menü.", game.map_index);
+            return AppState::StartScreen;
+        }
+
+        if self.draw_flat_button(buffer, &btn_audio, mx, my) && clicked || click3 {
+            audio.set_muted(!audio.is_muted);
+            return AppState::GameExited;
+        }
+
+        if self.draw_flat_button(buffer, &btn_menu, mx, my) && clicked {
+            println!("Spiel abgebrochen, nicht gespeichert.");
+            return AppState::StartScreen;
+        }
+
+        AppState::GameExited
+    }
+
+
     fn get_mouse_state(&mut self, window: &Window) -> (usize, usize, bool) {
         let mouse_pos = window.get_mouse_pos(MouseMode::Clamp).unwrap_or((0.0, 0.0));
         let is_mouse_down = window.get_mouse_down(MouseButton::Left);
+        
         let clicked = is_mouse_down && !self.was_mouse_down;
         self.was_mouse_down = is_mouse_down;
+        
         (mouse_pos.0 as usize, mouse_pos.1 as usize, clicked)
     }
 
     fn draw_flat_button(
         &self,
         buffer: &mut [u32],
-        screen_width: usize,
-        screen_height: usize,
         btn: &ButtonDef,
         mx: usize,
         my: usize,
@@ -205,8 +202,8 @@ impl Menu {
 
         for row in btn.y..(btn.y + btn.h) {
             for col in btn.x..(btn.x + btn.w) {
-                if row < screen_height && col < screen_width {
-                    buffer[row * screen_width + col] = bg_color;
+                if row < SCREEN_HEIGHT && col < SCREEN_WIDTH {
+                    buffer[row * SCREEN_WIDTH + col] = bg_color;
                 }
             }
         }
@@ -216,8 +213,8 @@ impl Menu {
         let text_y = btn.y + btn.h.saturating_sub(16) / 2;
         Self::draw_text(
             buffer,
-            screen_width,
-            screen_height,
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT,
             &btn.text,
             text_x,
             text_y,
