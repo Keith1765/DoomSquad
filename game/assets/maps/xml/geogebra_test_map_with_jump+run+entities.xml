@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<geogebra format="5.0" version="5.4.915.1" app="suite" subApp="graphing" platform="w" id="e836591d-d998-4e41-b6b9-d7cd53a8fcb9" xsi:noNamespaceSchemaLocation="https://www.geogebra.org/apps/xsd/ggb.xsd" xmlns="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<geogebra format="5.0" version="5.4.916.2" app="suite" subApp="graphing" platform="w" id="58c50a92-4860-4b4c-a6b9-b5a3329e3b1e" xsi:noNamespaceSchemaLocation="https://www.geogebra.org/apps/xsd/ggb.xsd" xmlns="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <gui>
-	<window width="1875" height="861"/>
+	<window width="2083" height="963"/>
 	<perspectives>
 <perspective id="tmp">
 	<panes>
-	<pane location="" divider="0.20426666666666668" orientation="1"/>
+	<pane location="" divider="0.21363418146903504" orientation="1"/>
 </panes>
 	<views>
 	<view id="4097" visible="false" inframe="false" stylebar="true" location="1,1,1,1" size="400" window="100,100,700,550"/>
 	<view id="512" toolbar="0 | 1 501 5 19 , 67 | 2 15 45 18 , 7 37 | 514 3 9 , 13 44 , 47 | 16 51 | 551 550 11 ,  20 22 21 23 , 55 56 57 , 12 | 69 | 510 511 , 512 513 | 533 531 , 534 532 , 522 523 , 537 536 , 535 , 538 | 521 520 | 36 , 38 49 560 | 571 30 29 570 31 33 | 17 | 540 40 41 42 , 27 28 35 , 6 , 502" visible="false" inframe="false" stylebar="false" location="1,1,1" size="500" window="100,100,600,400"/>
 	<view id="4" toolbar="0 || 2020 , 2021 , 2022 || 2001 , 2003 , 2002 , 2004 , 2005 || 2040 , 2041 , 2042 , 2044 , 2043" visible="false" inframe="false" stylebar="false" location="1,1" size="300" window="100,100,600,400"/>
 	<view id="8" toolbar="1001 | 1002 | 1003  || 1005 | 1004 || 1006 | 1007 | 1010 || 1008 | 1009 || 6" visible="false" inframe="false" stylebar="false" location="1,3" size="300" window="100,100,600,400"/>
-	<view id="1" visible="true" inframe="false" stylebar="false" location="1" size="1476" window="100,100,600,400"/>
-	<view id="2" visible="true" inframe="false" stylebar="false" location="3" size="383" tab="TOOLS" window="100,100,600,400"/>
+	<view id="1" visible="true" inframe="false" stylebar="false" location="1" size="1622" window="100,100,600,400"/>
+	<view id="2" visible="true" inframe="false" stylebar="false" location="3" size="445" tab="TOOLS" window="100,100,600,400"/>
 	<view id="16" visible="false" inframe="false" stylebar="false" location="1" size="300" window="50,50,500,500"/>
 	<view id="32" visible="false" inframe="false" stylebar="true" location="1" size="300" window="50,50,500,500"/>
 	<view id="64" visible="false" inframe="false" stylebar="false" location="1" size="480" window="50,50,500,500"/>
@@ -30,8 +30,8 @@
 </gui>
 <euclidianView>
 	<viewNumber viewNo="1"/>
-	<size width="1476" height="861"/>
-	<coordSystem xZero="152.51126998975545" yZero="690.3818970340428" scale="68.31977944909714" yscale="68.31977944909606"/>
+	<size width="1621" height="962"/>
+	<coordSystem xZero="-1505.0725781023816" yZero="1166.9441225066294" scale="134.00233377478636" yscale="134.0023337747877"/>
 	<evSettings axes="true" grid="true" gridIsBold="false" pointCapturing="3" rightAngleStyle="1" checkboxSize="26" gridType="3"/>
 	<bgColor r="255" g="255" b="255"/>
 	<axesColor r="28" g="28" b="31"/>
@@ -156,13 +156,13 @@
 <element type="polygon" label="v7">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="50" b="8" alpha="0.1"/>
+	<objColor r="0" g="50" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="p">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="8" alpha="0"/>
+	<objColor r="0" g="50" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -176,7 +176,7 @@
 </element>
 <element type="segment" label="q">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="8" alpha="0"/>
+	<objColor r="0" g="50" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -190,7 +190,7 @@
 </element>
 <element type="segment" label="r">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="9" alpha="0"/>
+	<objColor r="0" g="50" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -204,7 +204,7 @@
 </element>
 <element type="segment" label="s">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="8" alpha="0"/>
+	<objColor r="0" g="50" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -267,13 +267,13 @@
 <element type="polygon" label="v8">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="50" b="9" alpha="0.1"/>
+	<objColor r="0" g="50" b="32" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="t">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="9" alpha="0"/>
+	<objColor r="0" g="50" b="32" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -287,7 +287,7 @@
 </element>
 <element type="segment" label="u">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="9" alpha="0"/>
+	<objColor r="0" g="50" b="32" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -301,7 +301,7 @@
 </element>
 <element type="segment" label="v">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="9" alpha="0"/>
+	<objColor r="0" g="50" b="32" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -315,7 +315,7 @@
 </element>
 <element type="segment" label="w">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="9" alpha="0"/>
+	<objColor r="0" g="50" b="32" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -374,13 +374,13 @@
 <element type="polygon" label="v9">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="50" b="10" alpha="0.1"/>
+	<objColor r="0" g="50" b="33" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="z_1">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="10" alpha="0"/>
+	<objColor r="0" g="50" b="33" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -394,7 +394,7 @@
 </element>
 <element type="segment" label="a_1">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="10" alpha="0"/>
+	<objColor r="0" g="50" b="33" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -408,7 +408,7 @@
 </element>
 <element type="segment" label="b_1">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="10" alpha="0"/>
+	<objColor r="0" g="50" b="33" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -422,7 +422,7 @@
 </element>
 <element type="segment" label="c_1">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="10" alpha="0"/>
+	<objColor r="0" g="50" b="33" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -481,13 +481,13 @@
 <element type="polygon" label="v10">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="50" b="12" alpha="0.1"/>
+	<objColor r="0" g="50" b="35" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="n_1">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="12" alpha="0"/>
+	<objColor r="0" g="50" b="35" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -501,7 +501,7 @@
 </element>
 <element type="segment" label="e_1">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="12" alpha="0"/>
+	<objColor r="0" g="50" b="35" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -515,7 +515,7 @@
 </element>
 <element type="segment" label="p_1">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="12" alpha="0"/>
+	<objColor r="0" g="50" b="35" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -529,7 +529,7 @@
 </element>
 <element type="segment" label="q_1">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="12" alpha="0"/>
+	<objColor r="0" g="50" b="35" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -592,13 +592,13 @@
 <element type="polygon" label="v8_{1}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="50" b="9" alpha="0.1"/>
+	<objColor r="0" g="50" b="32" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="t_{1}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="9" alpha="0"/>
+	<objColor r="0" g="50" b="32" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -612,7 +612,7 @@
 </element>
 <element type="segment" label="u_{1}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="9" alpha="0"/>
+	<objColor r="0" g="50" b="32" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -626,7 +626,7 @@
 </element>
 <element type="segment" label="v_{1}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="9" alpha="0"/>
+	<objColor r="0" g="50" b="32" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -640,7 +640,7 @@
 </element>
 <element type="segment" label="w_{1}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="9" alpha="0"/>
+	<objColor r="0" g="50" b="32" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -699,13 +699,13 @@
 <element type="polygon" label="v10_{1}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="50" b="11" alpha="0.1"/>
+	<objColor r="0" g="50" b="34" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="n_{2}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="11" alpha="0"/>
+	<objColor r="0" g="50" b="34" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -719,7 +719,7 @@
 </element>
 <element type="segment" label="e_{2}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="11" alpha="0"/>
+	<objColor r="0" g="50" b="34" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -733,7 +733,7 @@
 </element>
 <element type="segment" label="p_{2}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="11" alpha="0"/>
+	<objColor r="0" g="50" b="34" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -747,7 +747,7 @@
 </element>
 <element type="segment" label="q_{2}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="11" alpha="0"/>
+	<objColor r="0" g="50" b="34" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -806,13 +806,13 @@
 <element type="polygon" label="v10_{2}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="50" b="13" alpha="0.1"/>
+	<objColor r="0" g="50" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="n_{3}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="13" alpha="0"/>
+	<objColor r="0" g="50" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -826,7 +826,7 @@
 </element>
 <element type="segment" label="e_{3}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="13" alpha="0"/>
+	<objColor r="0" g="50" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -840,7 +840,7 @@
 </element>
 <element type="segment" label="p_{3}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="13" alpha="0"/>
+	<objColor r="0" g="50" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -854,7 +854,7 @@
 </element>
 <element type="segment" label="q_{3}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="13" alpha="0"/>
+	<objColor r="0" g="50" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -913,13 +913,13 @@
 <element type="polygon" label="v10_{3}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="50" b="14" alpha="0.1"/>
+	<objColor r="0" g="50" b="37" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="n_{4}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="14" alpha="0"/>
+	<objColor r="0" g="50" b="37" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -933,7 +933,7 @@
 </element>
 <element type="segment" label="e_{4}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="14" alpha="0"/>
+	<objColor r="0" g="50" b="37" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -947,7 +947,7 @@
 </element>
 <element type="segment" label="p_{4}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="14" alpha="0"/>
+	<objColor r="0" g="50" b="37" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -961,7 +961,7 @@
 </element>
 <element type="segment" label="q_{4}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="50" b="14" alpha="0"/>
+	<objColor r="0" g="50" b="37" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1068,13 +1068,13 @@
 <element type="polygon" label="Vieleck1">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="false" label="false"/>
-	<objColor r="0" g="255" b="11" alpha="0.1"/>
+	<objColor r="0" g="255" b="36" alpha="0.1"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="d">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1088,7 +1088,7 @@
 </element>
 <element type="segment" label="a">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1102,7 +1102,7 @@
 </element>
 <element type="segment" label="b">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1116,7 +1116,7 @@
 </element>
 <element type="segment" label="c">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1130,7 +1130,7 @@
 </element>
 <element type="segment" label="r_1">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1144,7 +1144,7 @@
 </element>
 <element type="segment" label="s_1">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1158,7 +1158,7 @@
 </element>
 <element type="segment" label="f_2">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1172,7 +1172,7 @@
 </element>
 <element type="segment" label="g_2">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1186,7 +1186,7 @@
 </element>
 <element type="segment" label="h_2">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1200,7 +1200,7 @@
 </element>
 <element type="segment" label="i_2">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1214,7 +1214,7 @@
 </element>
 <element type="segment" label="o_1">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1228,7 +1228,7 @@
 </element>
 <element type="segment" label="c_2">
 	<show object="false" label="true"/>
-	<objColor r="0" g="255" b="11" alpha="0"/>
+	<objColor r="0" g="255" b="36" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1287,13 +1287,13 @@
 <element type="polygon" label="v1">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="16" g="16" b="8" alpha="0.1"/>
+	<objColor r="16" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="j_2">
 	<show object="true" label="true"/>
-	<objColor r="16" g="16" b="8" alpha="0"/>
+	<objColor r="16" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1307,7 +1307,7 @@
 </element>
 <element type="segment" label="k_2">
 	<show object="true" label="true"/>
-	<objColor r="16" g="16" b="8" alpha="0"/>
+	<objColor r="16" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1321,7 +1321,7 @@
 </element>
 <element type="segment" label="l_2">
 	<show object="true" label="true"/>
-	<objColor r="16" g="16" b="8" alpha="0"/>
+	<objColor r="16" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1335,7 +1335,7 @@
 </element>
 <element type="segment" label="m_2">
 	<show object="true" label="true"/>
-	<objColor r="16" g="16" b="8" alpha="0"/>
+	<objColor r="16" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1394,13 +1394,13 @@
 <element type="polygon" label="v1_{1}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="50" g="16" b="8" alpha="0.1"/>
+	<objColor r="50" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="j_{3}">
 	<show object="true" label="true"/>
-	<objColor r="50" g="16" b="8" alpha="0"/>
+	<objColor r="50" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1414,7 +1414,7 @@
 </element>
 <element type="segment" label="k_{3}">
 	<show object="true" label="true"/>
-	<objColor r="50" g="16" b="8" alpha="0"/>
+	<objColor r="50" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1428,7 +1428,7 @@
 </element>
 <element type="segment" label="l_{3}">
 	<show object="true" label="true"/>
-	<objColor r="50" g="16" b="8" alpha="0"/>
+	<objColor r="50" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1442,7 +1442,7 @@
 </element>
 <element type="segment" label="m_{3}">
 	<show object="true" label="true"/>
-	<objColor r="50" g="16" b="8" alpha="0"/>
+	<objColor r="50" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1501,13 +1501,13 @@
 <element type="polygon" label="v1_{2}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="66" g="16" b="8" alpha="0.1"/>
+	<objColor r="66" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="j_{4}">
 	<show object="true" label="true"/>
-	<objColor r="66" g="16" b="8" alpha="0"/>
+	<objColor r="66" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1521,7 +1521,7 @@
 </element>
 <element type="segment" label="k_{4}">
 	<show object="true" label="true"/>
-	<objColor r="66" g="16" b="8" alpha="0"/>
+	<objColor r="66" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1535,7 +1535,7 @@
 </element>
 <element type="segment" label="l_{4}">
 	<show object="true" label="true"/>
-	<objColor r="66" g="16" b="8" alpha="0"/>
+	<objColor r="66" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1549,7 +1549,7 @@
 </element>
 <element type="segment" label="m_{4}">
 	<show object="true" label="true"/>
-	<objColor r="66" g="16" b="8" alpha="0"/>
+	<objColor r="66" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1608,13 +1608,13 @@
 <element type="polygon" label="v1_{3}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="60" g="16" b="8" alpha="0.1"/>
+	<objColor r="60" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="j_{5}">
 	<show object="true" label="true"/>
-	<objColor r="60" g="16" b="8" alpha="0"/>
+	<objColor r="60" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1628,7 +1628,7 @@
 </element>
 <element type="segment" label="k_{5}">
 	<show object="true" label="true"/>
-	<objColor r="60" g="16" b="8" alpha="0"/>
+	<objColor r="60" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1642,7 +1642,7 @@
 </element>
 <element type="segment" label="l_{5}">
 	<show object="true" label="true"/>
-	<objColor r="60" g="16" b="8" alpha="0"/>
+	<objColor r="60" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1656,7 +1656,7 @@
 </element>
 <element type="segment" label="m_{5}">
 	<show object="true" label="true"/>
-	<objColor r="60" g="16" b="8" alpha="0"/>
+	<objColor r="60" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1715,13 +1715,13 @@
 <element type="polygon" label="v1_{4}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="80" g="16" b="8" alpha="0.1"/>
+	<objColor r="80" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="j_{6}">
 	<show object="true" label="true"/>
-	<objColor r="80" g="16" b="8" alpha="0"/>
+	<objColor r="80" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1735,7 +1735,7 @@
 </element>
 <element type="segment" label="k_{6}">
 	<show object="true" label="true"/>
-	<objColor r="80" g="16" b="8" alpha="0"/>
+	<objColor r="80" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1749,7 +1749,7 @@
 </element>
 <element type="segment" label="l_{6}">
 	<show object="true" label="true"/>
-	<objColor r="80" g="16" b="8" alpha="0"/>
+	<objColor r="80" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1763,7 +1763,7 @@
 </element>
 <element type="segment" label="m_{6}">
 	<show object="true" label="true"/>
-	<objColor r="80" g="16" b="8" alpha="0"/>
+	<objColor r="80" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1822,13 +1822,13 @@
 <element type="polygon" label="v1_{5}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="90" g="16" b="8" alpha="0.1"/>
+	<objColor r="90" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="j_{7}">
 	<show object="true" label="true"/>
-	<objColor r="90" g="16" b="8" alpha="0"/>
+	<objColor r="90" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1842,7 +1842,7 @@
 </element>
 <element type="segment" label="k_{7}">
 	<show object="true" label="true"/>
-	<objColor r="90" g="16" b="8" alpha="0"/>
+	<objColor r="90" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1856,7 +1856,7 @@
 </element>
 <element type="segment" label="l_{7}">
 	<show object="true" label="true"/>
-	<objColor r="90" g="16" b="8" alpha="0"/>
+	<objColor r="90" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1870,7 +1870,7 @@
 </element>
 <element type="segment" label="m_{7}">
 	<show object="true" label="true"/>
-	<objColor r="90" g="16" b="8" alpha="0"/>
+	<objColor r="90" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1929,13 +1929,13 @@
 <element type="polygon" label="v1_{6}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="130" g="16" b="8" alpha="0.1"/>
+	<objColor r="130" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="j_{8}">
 	<show object="true" label="true"/>
-	<objColor r="130" g="16" b="8" alpha="0"/>
+	<objColor r="130" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1949,7 +1949,7 @@
 </element>
 <element type="segment" label="k_{8}">
 	<show object="true" label="true"/>
-	<objColor r="130" g="16" b="8" alpha="0"/>
+	<objColor r="130" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1963,7 +1963,7 @@
 </element>
 <element type="segment" label="l_{8}">
 	<show object="true" label="true"/>
-	<objColor r="130" g="16" b="8" alpha="0"/>
+	<objColor r="130" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -1977,7 +1977,7 @@
 </element>
 <element type="segment" label="m_{8}">
 	<show object="true" label="true"/>
-	<objColor r="130" g="16" b="8" alpha="0"/>
+	<objColor r="130" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -2037,13 +2037,13 @@
 <element type="polygon" label="v1_{7}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="170" g="16" b="8" alpha="0.1"/>
+	<objColor r="170" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="j_{9}">
 	<show object="true" label="true"/>
-	<objColor r="170" g="16" b="8" alpha="0"/>
+	<objColor r="170" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -2057,7 +2057,7 @@
 </element>
 <element type="segment" label="k_{9}">
 	<show object="true" label="true"/>
-	<objColor r="170" g="16" b="8" alpha="0"/>
+	<objColor r="170" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -2071,7 +2071,7 @@
 </element>
 <element type="segment" label="l_{9}">
 	<show object="true" label="true"/>
-	<objColor r="170" g="16" b="8" alpha="0"/>
+	<objColor r="170" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -2085,7 +2085,7 @@
 </element>
 <element type="segment" label="m_{9}">
 	<show object="true" label="true"/>
-	<objColor r="170" g="16" b="8" alpha="0"/>
+	<objColor r="170" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -2144,13 +2144,13 @@
 <element type="polygon" label="v1_{8}">
 	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
 	<show object="true" label="false"/>
-	<objColor r="0" g="16" b="8" alpha="0.1"/>
+	<objColor r="0" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 </element>
 <element type="segment" label="j_{10}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="16" b="8" alpha="0"/>
+	<objColor r="0" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -2164,7 +2164,7 @@
 </element>
 <element type="segment" label="k_{10}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="16" b="8" alpha="0"/>
+	<objColor r="0" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -2178,7 +2178,7 @@
 </element>
 <element type="segment" label="l_{10}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="16" b="8" alpha="0"/>
+	<objColor r="0" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -2192,7 +2192,7 @@
 </element>
 <element type="segment" label="m_{10}">
 	<show object="true" label="true"/>
-	<objColor r="0" g="16" b="8" alpha="0"/>
+	<objColor r="0" g="16" b="31" alpha="0"/>
 	<layer val="0"/>
 	<labelMode val="0"/>
 	<auxiliary val="false"/>
@@ -2243,6 +2243,284 @@
 	<pointSize val="5"/>
 	<pointStyle val="0"/>
 	<coords x="3.4907713686039457" y="6.548351014033641" z="1"/>
+</element>
+<element type="point" label="InteractableButtonMap_{1}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="1" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-79" y="-15"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="1.9940918088186448" y="0.20689051660474558" z="1"/>
+</element>
+<element type="point" label="InteractableButtonSpawner">
+	<show object="true" label="true"/>
+	<objColor r="0" g="11" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-70" y="-38"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="2.983824688906792" y="0.20689051660474558" z="1"/>
+</element>
+<element type="point" label="InteractableButtonHeal">
+	<show object="true" label="true"/>
+	<objColor r="0" g="50" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-69" y="-18"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="3.9845546009959185" y="0.195893484603766" z="1"/>
+</element>
+<element type="point" label="InteractableElevator">
+	<show object="true" label="true"/>
+	<objColor r="0" g="20" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-25" y="-41"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="4.996281545086024" y="0.17389942060180683" z="1"/>
+</element>
+<element type="point" label="Player">
+	<show object="true" label="true"/>
+	<objColor r="21" g="101" b="192" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="0.6249613246967061" y="0.27287270861062163" z="1"/>
+</element>
+<element type="point" label="InteractableSlotmaschine">
+	<show object="true" label="true"/>
+	<objColor r="0" g="3" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-25" y="-41"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="6.00249966775261" y="0.16943941741266982" z="1"/>
+</element>
+<element type="point" label="D_{5}">
+	<show object="true" label="true"/>
+	<objColor r="21" g="101" b="192" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="7" y="2" z="1"/>
+</element>
+<element type="point" label="E_{5}">
+	<show object="true" label="true"/>
+	<objColor r="21" g="101" b="192" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="7" y="1" z="1"/>
+</element>
+<element type="point" label="F_{5}">
+	<show object="true" label="true"/>
+	<objColor r="21" g="101" b="192" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="8" y="1" z="1"/>
+</element>
+<element type="point" label="G_{5}">
+	<show object="true" label="true"/>
+	<objColor r="21" g="101" b="192" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="8" y="2" z="1"/>
+</element>
+<command name="Polygon">
+	<input a0="D_{5}" a1="E_{5}" a2="F_{5}" a3="G_{5}"/>
+	<output a0="v10_{4}" a1="n_{5}" a2="e_{5}" a3="p_{5}" a4="q_{5}"/>
+</command>
+<element type="polygon" label="v10_{4}">
+	<lineStyle thickness="5" type="0" typeHidden="1" opacity="204"/>
+	<show object="true" label="false"/>
+	<objColor r="0" g="50" b="38" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+</element>
+<element type="segment" label="n_{5}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="50" b="38" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+	<auxiliary val="false"/>
+	<lineStyle thickness="5" type="0" typeHidden="1" opacity="178"/>
+	<eqnStyle style="implicit"/>
+	<outlyingIntersections val="false"/>
+	<keepTypeOnTransform val="true"/>
+	<startStyle val="default"/>
+	<endStyle val="default"/>
+	<coords x="1" y="0" z="-7"/>
+</element>
+<element type="segment" label="e_{5}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="50" b="38" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+	<auxiliary val="false"/>
+	<lineStyle thickness="5" type="0" typeHidden="1" opacity="178"/>
+	<eqnStyle style="implicit"/>
+	<outlyingIntersections val="false"/>
+	<keepTypeOnTransform val="true"/>
+	<startStyle val="default"/>
+	<endStyle val="default"/>
+	<coords x="0" y="1" z="-1"/>
+</element>
+<element type="segment" label="p_{5}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="50" b="38" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+	<auxiliary val="false"/>
+	<lineStyle thickness="5" type="0" typeHidden="1" opacity="178"/>
+	<eqnStyle style="implicit"/>
+	<outlyingIntersections val="false"/>
+	<keepTypeOnTransform val="true"/>
+	<startStyle val="default"/>
+	<endStyle val="default"/>
+	<coords x="-1" y="0" z="8"/>
+</element>
+<element type="segment" label="q_{5}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="50" b="38" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+	<auxiliary val="false"/>
+	<lineStyle thickness="5" type="0" typeHidden="1" opacity="178"/>
+	<eqnStyle style="implicit"/>
+	<outlyingIntersections val="false"/>
+	<keepTypeOnTransform val="true"/>
+	<startStyle val="default"/>
+	<endStyle val="default"/>
+	<coords x="0" y="-1" z="2"/>
+</element>
+<expression label="InteractableButtonMap_{2}" exp="(10.5, 5.5)" type="point"/>
+<element type="point" label="InteractableButtonMap_{2}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="1" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-79" y="-15"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="10.5" y="5.5" z="1"/>
+</element>
+<element type="point" label="InteractableButtonMap_{3}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="2" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-79" y="-15"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="10.5" y="5" z="1"/>
+</element>
+<element type="point" label="InteractableButtonMap_{4}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="3" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-79" y="-15"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="10.5" y="4.5" z="1"/>
+</element>
+<element type="point" label="InteractableButtonMap_{5}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="4" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-79" y="-15"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="10.5" y="4" z="1"/>
+</element>
+<element type="point" label="InteractableButtonMap_{6}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="5" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-79" y="-15"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="10.5" y="3.5" z="1"/>
+</element>
+<element type="point" label="InteractableButtonMap_{7}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="6" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-79" y="-15"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="10.5" y="3" z="1"/>
+</element>
+<element type="point" label="InteractableButtonMap_{8}">
+	<show object="true" label="true"/>
+	<objColor r="0" g="7" b="0" alpha="0"/>
+	<layer val="0"/>
+	<labelOffset x="-79" y="-15"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="10.5" y="2.5" z="1"/>
+</element>
+<command name="Point">
+	<input a0="yAxis"/>
+	<output a0="E"/>
+</command>
+<element type="point" label="E">
+	<show object="true" label="true"/>
+	<objColor r="21" g="101" b="192" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="0" y="6" z="1"/>
+</element>
+<command name="Point">
+	<input a0="yAxis"/>
+	<output a0="F"/>
+</command>
+<element type="point" label="F">
+	<show object="true" label="true"/>
+	<objColor r="21" g="101" b="192" alpha="0"/>
+	<layer val="0"/>
+	<labelMode val="0"/>
+	<animation step="0.1" type="1" playing="false"/>
+	<pointSize val="5"/>
+	<pointStyle val="0"/>
+	<coords x="0" y="6.02" z="1"/>
 </element>
 </construction>
 </geogebra>
