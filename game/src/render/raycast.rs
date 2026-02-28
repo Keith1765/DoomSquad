@@ -145,11 +145,11 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
         }
     }
 
-    return MapSlice {
+    MapSlice {
         wall_hit: closest_wall_hit,
-        block_slices: block_slices,
+        block_slices,
         hits_blocks_currently_inside: blocks_currently_over.into_values().collect(),
-    };
+    }
 }
 
 //checks wether a ray intersect the line between two given points

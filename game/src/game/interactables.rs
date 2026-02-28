@@ -1,6 +1,6 @@
 use minifb::Window;
 
-use crate::audio::audio::Audio;
+use crate::audio::audio_handler::Audio;
 use crate::parser::entities_parser::map_enemy_type;
 use crate::{
     game::{self, generate_entities::*, map::Point, movement::Mover},
@@ -24,7 +24,6 @@ impl InteractableType {
             Self::Button(ButtonType::Heal) => 27,
             Self::Elevator => 26,
             Self::SlotMachine => 30,
-            _ => 0,
         }
     }
 }
@@ -95,8 +94,8 @@ impl Interactable {
             interactable_type,
             player_in_range: false,
             last_player_state: false,
-            parameter_1: parameter_1,
-            parameter_2: parameter_2,
+            parameter_1,
+            parameter_2,
             not_used: true,
         };
         Some(interactable)
@@ -128,7 +127,7 @@ impl Interactable {
                 self.slot_maschine_behaviour(window, _renderer_data, game_state, audio);
             }
         }
-        return events;
+        events
     }
     fn button_behaviour(
         &mut self,
@@ -171,7 +170,7 @@ impl Interactable {
                 ButtonType::Heal => {
                     println!("Player health before: {}", game_state.player.hp);
                     let player = &mut game_state.player;
-                    player.hp = player.hp + self.parameter_1;
+                    player.hp += self.parameter_1;
                     println!("Player healed! Current HP: {}", player.hp);
                     self.not_used = false;
                     audio.play_sfx("heal", 1.0);
@@ -214,7 +213,7 @@ impl Interactable {
             let roll: u8 = rng.random_range(0..100);
 
             match roll {
-                n if n == 99 => {
+                99 => {
                     game_state.map_swap(_renderer_data, 8); //for just 8
                 },
                 n if n < 30 => {
@@ -234,7 +233,7 @@ impl Interactable {
                 },
                 n if n >= 30 => {
                     let player = &mut game_state.player;
-                    player.hp = player.hp + 10.0;
+                    player.hp += 10.0;
                 },
                 _ => unreachable!(),
             }

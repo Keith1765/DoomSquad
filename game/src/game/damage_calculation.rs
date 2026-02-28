@@ -1,5 +1,5 @@
-use crate::audio;
-use crate::audio::audio::Audio;
+
+use crate::audio::audio_handler::Audio;
 use crate::game::entities::EntityType::{
     EnemyArrow, EnemyBullet, ExplodedRedBarrel, MeleeEnemy, PlayerArrow, PlayerBullet, WeakEnemy,
 };
@@ -8,7 +8,6 @@ use crate::game::entities::{
     WEAK_ENEMY_MULTIPLICATOR,
 };
 use crate::game::gamestate::{Game, INTERACTABLE_RANGE};
-use crate::game::map_grid;
 
 pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
     //DMG calc for entities
@@ -162,7 +161,7 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
     }
     //Interactables
 
-    for i in 0..game_state.interactables.len() {
+    for _i in 0..game_state.interactables.len() {
         game_state.map_grid.update_interactables(&game_state.interactables);
 
         for interactable in &mut game_state.interactables {

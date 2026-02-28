@@ -1,5 +1,5 @@
 use super::map::Map;
-use crate::{SCREEN_HEIGHT, audio::audio::Audio, game::{entities::{
+use crate::{SCREEN_HEIGHT, audio::audio_handler::Audio, game::{entities::{
     ARROW_COOLDOWN, BULLET_COOLDOWN, EntityEvent::{self, Spawn}, EntityType::{PlayerArrow, PlayerBullet}
 }, movement::find_blocks_were_currently_in}};
 use crate::game::generate_entities::generate_entities;
@@ -38,9 +38,10 @@ const ROCKETLAUNCHER_HEIGHT_BOOST: f64 = 5.0;
 const JUMPING_ALLOWED_TIMER_AMOUNT: i32 = 10;
 const DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING: f64 = 0.3;
 const PROJECTILE_OFFSET_TO_MATCH_SCREEN_MIDDLE: f64 = 3.0;
-const VERTICAL_AIM_SPEED: f64 = 0.1;
+const VERTICAL_AIM_SPEED: f64 = 0.12;
 const MOUSE_SENSE_X: f64 = 0.003;
 const MOUSE_SENSE_Y: f64 = 0.003;
+const AIM_MODE_SLOWDOWN: f64 = 0.1;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum LastInputDirection {
@@ -75,6 +76,7 @@ pub struct Player {
     pub jumping_allowed: bool,
     pub jumping_allowed_timer: i32,
     pub vertcal_aim: f64,
+    pub aim_mode: bool,
 }
 
 impl Player {
@@ -111,6 +113,7 @@ impl Player {
             jumping_allowed: false,
             jumping_allowed_timer: 0,
             vertcal_aim: 0.0,
+            aim_mode: false,
         }
     }
 
@@ -147,6 +150,7 @@ impl Player {
             jumping_allowed_timer: 0,
             bullet_cooldown: 0,
             vertcal_aim: 0.0,
+            aim_mode: false
         }
     }
 
@@ -162,6 +166,14 @@ impl Player {
         self.interacting = false;
         if window.is_key_pressed(Key::F, KeyRepeat::No) {
             self.interacting = true;
+        }
+
+        //swap between aim_mode and not, during aim mode sense is lowered
+        if window.is_key_pressed(Key::E, KeyRepeat::No) {
+            match self.aim_mode {
+                true => self.aim_mode = false,
+                false => self.aim_mode = true,
+            }
         }
 
         if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) || window.get_mouse_down(MouseButton::Left)) && self.bullet_cooldown == 0 {
@@ -223,8 +235,11 @@ impl Player {
                     true => STRAIFING_SPEED * INCREASED_STRAFING_SPEED_RL,
                     false => STRAIFING_SPEED,
                 },
-                false => ROTATION_SPEED_KEYS,
-            };
+                false => match self.aim_mode {
+                    false => ROTATION_SPEED_KEYS,
+                    true => ROTATION_SPEED_KEYS * AIM_MODE_SLOWDOWN,
+            },
+        };
 
             self.check_angle();
             self.mover.facing_direction -= rotation_factor;
@@ -238,7 +253,10 @@ impl Player {
                     true => STRAIFING_SPEED * INCREASED_STRAFING_SPEED_RL,
                     false => STRAIFING_SPEED,
                 },
-                false => ROTATION_SPEED_KEYS,
+                false =>match self.aim_mode {
+                    false => ROTATION_SPEED_KEYS,
+                    true => ROTATION_SPEED_KEYS * AIM_MODE_SLOWDOWN,
+                },
             };
             self.check_angle();
             self.mover.facing_direction += rotation_factor;
@@ -275,7 +293,8 @@ impl Player {
             step_successful = self.mover.step(self.move_speed, PI, map, self.godmode);
         }
 
-        // if we moved, play step sound
+        // if we moved, play step 
+        #[allow(clippy::neg_cmp_op_on_partial_ord)]
         if step_successful && !self.is_sliding && !((self.mover.foot_level - self.mover.floor_level).abs() > 0.3 ) {
             audio.play_step(1.0);
         }
@@ -315,13 +334,12 @@ impl Player {
             && !self.is_sliding
             && !self.godmode
             && self.slide_cooldown == 0
+            && self.move_speed > 1.5 
         {
-            if self.move_speed > 1.5 {
                 audio.play_sfx("slide", 1.0);
                 self.move_speed += 5.0;
                 self.is_sliding = true;
                 self.save_input(window);
-            }
         }
 
         //during slide speed decreases
@@ -330,6 +348,7 @@ impl Player {
         }
 
         //ending slide (either cause not pressed or slowed down)
+        #[allow(clippy::nonminimal_bool)]
         if (!window.is_key_down(Key::C) && self.is_sliding)
             || ((self.move_speed <= SPRINT_SPEED) && self.is_sliding)
         {
@@ -453,7 +472,7 @@ impl Player {
                 <= (lowest_ceiling_level - self.mover.height)
             {
                 // if we didnt bump our head, we just go up normally
-                self.mover.foot_level = self.mover.foot_level + self.vertical_velocity;
+                self.mover.foot_level += self.vertical_velocity;
             } else {
                 // if we bumped our head, we only go up to the ceiling and lose vertical velocity
                 self.mover.foot_level = lowest_ceiling_level - self.mover.height;
@@ -475,29 +494,31 @@ impl Player {
 
         //aim (inverted controls because pixel grid is inverted too)
         if window.is_key_down(Key::Up){
-            self.vertcal_aim = (self.vertcal_aim - VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 );
+            match self.aim_mode {
+                false => self.vertcal_aim = (self.vertcal_aim - VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 ),
+                true => self.vertcal_aim = (self.vertcal_aim - VERTICAL_AIM_SPEED * AIM_MODE_SLOWDOWN ).clamp(-1.0, 1.0 ),
+            }
         }
 
         if window.is_key_down(Key::Down){
-            self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 );
+            match self.aim_mode {
+                false => self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 ),
+                true => self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED * AIM_MODE_SLOWDOWN ).clamp(-1.0, 1.0 ),
+            }
         }
 
-        return events;
+        events
     }
 
     fn save_input(&mut self, window: &Window) {
         if window.is_key_down(Key::D) {
             self.last_input = D;
-            return;
         } else if window.is_key_down(Key::A) {
             self.last_input = A;
-            return;
         } else if window.is_key_down(Key::S) {
             self.last_input = S;
-            return;
         } else if window.is_key_down(Key::W) {
             self.last_input = W;
-            return;
         } else {
             self.last_input = No
         }

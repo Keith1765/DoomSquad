@@ -6,16 +6,12 @@ mod parser;
 mod render;
 mod menu;
 
-use crate::audio::audio::Audio;
+use crate::audio::audio_handler::Audio;
 use crate::render::{RendererData, render_init};
 use crate::menu::menu::{Menu, AppState};
 use minifb::{KeyRepeat, Key, Window, WindowOptions};
 use std::f64::consts::PI;
 use std::time::Instant;
-
-use crate::parser::entities_parser::*;
-use crate::parser::map_parser::*;
-use crate::game::interactables::*;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
@@ -78,20 +74,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 } else if game.player.hp <= 0.0 {
                     app_state = AppState::GameOver;
                 } else {
-
-                    let (_, _, _, _, prev_space) = prev_keys;
-                    let cur_w = window.is_key_down(Key::W);
-                    let cur_a = window.is_key_down(Key::A);
-                    let cur_s = window.is_key_down(Key::S);
-                    let cur_d = window.is_key_down(Key::D);
-                    let cur_space = window.is_key_down(Key::Space);
-
-                    let is_moving = cur_w || cur_a || cur_s || cur_d;
-                    let just_jumped = cur_space && !prev_space;
-                    
-                    audio.handle_input(is_moving, just_jumped);
-                    prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
-
                     game.update(&window, &renderer_data, &mut audio);
                     render::draw_screen(&mut buffer, &renderer_data, &game);
 
