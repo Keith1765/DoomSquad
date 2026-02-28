@@ -5,16 +5,11 @@ mod game;
 mod parser;
 mod render;
 
-use crate::audio::Audio;
+use crate::audio::audio_handler::Audio;
 use crate::render::{RendererData, render_init};
 use minifb::{Key, Window, WindowOptions};
 use std::f64::consts::PI;
 use std::time::Instant;
-
-use crate::parser::entities_parser::*;
-use crate::parser::map_parser::*;
-
-use crate::game::interactables::*;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
@@ -25,7 +20,6 @@ const DISTANCE_DARKNESS_COEFFICIENT: f64 = 0.005;
 const WALL_DEFAULT_COLOR: u32 = 0x00ff00;
 const BLOCK_DEFAULT_COLOR: u32 = 0x0000ff;
 const SURFACE_DEFAULT_COLOR: u32 = 0xffff00;
-const AUDIO_ENABLED: bool = false;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     //I commented game init to test parser first
@@ -64,53 +58,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         BLOCK_DEFAULT_COLOR,
         SURFACE_DEFAULT_COLOR,
     );
-    let mut game = game::Game::new_test_game(&renderer_data);
 
-    //TODO TEST
-    let map = parse_map("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string());
-    if let Ok(map) = map {
-        game.map = map;
-    } else {
-        return Err("Error parsing map".into());
-    }
+    // ! this unwrap is acceptable, if the whole game is broken then crashing is pretty reasonable
+    let mut game = game::Game::new_game(&renderer_data).unwrap();
 
-    let mut audio: Option<Audio> = None;
-    if AUDIO_ENABLED {
-        audio = Audio::new().ok();
+    // let map = parse_map("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string());
+    // if let Ok(map) = map {
+    //     game.map = map;
+    // } else {
+    //     return Err("Error parsing map".into());
+    // }
 
-        if let Some(a) = audio.as_mut() {
-            let _ = a.load_sfx("step", "assets/audio/step.wav");
-            let _ = a.load_sfx("jump", "assets/audio/jump.wav");
-            let _ = a.play_music_loop("assets/audio/music.wav", 0.6);
-        }
-    }
-
-    let mut prev_keys = (false, false, false, false, false); // (W, A, S, D, Space)
+    let mut audio = Audio::init();
 
     while window.is_open() && !window.is_key_down(Key::Escape) && (game.player.hp > 0.0) {
-        let (_, _, _, _, prev_space) = prev_keys;
 
-        let cur_w = window.is_key_down(Key::W);
-        let cur_a = window.is_key_down(Key::A);
-        let cur_s = window.is_key_down(Key::S);
-        let cur_d = window.is_key_down(Key::D);
-        let cur_space = window.is_key_down(Key::Space);
-
-        if let Some(a) = &mut audio {
-            // call this for any movement key pressed
-            if cur_w || cur_a || cur_s || cur_d {
-                a.play_step(); // step sound with cooldown
-            }
-
-            // jump SFX
-            if cur_space && !prev_space {
-                a.play_sfx("jump");
-            }
-        }
-
-        prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
-
-        game.update(&window, &renderer_data);
+        game.update(&window, &renderer_data, &mut audio);
         render::draw_screen(&mut buffer, &renderer_data, &game);
 
         //fps calc

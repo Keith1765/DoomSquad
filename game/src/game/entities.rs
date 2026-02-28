@@ -1,5 +1,6 @@
 use minifb::{Key, Window};
 
+use crate::audio::audio_handler::Audio;
 use crate::game::entities::EntityType::*;
 use crate::game::entity_behaviour::{
     archer_behaviour, dummy_behaviour, enemy_arrow_behaviour, enemy_bullet_behaviour,
@@ -12,7 +13,6 @@ use crate::game::map::{Map, Point};
 use crate::game::movement::Mover;
 use crate::render::RendererData;
 use crate::render::sprites::Sprite;
-use crate::render::sprites::WalkCycleHandler;
 
 use std::fmt;
 
@@ -120,7 +120,6 @@ impl EntityType {
             EntityType::EnemyArrow => 2,
             EntityType::PlayerArrow => 1,
             EntityType::Button => 0,
-            _ => 0,
         }
     }
 }
@@ -146,6 +145,7 @@ pub struct Entity {
 }
 
 impl Entity {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         position: Point,
         start_floor_level: f64,
@@ -178,24 +178,25 @@ impl Entity {
                 },
             gravity: GRAVITY_CONST,
             vertical_velocity: 0.0,
-            entity_type: entity_type,
+            entity_type,
             orientation_lock: false,
             action_cooldown: 0,
-            hp: hp,
-            size: size,
+            hp,
+            size,
             did_damage: false,
-            vertical_aim: vertical_aim,
+            vertical_aim,
         };
         Some(entity)
     }
 
     //updates every tick
     pub fn update(
-        self: &mut Self,
+        &mut self,
         window: &Window,
         map: &Map,
         player_mover: &Mover,
         renderer_data: &RendererData,
+        audio: &mut Audio,
     ) -> Vec<EntityEvent> {
         //collect all Spawn events for gamestate
         let mut events: Vec<EntityEvent> = Vec::new();
@@ -215,20 +216,21 @@ impl Entity {
             RedBarrel => red_barrel_behaviour(self, map),
             ExplodedRedBarrel => exploded_red_barrel_behaviour(self),
             RangedEnemy => {
-                ranged_enemy_behaviour(self, map, player_mover.position, renderer_data, &mut events)
+                ranged_enemy_behaviour(self, map, player_mover.position, renderer_data, &mut events, audio)
             }
             Archer => {
                 archer_behaviour(self, map, player_mover.position, renderer_data, &mut events)
             }
-            MeleeEnemy => melee_enemy_behaviour(self, map, player_mover.position),
+            MeleeEnemy => melee_enemy_behaviour(self, map, player_mover.position, audio),
             SummonerEnemy => summoner_enemy_behaviour(
                 self,
                 map,
                 player_mover.position,
                 renderer_data,
                 &mut events,
+                audio,
             ),
-            WeakEnemy => weak_enemy_behaviour(self, map, player_mover.position),
+            WeakEnemy => weak_enemy_behaviour(self, map, player_mover.position, audio),
             EnemyArrow => enemy_arrow_behaviour(self, map),
             PlayerArrow => player_arrow_behaviour(self, map),
             _ => dummy_behaviour(self, map),
@@ -254,12 +256,12 @@ impl Entity {
             }
         }
 
-        return events;
+        events
     }
 
     //std movement constantly moves towards player
     pub fn normal_enemy_movement(
-        self: &mut Self,
+        &mut self,
         map: &Map,
         player_position: Point,
         move_speed: f64,
@@ -278,8 +280,8 @@ impl Entity {
         }
     }
 
-    //percentage var should be 1.0 per default, lower for small gravity effect
-    pub fn gravity(self: &mut Self, map: &Map, percentage: f64) {
+    //percentage should be 1.0 per default, lower for small gravity effect
+    pub fn gravity(&mut self, map: &Map, percentage: f64) {
         // GRAVITY
         //adjust for gravity
         self.vertical_velocity += self.gravity * percentage;

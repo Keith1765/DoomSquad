@@ -42,11 +42,10 @@ pub fn read_player_from_file(
                     }
                 }
 
-                if let Some(label) = label {
-                    if label.starts_with("Player") {
-                        return read_coords_for_player(&mut reader, &mut buf);
-                    }
+                if let Some(label) = label && label.starts_with("Player") {
+                    return read_coords_for_player(&mut reader, &mut buf);
                 }
+                
             }
             Event::Eof => break,
             _ => {}

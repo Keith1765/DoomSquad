@@ -1,16 +1,12 @@
-use std::{fs, path::Path, usize};
+use std::{fs, path::Path};
 
 use crate::{
-    game::{
+    audio::audio_handler::Audio, game::{
         entities::{Entity, EntityEvent::*},
         entity_behaviour::death_behaviour,
-        gamestate,
-        interactables::{ButtonType, Interactable, InteractableType},
-        map::Point,
-        map_grid::{self, MapGrid},
-    },
-    parser::map_parser::parse_map,
-    render::RendererData,
+        interactables::Interactable,
+        map_grid::MapGrid,
+    }, parser::map_parser::parse_map, render::RendererData
 };
 
 use super::map::Map;
@@ -40,42 +36,65 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new_test_game(renderer_data: &RendererData) -> Self {
-        Self {
-            player: Player::new_with_position(
-                parse_player_position(
-                    "assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string(),
-                    &renderer_data,
+    pub fn new_game(renderer_data: &RendererData) -> Option<Self> {
+        let path = Path::new("assets/maps/ggb");
+        let entries_result = fs::read_dir(path);
+        let mut entries: Vec<_> = match entries_result {
+            Ok(read_dir) => read_dir.filter_map(Result::ok).collect(),
+            Err(e) => {
+                eprintln!("Error when reading directory: {}", e);
+                return None;
+            }
+        };
+        entries.sort_by_key(|e| e.path());
+        if let Some(entry) = entries.first() { // we initially load the first map
+            let path_buf = entry.path();
+
+            let path = match path_buf.to_str() {
+                Some(p) => p,
+                None => {
+                    eprintln!("Invalid path");
+                    return None;
+                }
+            };
+            let game = Self {
+                player: Player::new_with_position(
+                    parse_player_position(
+                        path.to_string(),
+                        renderer_data,
+                    )
+                    .ok()?,
+                ),
+                entities: parse_entities(
+                    path.to_string(),
+                    renderer_data,
                 )
-                .unwrap(),
-            ),
-            entities: parse_entities(
-                "assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string(),
-                &renderer_data,
-            )
-            .unwrap(),
-            interactables: parse_interactables(
-                "assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string(),
-                &renderer_data,
-            )
-            .unwrap(),
-            map: Map::new_test_map().unwrap(), // TODO remove unwrap
-            despawn_timer: DESPAWN_TIME,
-            map_grid: MapGrid::new(MAP_GRID_CELL_SIZE),
-            projectile_that_hit: Vec::new(),
-            map_index: 0,
-            last_map_index:0,
-        }
+                .ok()?,
+                interactables: parse_interactables(
+                    path.to_string(),
+                    renderer_data,
+                )
+                .ok()?,
+                map: parse_map(path.to_string()).ok()?, // TODO remove unwrap
+                despawn_timer: DESPAWN_TIME,
+                map_grid: MapGrid::new(MAP_GRID_CELL_SIZE),
+                projectile_that_hit: Vec::new(),
+                map_index: 0,
+                last_map_index:0,
+            };
+
+            Some(game)
+
+        } else { None }
     }
 
-    //updates per tick everything game related, sits at top lvl
-    pub fn update(&mut self, window: &Window, renderer_data: &RendererData) {
+    pub fn update(&mut self, window: &Window, renderer_data: &RendererData, audio: &mut Audio) {
         //update all interactables and add possible spawn events
         let mut interactables = std::mem::take(&mut self.interactables);
         let mut interactables_spawns = Vec::new();
 
         for interactable in &mut interactables {
-            let event = interactable.update(window, renderer_data, self);
+            let event = interactable.update(window, renderer_data, self, audio);
             interactables_spawns.extend(event);
         }
 
@@ -83,23 +102,23 @@ impl Game {
 
         let mut entity_spawns = Vec::new();
         //update player
-        let event = self.player.update(window, &self.map, renderer_data);
-        //add possible spawn events from player
+        let event = self.player.update(window, &self.map, renderer_data, audio);
+        //add possible spawn events
         entity_spawns.extend(event);
 
         //update all entites and add possible spawn events
         for entity in &mut self.entities {
-            let event = entity.update(window, &self.map, &self.player.mover, renderer_data);
+            let event = entity.update(window, &self.map, &self.player.mover, renderer_data, audio);
             entity_spawns.extend(event);
         }
 
-        //deal damage and check for interactable intersect
-        damage_check(self);
+        //deal damage
+        damage_check(self, audio);
 
         //on death behaviour
         for entity in &mut self.entities {
             if entity.hp <= 0.0 {
-                entity_spawns.extend(death_behaviour(entity, renderer_data));
+                entity_spawns.extend(death_behaviour(entity, renderer_data,self.player.mover.position, audio));
             }
         }
 
@@ -119,8 +138,7 @@ impl Game {
             }
         }
     }
-    
-    pub fn map_swap(self: &mut Self, renderer_data: &RendererData, new_map_index: usize) {
+    pub fn map_swap(&mut self, renderer_data: &RendererData, new_map_index: usize) {
         let path = Path::new("assets/maps/ggb");
         let entries_result = fs::read_dir(path);
         let mut entries: Vec<_> = match entries_result {
@@ -164,7 +182,6 @@ impl Game {
             }
             self.last_map_index = self.map_index;
             self.map_index = new_map_index;
-            return;
         }
     }
 }

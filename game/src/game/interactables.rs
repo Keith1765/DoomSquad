@@ -1,5 +1,6 @@
 use minifb::Window;
 
+use crate::audio::audio_handler::Audio;
 use crate::parser::entities_parser::map_enemy_type;
 use crate::{
     game::{self, generate_entities::*, map::Point, movement::Mover},
@@ -23,7 +24,6 @@ impl InteractableType {
             Self::Button(ButtonType::Heal) => 27,
             Self::Elevator => 26,
             Self::SlotMachine => 30,
-            _ => 0,
         }
     }
 }
@@ -94,8 +94,8 @@ impl Interactable {
             interactable_type,
             player_in_range: false,
             last_player_state: false,
-            parameter_1: parameter_1,
-            parameter_2: parameter_2,
+            parameter_1,
+            parameter_2,
             not_used: true,
         };
         Some(interactable)
@@ -105,6 +105,7 @@ impl Interactable {
         window: &Window,
         _renderer_data: &RendererData,
         game_state: &mut game::Game,
+        audio: &mut Audio,
     ) -> Vec<InteractableEvent> {
         let entity_type = self.interactable_type.clone();
         let mut events: Vec<InteractableEvent> = Vec::new();
@@ -116,16 +117,17 @@ impl Interactable {
                     &button_type,
                     game_state,
                     &mut events,
+                    audio
                 );
             }
             InteractableType::Elevator => {
-                self.elevator_behaviour(window, _renderer_data, game_state);
+                self.jump_pad_behaviour(window, _renderer_data, game_state, audio);
             }
             InteractableType::SlotMachine => {
-                self.slot_maschine_behaviour(window, _renderer_data, game_state);
+                self.slot_maschine_behaviour(window, _renderer_data, game_state, audio);
             }
         }
-        return events;
+        events
     }
     fn button_behaviour(
         &mut self,
@@ -134,6 +136,7 @@ impl Interactable {
         button_type: &ButtonType,
         game_state: &mut game::Game,
         events: &mut Vec<InteractableEvent>,
+        audio: &mut Audio,
     ) {
         if self.player_in_range //checking if player is in range and pressing interact
             && game_state.player.interacting //checking if player pressed F for interact
@@ -143,7 +146,8 @@ impl Interactable {
         {
             match button_type {
                 ButtonType::Map => {
-                    events.push(InteractableEvent::SpawnMap(self.parameter_1 as usize))
+                    events.push(InteractableEvent::SpawnMap(self.parameter_1 as usize));
+                    audio.play_sfx("button_press", 1.0);
                 }
                 ButtonType::Spawner => {
                     println!("Spawner button pressed!");
@@ -160,23 +164,26 @@ impl Interactable {
                         _renderer_data,
                         0.0,
                     );
-                    game_state.entities.push(entity);
+                    audio.play_sfx("summoner", 1.0);
+                    if let Some(entity) = entity { game_state.entities.push(entity); }
                 }
                 ButtonType::Heal => {
                     println!("Player health before: {}", game_state.player.hp);
                     let player = &mut game_state.player;
-                    player.hp = player.hp + self.parameter_1;
+                    player.hp += self.parameter_1;
                     println!("Player healed! Current HP: {}", player.hp);
                     self.not_used = false;
+                    audio.play_sfx("heal", 1.0);
                 }
             }
         }
     }
-    fn elevator_behaviour(
+    fn jump_pad_behaviour(
         &mut self,
         _window: &Window,
         _renderer_data: &RendererData,
         game_state: &mut game::Game,
+        audio: &mut Audio,
     ) {
         if self.player_in_range //checking if player is in range and pressing interact
             && game_state.player.interacting //checking if player pressed F for interact
@@ -185,6 +192,7 @@ impl Interactable {
         {
             let player = &mut game_state.player;
             player.vertical_velocity = self.parameter_1;
+            audio.play_sfx("jump_pad", 0.3);
         }
     }
     fn slot_maschine_behaviour(
@@ -192,18 +200,20 @@ impl Interactable {
         _window: &Window,
         _renderer_data: &RendererData,
         game_state: &mut game::Game,
+        audio: &mut Audio,
     ) {
         if self.player_in_range //checking if player is in range and pressing interact
             && game_state.player.interacting //checking if player pressed F for interact
             && (game_state.player.mover.foot_level - self.mover.foot_level).abs() < 5.0
         //checking if player is on the same hight level
         {
+            audio.play_sfx("slotmachine", 1.0);
             let mut rng = rand::rng();
 
             let roll: u8 = rng.random_range(0..100);
 
             match roll {
-                n if n == 99 => {
+                99 => {
                     game_state.map_swap(_renderer_data, 8); //for just 8
                 },
                 n if n < 30 => {
@@ -219,12 +229,11 @@ impl Interactable {
                         _renderer_data,
                         0.0,
                     );
-                    game_state.entities.push(entity);
+                    if let Some(entity) = entity { game_state.entities.push(entity); }
                 },
                 n if n >= 30 => {
                     let player = &mut game_state.player;
-                    player.hp = player.hp + 10.0;
-                    println!("u got healt by 10")
+                    player.hp += 10.0;
                 },
                 _ => unreachable!(),
             }

@@ -1,3 +1,5 @@
+
+use crate::audio::audio_handler::Audio;
 use crate::game::entities::EntityType::{
     EnemyArrow, EnemyBullet, ExplodedRedBarrel, MeleeEnemy, PlayerArrow, PlayerBullet, WeakEnemy,
 };
@@ -6,12 +8,9 @@ use crate::game::entities::{
     WEAK_ENEMY_MULTIPLICATOR,
 };
 use crate::game::gamestate::{Game, INTERACTABLE_RANGE};
-use crate::game::map_grid;
 
-//we create a grid and do proximity checks only for all entities in the same cell of a grid or its neighbours
-pub fn damage_check(game_state: &mut Game) {
-
-    //DMG calc to entities
+pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
+    //DMG calc for entities
 
     //clears grid and re-loads everything
     game_state.map_grid.update(&game_state.entities);
@@ -72,6 +71,15 @@ pub fn damage_check(game_state: &mut Game) {
                     //DAMAGE THAT BITCH
                     game_state.entities[j].hp -= damage;
 
+                    if damage > 0.0{
+                        audio.play_sfx_distance_scaled(
+                        "hit",
+                        1.0,
+                        game_state.player.mover.position,
+                        game_state.entities[j].mover.position
+                    );
+                    }
+
                     //projectiles go brr
                     if game_state.entities[i].entity_type != ExplodedRedBarrel {
                         game_state.projectile_that_hit.push(i);
@@ -131,6 +139,10 @@ pub fn damage_check(game_state: &mut Game) {
                         WeakEnemy => game_state.entities[j].did_damage = true,
                         _ => {}
                     }
+                    audio.play_sfx(
+                        "hit",
+                        1.0,
+                    );
                 }
 
                 //bullet go brr
@@ -150,7 +162,7 @@ pub fn damage_check(game_state: &mut Game) {
 
     //Interactables intersect 
 
-    for i in 0..game_state.interactables.len() {
+    for _i in 0..game_state.interactables.len() {
         game_state.map_grid.update_interactables(&game_state.interactables);
 
         for interactable in &mut game_state.interactables {

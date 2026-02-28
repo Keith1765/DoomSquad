@@ -1,5 +1,6 @@
+use crate::audio::audio_handler::Audio;
 use crate::game::entities::{
-    ARROW_COOLDOWN, ARROW_SPEED, BULLET_SPEED, ENEMY_HP, ENEMY_SIZE, ENTITY_DEFAULT_VIEW_HEIGHT, Entity, EntityEvent, MELEE_ENEMY_ATTACK_COOLDOWN, SHOOTING_COOLDOWN, SUMMONING_COOLDOWN
+    ARROW_COOLDOWN, ARROW_SPEED, BULLET_SPEED, ENTITY_DEFAULT_VIEW_HEIGHT, Entity, EntityEvent, MELEE_ENEMY_ATTACK_COOLDOWN, SHOOTING_COOLDOWN, SUMMONING_COOLDOWN
 };
 
 use crate::game::entities::EntityEvent::*;
@@ -78,6 +79,7 @@ pub fn ranged_enemy_behaviour(
     player_position: Point,
     renderer_data: &RendererData,
     events: &mut Vec<EntityEvent>,
+    audio: &mut Audio,
 ) {
     entity.gravity(map, 1.0);
 
@@ -94,7 +96,8 @@ pub fn ranged_enemy_behaviour(
             renderer_data,
             0.0,
         );
-        events.push(Spawn(bullet));
+        audio.play_sfx_distance_scaled("enemy_shoot", 1.0, player_position, entity.mover.position);
+        if let Some(bullet) = bullet { events.push(Spawn(bullet)); }
         // attack animation
         if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
             entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
@@ -125,7 +128,7 @@ pub fn archer_behaviour(
             renderer_data,
             0.0,
         );
-        events.push(Spawn(arrow));
+        if let Some(arrow) = arrow { events.push(Spawn(arrow)); }
         // attack animation
         if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
             entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
@@ -140,6 +143,7 @@ pub fn summoner_enemy_behaviour(
     player_position: Point,
     renderer_data: &RendererData,
     events: &mut Vec<EntityEvent>,
+    audio: &mut Audio,
 ) {
     entity.gravity(map, 1.0);
 
@@ -154,7 +158,8 @@ pub fn summoner_enemy_behaviour(
             renderer_data,
             0.0,
         );
-        events.push(Spawn(melee_enemy));
+        audio.play_sfx_distance_scaled("summoner", 1.0, player_position, entity.mover.position);
+        if let Some(melee_enemy) = melee_enemy { events.push(Spawn(melee_enemy)); }
         // attack animation
         if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
             entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
@@ -164,8 +169,7 @@ pub fn summoner_enemy_behaviour(
     }
 }
 
-//moves towards player and deals damage with cooldown if in proximity (dmg handled by damage_calculation)
-pub fn melee_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Point) {
+pub fn melee_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Point, audio: &mut Audio) {
     entity.gravity(map, 1.0);
 
     entity.normal_enemy_movement(map, player_position, MOVE_SPEED);
@@ -182,11 +186,11 @@ pub fn melee_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Po
         if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
             entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
         }
+        audio.play_sfx_distance_scaled("spider_attack", 1.0, player_position, entity.mover.position);
     }
 }
 
-//melee enemy but weaker
-pub fn weak_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Point) {
+pub fn weak_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Point, audio: &mut Audio) {
     entity.gravity(map, 1.0);
     entity.normal_enemy_movement(map, player_position, MOVE_SPEED * 0.5);
 
@@ -202,27 +206,24 @@ pub fn weak_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Poi
         if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
             entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
         }
+        audio.play_sfx_distance_scaled("monster_bite", 1.0, player_position, entity.mover.position);
     }
 }
 
-//handles death behaviour of entity and creates entities for Spawn event, originally planned for more entities, rn used just for exploded barrel
-pub fn death_behaviour(entity: &mut Entity, renderer_data: &RendererData) -> Vec<EntityEvent> {
+pub fn death_behaviour(entity: &mut Entity, renderer_data: &RendererData, player_position: Point, audio: &mut Audio) -> Vec<EntityEvent> {
     let mut events = Vec::new();
-    match entity.entity_type {
-        RedBarrel => {
-            let explosion = generate_entities(
-                ExplodedRedBarrel,
-                entity.mover.position,
-                entity.mover.foot_level,
-                0.0,
-                renderer_data,
-                0.0,
-            );
-            events.push(Spawn(explosion));
-        }
-
-        _ => {}
-    };
+    if entity.entity_type == RedBarrel {
+        let explosion = generate_entities(
+            ExplodedRedBarrel,
+            entity.mover.position,
+            entity.mover.foot_level,
+            0.0,
+            renderer_data,
+            0.0,
+        );
+        audio.play_sfx_distance_scaled("explosion", 3.0, player_position, entity.mover.position);
+        if let Some(explosion) = explosion { events.push(Spawn(explosion)); }
+    }
 
     events
 }
