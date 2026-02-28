@@ -345,7 +345,7 @@ fn read_polygon_element(
                         b"r" => bottom = attr.unescape_value()?.parse::<u8>()? as f64,
                         b"g" => height = attr.unescape_value()?.parse::<u8>()? as f64,
                         b"b" => texture_id = attr.unescape_value()?.parse::<u8>()? as f64,
-                        b"alpha" => surface_color = attr.unescape_value()?.parse::<f64>()?,
+                        b"alpha" => surface_color = attr.unescape_value()?.parse::<f64>()? * 100000.0, //alpha is between 0 and 1, we multiply it with 100000 to get a lager amount of coulors, because we only use the alpha value for the texture id, we can do this without losing any information
                         _ => {}
                     }
                 }
