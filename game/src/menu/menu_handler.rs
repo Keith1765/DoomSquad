@@ -78,15 +78,15 @@ impl Menu {
             return AppState::Playing;
         }
 
+        #[allow(clippy::collapsible_if)]
         if self.draw_flat_button(buffer, &btn_load, mx, my) && clicked || click2 {
-            if let Ok(content) = fs::read_to_string("savegame.txt") {
-                if let Ok(index) = content.trim().parse::<usize>() {
-                    *game = Game::new_game(renderer_data).unwrap();
-                    game.map_swap(renderer_data, index);
-                    return AppState::Playing;
-                }
+            if let Ok(content) = fs::read_to_string("savegame.txt") 
+            && let Ok(index) = content.trim().parse::<usize>() {
+                *game = Game::new_game(renderer_data).unwrap();
+                game.map_swap(renderer_data, index);
+                return AppState::Playing;
             }
-        }
+    }
 
         if self.draw_flat_button(buffer, &btn_audio, mx, my) && clicked || click3 {
             audio.set_muted(!audio.is_muted);
@@ -242,6 +242,7 @@ impl Menu {
         );
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn draw_text(
         buffer: &mut [u32],
         screen_width: usize,
@@ -255,6 +256,7 @@ impl Menu {
         let mut cursor_x = start_x;
         for c in text.chars() {
             if let Some(glyph) = BASIC_FONTS.get(c) {
+                #[allow(clippy::needless_range_loop)]
                 for y in 0..8 {
                     for x in 0..8 {
                         if (glyph[y] & (1 << x)) != 0 {

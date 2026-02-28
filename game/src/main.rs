@@ -8,7 +8,7 @@ mod menu;
 
 use crate::audio::audio_handler::Audio;
 use crate::render::{RendererData, render_init};
-use crate::menu::menu::{Menu, AppState};
+use crate::menu::menu_handler::{Menu, AppState};
 use minifb::{KeyRepeat, Key, Window, WindowOptions};
 use std::f64::consts::PI;
 use std::time::Instant;
@@ -49,8 +49,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut menu = Menu::new();
     
     let mut app_state = AppState::StartScreen;
-
-    let mut prev_keys = (false, false, false, false, false);
 
     while window.is_open() {
         let escape_clicked = window.is_key_pressed(Key::Escape, KeyRepeat::No);
