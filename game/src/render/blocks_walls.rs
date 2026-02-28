@@ -15,6 +15,7 @@ use crate::{
     },
 };
 
+/// creates a sequence of tasks for a column of the screen
 pub fn task_column(
     game: &Game,
     renderer_data: &RendererData,
@@ -23,12 +24,14 @@ pub fn task_column(
 ) -> ColumnTasks {
     let mut tasks: BinaryHeap<RenderTaskOrderer> = BinaryHeap::new();
 
+    // set the wall task if possible (furthest back ,an thing in front will not be rendered)
     if let Some(wall_hit) = &map_slice.wall_hit
         && let Some(wall_task) = task_side(wall_hit, angle_relative_to_player, renderer_data, game)
     {
         tasks.push(wall_task); // default return value: empty column
     }
 
+    // task all the slices of blocks
     for slice in &map_slice.block_slices {
         tasks.append(&mut task_block_slice(
             slice,
@@ -38,6 +41,7 @@ pub fn task_column(
         ));
     }
 
+    // task all the partial slices, equating to blocks which we are standing on (which the ray is inside of at its start)
     for exit_hit in &map_slice.hits_blocks_currently_inside {
         if let Some(task_ord) =
             task_partial_surface(exit_hit, angle_relative_to_player, renderer_data, game)
@@ -57,6 +61,7 @@ pub fn task_column(
     }
 }
 
+/// turns a slice of a block (its entry and exit ray hit) into a side and (if applicable) a floor/ceiling tasking 
 pub fn task_block_slice(
     slice: &BlockSlice,
     angle_relative_to_player: f64,
@@ -74,6 +79,7 @@ pub fn task_block_slice(
         tasks.push(side_task);
     }
 
+    // a surface is a floor or ceiling
     if let Some(task_surface_value) =
         task_surface(slice, angle_relative_to_player, renderer_data, game)
     {
@@ -83,6 +89,7 @@ pub fn task_block_slice(
     tasks
 }
 
+/// creates a task to render a side of a wall or block 
 pub fn task_side(
     side_hit: &RayHit,
     angle_relative_to_player: f64,
@@ -97,11 +104,13 @@ pub fn task_side(
         + 0.5)
         .clamp(0.2, 1.0);
 
+    // get the texture by its ID
     let texture = renderer_data.textures.get(&side_hit.side.texture_id);
 
+    // if there is a texture to the task
     if let Some(texture) = texture {
         let distance_along_side = (side_hit.proportion_along_side * side_hit.side.length) as usize;
-        let texture_u = distance_along_side % texture.width;
+        let texture_u = distance_along_side % texture.width; // u is the x coordinate on a texture
         let texture_column = texture.get_texture_column(
             texture_u,
             side_bottom_onscreen,
@@ -111,7 +120,7 @@ pub fn task_side(
         );
         let task = RenderTask {
             texture_column,
-            color: 0x000000,
+            color: 0x000000, // default color as fallback, should never be used
             brightness,
             onscreen_bottom: side_bottom_onscreen,
             onscreen_top: side_top_onscreen,
@@ -123,15 +132,19 @@ pub fn task_side(
         ));
     }
 
+    // if something with the texture didn't work, just render nothing as a fallback (no task)
     None
 }
 
+/// creates a task to render a unicolored floor or ceiling for a block 
 pub fn task_surface(
     slice: &BlockSlice,
     angle_relative_to_player: f64,
     renderer_data: &RendererData,
     game: &Game,
 ) -> Option<RenderTaskOrderer> {
+
+    // the points on screen of the places in world space where our ray entered and exited the block
     let (exit_bottom_onscreen, exit_top_onscreen) = calculate_side_bottom_top(
         &slice.exit_hit,
         angle_relative_to_player,
@@ -145,6 +158,7 @@ pub fn task_surface(
         game,
     );
 
+    // finds the onscreen dimensions of the surface; depend on whether we need to render a ceiling or floor, depending on player height 
     let onscreen_dimensions: Option<(isize, isize)> = match &slice.entry_hit.side.shape.shape_type {
         ShapeType::Block => {
             if slice.entry_hit.side.shape.bottom > game.player.mover.view_level {
@@ -157,7 +171,7 @@ pub fn task_surface(
                 None
             }
         }
-        ShapeType::Wall => None, // null value, shoud never happen
+        ShapeType::Wall => None, // null value, should never happen
     };
 
     let vertical_distance: Option<VerticalDisctance> = match &slice.entry_hit.side.shape.shape_type
