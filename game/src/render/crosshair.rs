@@ -1,4 +1,4 @@
-use crate::{SCREEN_HEIGHT, SCREEN_WIDTH, game::map::Point, render::RendererData};
+use crate::{SCREEN_WIDTH, game::map::Point, render::RendererData};
 
 const CROSSHAIR_THICKNESS: usize = 2;
 const CROSSHAIR_SIZE: isize = 20;
@@ -32,5 +32,5 @@ pub fn draw_crosshair (buffer: &mut [u32], vertical_aim_offset: f64, renderer_da
 fn aim_offset_conversion(vertical_aim_offset: f64, renderer_data: &RendererData) -> f64 {
     // let height_middle = renderer_data.screen_height_as_f64 * 0.5;
     let height_offset =(renderer_data.screen_height_as_f64 * 0.25) * vertical_aim_offset;
-    return height_offset.clamp(-renderer_data.screen_height_as_f64*0.5, renderer_data.screen_height_as_f64*0.5); //clamp unneccesary if math correct
+    height_offset.clamp(-renderer_data.screen_height_as_f64*0.5, renderer_data.screen_height_as_f64*0.5) //clamp unneccesary if math correct
 }

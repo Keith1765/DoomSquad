@@ -1,6 +1,6 @@
-use crate::audio::audio::Audio;
+use crate::audio::audio_handler::Audio;
 use crate::game::entities::{
-    ARROW_COOLDOWN, ARROW_SPEED, BULLET_SPEED, ENEMY_HP, ENEMY_SIZE, Entity, EntityEvent,
+    ARROW_COOLDOWN, ARROW_SPEED, BULLET_SPEED, Entity, EntityEvent,
     MELEE_ENEMY_ATTACK_COOLDOWN, SHOOTING_COOLDOWN, SUMMONING_COOLDOWN,
 };
 
@@ -207,22 +207,18 @@ pub fn weak_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Poi
 
 pub fn death_behaviour(entity: &mut Entity, renderer_data: &RendererData, player_position: Point, audio: &mut Audio) -> Vec<EntityEvent> {
     let mut events = Vec::new();
-    match entity.entity_type {
-        RedBarrel => {
-            let explosion = generate_entities(
-                ExplodedRedBarrel,
-                entity.mover.position,
-                entity.mover.foot_level,
-                0.0,
-                renderer_data,
-                0.0,
-            );
-            audio.play_sfx_distance_scaled("explosion", 3.0, player_position, entity.mover.position);
-            if let Some(explosion) = explosion { events.push(Spawn(explosion)); }
-        }
-
-        _ => {}
-    };
+    if entity.entity_type == RedBarrel {
+        let explosion = generate_entities(
+            ExplodedRedBarrel,
+            entity.mover.position,
+            entity.mover.foot_level,
+            0.0,
+            renderer_data,
+            0.0,
+        );
+        audio.play_sfx_distance_scaled("explosion", 3.0, player_position, entity.mover.position);
+        if let Some(explosion) = explosion { events.push(Spawn(explosion)); }
+    }
 
     events
 }

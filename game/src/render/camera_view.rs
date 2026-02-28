@@ -2,7 +2,7 @@ use core::f64;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-use crate::game::{Game, player};
+use crate::game::{Game};
 use crate::render::blocks_walls::task_column;
 use crate::render::crosshair::draw_crosshair;
 use crate::render::player_hp_bar::draw_player_hp_bar;
@@ -46,6 +46,7 @@ impl PartialEq for RenderTaskOrderer {
 
 impl Eq for RenderTaskOrderer {} // PartialEQ already handles functionality, but must be written out; do not remove
 
+#[allow(clippy::non_canonical_partial_ord_impl)]
 impl PartialOrd for RenderTaskOrderer {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         // surfaces should be rendered above sides when they are of equal (within floating point error) distance, to prevent flickering between the two
@@ -54,27 +55,27 @@ impl PartialOrd for RenderTaskOrderer {
                 // if both are ciling or both are floor, render the one that is vertically closer above further one (prevents flickering between surface of equal distance)
                 (RenderTaskType::Ceiling(s_vert_dist), RenderTaskType::Ceiling(o_vert_dist))
                 | (RenderTaskType::Floor(s_vert_dist), RenderTaskType::Floor(o_vert_dist)) => {
-                    return s_vert_dist.partial_cmp(&o_vert_dist);
+                    s_vert_dist.partial_cmp(&o_vert_dist)
                 }
                 // if both are surfaces (ceilings or floors), but not of same type, order as normal
                 (RenderTaskType::Ceiling(_), RenderTaskType::Floor(_))
                 | (RenderTaskType::Floor(_), RenderTaskType::Ceiling(_)) => {
-                    return self.distance.partial_cmp(&other.distance);
+                    self.distance.partial_cmp(&other.distance)
                 }
                 // if self is a surface but not other, render self above other
                 (RenderTaskType::Floor(_), _) | (RenderTaskType::Ceiling(_), _) => {
-                    return Some(Ordering::Less);
+                    Some(Ordering::Less)
                 }
                 // if other is a surface but not self, render other above self
                 (_, RenderTaskType::Floor(_)) | (_, RenderTaskType::Ceiling(_)) => {
-                    return Some(Ordering::Greater);
+                    Some(Ordering::Greater)
                 }
                 // in all other cases (if neither are surfaces), render in normal ordering
-                (_, _) => return self.distance.partial_cmp(&other.distance),
+                (_, _) => self.distance.partial_cmp(&other.distance),
             }
         } else {
             // if not very close, order as one would expect, accorfding to distance
-            return self.distance.partial_cmp(&other.distance);
+            self.distance.partial_cmp(&other.distance)
         }
     }
 }
@@ -109,7 +110,7 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     for px in buffer.iter_mut() {
         *px = renderer_data.background_color;
     }
-    draw_camera_view(buffer, &renderer_data, game);
+    draw_camera_view(buffer, renderer_data, game);
     //draw grid of reference points spaced each 50 pixels for debugging
     if game.player.godmode {
         draw_reference_points(buffer);
@@ -117,21 +118,21 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     //draw_texture_bottom_left(buffer, renderer_data.textures.get(&0).unwrap());
 
     //draw playwer hp bar
-    draw_player_hp_bar(buffer,&renderer_data, game.player.hp);
+    draw_player_hp_bar(buffer,renderer_data, game.player.hp);
 
     //draw crosshair
-    draw_crosshair(buffer, game.player.vertcal_aim, &renderer_data, game.player.aim_mode);
+    draw_crosshair(buffer, game.player.vertcal_aim, renderer_data, game.player.aim_mode);
 
 }
 
 fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
     // for every column of the screen, create a slice of the map
-    let mut map_slices_and_angles: [Option<(MapSlice, f64)>; SCREEN_WIDTH] =
-        [const { None }; SCREEN_WIDTH];
+    let mut map_slices_and_angles: [Option<(MapSlice, f64)>; SCREEN_WIDTH] = [const { None }; SCREEN_WIDTH];
+    #[allow(clippy::needless_range_loop)]
     for x in 0..SCREEN_WIDTH {
         let pixel_distance_from_screen_middle: f64 = x as f64 - SCREEN_WIDTH as f64 / 2.0;
         let angle_relative_to_player: f64 = (pixel_distance_from_screen_middle
-            / renderer_data.render_scale_coefficient as f64)
+            / renderer_data.render_scale_coefficient)
             .atan();
 
         map_slices_and_angles[x] = Some((
@@ -164,7 +165,7 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
         {
             let sprite_width = instruction.sprite_right_screen_x - instruction.sprite_left_screen_x;
             for x in 0..sprite_width {
-                if x < 0 || x > SCREEN_WIDTH - 1 {
+                if x > SCREEN_WIDTH - 1 {
                     continue;
                 }
 
@@ -189,7 +190,7 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
         ) {
             let sprite_width = instruction.sprite_right_screen_x - instruction.sprite_left_screen_x;
             for x in 0..sprite_width {
-                if x < 0 || x > SCREEN_WIDTH - 1 {
+                if x > SCREEN_WIDTH - 1 {
                     continue;
                 }
 
@@ -234,8 +235,6 @@ fn draw_tasks(
         // try to render a texture, if the task has one
         if let Some(texture_column) = task.texture_column {
             for screen_y in onscreen_bottom..onscreen_top {
-                if onscreen_top > renderer_data.screen_height_as_isize {
-                }
                 let column_v = screen_y - onscreen_bottom;
                 if let Some(pixel_color) = texture_column.get(column_v as usize) {
                     // dont draw outside of screen bounds

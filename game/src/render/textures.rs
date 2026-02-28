@@ -59,8 +59,7 @@ impl Texture {
 pub fn load_textures() -> Option<HashMap<usize, Texture>> {
     let mut textures = HashMap::new();
 
-    let mut texture_id: usize = 0; // TODO find a more elegant solution
-    for entry in fs::read_dir(Path::new("./assets/textures")).ok()? {
+    for (texture_id, entry) in (fs::read_dir(Path::new("./assets/textures")).ok()?).enumerate() {
         let entry = entry.ok()?;
         let path = entry.path();
         // TODO make whole function not fail when one file doesnt work
@@ -89,7 +88,6 @@ pub fn load_textures() -> Option<HashMap<usize, Texture>> {
             pixels,
         };
         textures.insert(texture_id, texture);
-        texture_id += 1;
     }
     Some(textures)
 }

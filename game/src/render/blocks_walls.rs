@@ -24,7 +24,7 @@ pub fn task_column(
     let mut tasks: BinaryHeap<RenderTaskOrderer> = BinaryHeap::new();
 
     if let Some(wall_hit) = &map_slice.wall_hit
-        && let Some(wall_task) = task_side(&wall_hit, angle_relative_to_player, renderer_data, game)
+        && let Some(wall_task) = task_side(wall_hit, angle_relative_to_player, renderer_data, game)
     {
         tasks.push(wall_task); // default return value: empty column
     }
@@ -51,10 +51,10 @@ pub fn task_column(
         wall_distance = wh.distance;
     }
 
-    return ColumnTasks {
+    ColumnTasks {
         tasks,
         wall_distance,
-    };
+    }
 }
 
 pub fn task_block_slice(
@@ -90,7 +90,7 @@ pub fn task_side(
     game: &Game,
 ) -> Option<RenderTaskOrderer> {
     let (side_bottom_onscreen, side_top_onscreen) =
-        calculate_side_bottom_top(&side_hit, angle_relative_to_player, renderer_data, game);
+        calculate_side_bottom_top(side_hit, angle_relative_to_player, renderer_data, game);
 
     let brightness = (side_hit.side.angle_in_world.cos() * 0.5
         / (side_hit.distance * renderer_data.distance_darkness_coefficient)
@@ -110,7 +110,7 @@ pub fn task_side(
             renderer_data,
         );
         let task = RenderTask {
-            texture_column: texture_column,
+            texture_column,
             color: 0x000000,
             brightness,
             onscreen_bottom: side_bottom_onscreen,
@@ -147,9 +147,9 @@ pub fn task_surface(
 
     let onscreen_dimensions: Option<(isize, isize)> = match &slice.entry_hit.side.shape.shape_type {
         ShapeType::Block => {
-            if &slice.entry_hit.side.shape.bottom > &game.player.mover.view_level {
+            if slice.entry_hit.side.shape.bottom > game.player.mover.view_level {
                 Some((exit_bottom_onscreen, entry_bottom_onscreen))
-            } else if (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height)
+            } else if (slice.entry_hit.side.shape.bottom + slice.entry_hit.side.shape.height)
                 < game.player.mover.view_level
             {
                 Some((entry_top_onscreen, exit_top_onscreen))
@@ -164,15 +164,15 @@ pub fn task_surface(
     {
         ShapeType::Block => {
             // case ceiling
-            if &slice.entry_hit.side.shape.bottom > &game.player.mover.view_level {
-                Some(&slice.entry_hit.side.shape.bottom - &game.player.mover.view_level)
+            if slice.entry_hit.side.shape.bottom > game.player.mover.view_level {
+                Some(slice.entry_hit.side.shape.bottom - game.player.mover.view_level)
             //case floor
-            } else if (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height)
+            } else if (slice.entry_hit.side.shape.bottom + slice.entry_hit.side.shape.height)
                 < game.player.mover.view_level
             {
                 Some(
                     game.player.mover.view_level
-                        - (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height),
+                        - (slice.entry_hit.side.shape.bottom + slice.entry_hit.side.shape.height),
                 )
             } else {
                 None
@@ -182,7 +182,7 @@ pub fn task_surface(
     };
 
     // varies between 0.5 and 1.0 depending on height in level; temporary
-    let brightness = 0.5 + (&slice.entry_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
+    let brightness = 0.5 + (slice.entry_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
 
     if let Some((onscreen_bottom, onscreen_top)) = onscreen_dimensions
         && let Some(vertical_distance_value) = vertical_distance
@@ -191,17 +191,17 @@ pub fn task_surface(
             texture_column: None,
             color: slice.entry_hit.side.shape.surface_color,
             brightness,
-            onscreen_bottom: onscreen_bottom,
-            onscreen_top: onscreen_top,
+            onscreen_bottom,
+            onscreen_top,
         };
 
         //println!("{}|{}", task.onscreen_bottom, task.onscreen_top);
 
         let task_type: RenderTaskType = match &slice.entry_hit.side.shape.shape_type {
             ShapeType::Block => {
-                if &slice.entry_hit.side.shape.bottom > &game.player.mover.view_level {
+                if slice.entry_hit.side.shape.bottom > game.player.mover.view_level {
                     RenderTaskType::Ceiling(vertical_distance_value)
-                } else if (&slice.entry_hit.side.shape.bottom + &slice.entry_hit.side.shape.height)
+                } else if (slice.entry_hit.side.shape.bottom + slice.entry_hit.side.shape.height)
                     < game.player.mover.view_level
                 {
                     RenderTaskType::Floor(vertical_distance_value)
@@ -214,13 +214,13 @@ pub fn task_surface(
             }
         };
 
-        return Some(RenderTaskOrderer::new(
+        Some(RenderTaskOrderer::new(
             task,
             slice.exit_hit.distance,
             task_type,
-        ));
+        ))
     } else {
-        return None;
+        None
     }
 }
 
@@ -240,9 +240,9 @@ pub fn task_partial_surface(
     }
 
     let (exit_bottom_onscreen, exit_top_onscreen) =
-        calculate_side_bottom_top(&exit_hit, angle_relative_to_player, renderer_data, game);
+        calculate_side_bottom_top(exit_hit, angle_relative_to_player, renderer_data, game);
 
-    let brightness = 0.5 + (&exit_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
+    let brightness = 0.5 + (exit_hit.side.shape.height / LEVEL_HEIGHT) * 0.5;
 
     // if we are above the block (case floor)
     if exit_hit.side.shape.bottom + exit_hit.side.shape.height < game.player.mover.view_level {
@@ -251,30 +251,30 @@ pub fn task_partial_surface(
         let task: RenderTask = RenderTask {
             texture_column: None,
             color: exit_hit.side.shape.surface_color,
-            brightness: brightness,
+            brightness,
             onscreen_bottom: 0,
             onscreen_top: exit_top_onscreen,
         };
-        return Some(RenderTaskOrderer {
-            task: task,
+        Some(RenderTaskOrderer {
+            task,
             task_type: RenderTaskType::Floor(vert_dist),
             distance: exit_hit.distance,
-        });
+        })
     } else {
         // otherwise we are below the block (case ceiling)
         let vert_dist = exit_hit.side.shape.bottom - game.player.mover.view_level;
         let task: RenderTask = RenderTask {
             texture_column: None,
             color: exit_hit.side.shape.surface_color,
-            brightness: brightness,
+            brightness,
             onscreen_bottom: exit_bottom_onscreen,
             onscreen_top: SCREEN_HEIGHT as isize,
         };
-        return Some(RenderTaskOrderer {
-            task: task,
+        Some(RenderTaskOrderer {
+            task,
             task_type: RenderTaskType::Floor(vert_dist),
             distance: exit_hit.distance,
-        });
+        })
     }
 }
 

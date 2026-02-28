@@ -2,9 +2,8 @@ use std::{f64::consts::PI, rc::Rc};
 
 use crate::game::entities::EntityType;
 use crate::game::movement::Mover;
-use crate::render::textures::Texture;
 use crate::{
-    game::{Game, entities::Entity},
+    game::{Game},
     render::{
         RendererData,
         camera_view::{RenderTask, RenderTaskOrderer, RenderTaskType},
@@ -38,11 +37,11 @@ impl Sprite {
     pub fn get_current_sprite_texture_id(&self) -> usize {
         if let Some(switcher) = &self.action_sprite_switcher {
             //println!("{}", switcher.countdown);
-            return switcher.texture_id;
+            switcher.texture_id
         } else if let Some(handler) = &self.walk_cycle_handler {
-            return handler.current_texture_id;
+            handler.current_texture_id
         } else {
-            return self.default_texture_id;
+            self.default_texture_id
         }
     }
 
@@ -57,9 +56,7 @@ impl Sprite {
     pub fn continue_or_start_walk_cycle(&mut self, entity_type: &EntityType) {
         if let Some(handler) = &mut self.walk_cycle_handler {
             if handler.countdown == 0 {
-                let temp_texture_id = handler.current_texture_id;
-                handler.current_texture_id = handler.other_texture_id;
-                handler.other_texture_id = temp_texture_id;
+                std::mem::swap(&mut handler.current_texture_id, &mut handler.other_texture_id);
                 handler.countdown = handler.countdown_full_value;
             } else {
                 handler.countdown -= 1;
@@ -72,12 +69,12 @@ impl Sprite {
 
 pub fn start_walk_cycle(entity_type: &EntityType) -> Option<WalkCycleHandler> {
         let (current_texture_id, other_texture_id, switch_time) = entity_type.get_walk_animation_data()?;
-        return Some(WalkCycleHandler {
+        Some(WalkCycleHandler {
             current_texture_id,
             other_texture_id,
             countdown: switch_time,
             countdown_full_value: switch_time,
-        });
+        })
     }
 
 // currently unused
@@ -173,7 +170,7 @@ pub fn task_sprite(
             let task = RenderTask {
                 texture_column: texture_column.clone(),
                 color: 0x000000, // default color, will not be read because texture exists
-                brightness: brightness,
+                brightness,
                 onscreen_bottom,
                 onscreen_top: onscreen_bottom + onscreen_height,
             };
@@ -186,11 +183,11 @@ pub fn task_sprite(
         }
     }
 
-    return Some(SpriteInstruction {
+    Some(SpriteInstruction {
         // .clamp() is mainly to prevent overflow into fvery high numbers when casting to usize
         sprite_left_screen_x: left_screen_x.clamp(0, renderer_data.screen_width_as_isize) as usize,
         sprite_right_screen_x: (left_screen_x + onscreen_width)
             .clamp(0, renderer_data.screen_width_as_isize) as usize,
         tasks,
-    });
+    })
 }

@@ -91,15 +91,15 @@ impl Side {
         shape: Rc<Shape>,
         texture_id: usize,
     ) -> Self {
-        return Side {
-            id: id,
-            point1: point1,
-            point2: point2,
+        Side {
+            id,
+            point1,
+            point2,
             angle_in_world: ((point1.x - point2.x) / (point1.y - point2.y)).atan(),
             length: point1.distance_to(&point2),
-            shape: shape,
-            texture_id: texture_id,
-        };
+            shape,
+            texture_id,
+        }
     }
 }
 
@@ -401,6 +401,7 @@ impl Map {
 
     // returns the sides in the shape and the shape itself as tuple
     // add side vector from tuple into side list and shape into shape list
+    #[allow(clippy::too_many_arguments)]
     pub fn add_shape_from_points(
         &mut self,
         points: Vec<Point>,
@@ -416,10 +417,10 @@ impl Map {
         }
         let shape = Rc::new(Shape {
             id: self.shape_count,
-            shape_type: shape_type,
-            bottom: bottom,
-            height: height,
-            color: color,
+            shape_type,
+            bottom,
+            height,
+            color,
             surface_color,
         });
 
@@ -452,7 +453,7 @@ impl Map {
         }
         shapes.push(shape);
         self.shape_count += 1;
-        return Some(());
+        Some(())
     }
 }
 

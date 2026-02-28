@@ -1,13 +1,11 @@
-use std::{fs, path::Path, usize};
+use std::{fs, path::Path};
 
 use crate::{
-    audio::audio::Audio, game::{
+    audio::audio_handler::Audio, game::{
         entities::{Entity, EntityEvent::*},
         entity_behaviour::death_behaviour,
-        gamestate,
-        interactables::{ButtonType, Interactable, InteractableType},
-        map::Point,
-        map_grid::{self, MapGrid},
+        interactables::Interactable,
+        map_grid::MapGrid,
     }, parser::map_parser::parse_map, render::RendererData
 };
 
@@ -49,7 +47,7 @@ impl Game {
             }
         };
         entries.sort_by_key(|e| e.path());
-        if let Some(entry) = entries.get(0) { // we initially load the first map, index 0
+        if let Some(entry) = entries.first() { // we initially load the first map
             let path_buf = entry.path();
 
             let path = match path_buf.to_str() {
@@ -63,18 +61,18 @@ impl Game {
                 player: Player::new_with_position(
                     parse_player_position(
                         path.to_string(),
-                        &renderer_data,
+                        renderer_data,
                     )
                     .ok()?,
                 ),
                 entities: parse_entities(
                     path.to_string(),
-                    &renderer_data,
+                    renderer_data,
                 )
                 .ok()?,
                 interactables: parse_interactables(
                     path.to_string(),
-                    &renderer_data,
+                    renderer_data,
                 )
                 .ok()?,
                 map: parse_map(path.to_string()).ok()?, // TODO remove unwrap
@@ -85,9 +83,9 @@ impl Game {
                 last_map_index:0,
             };
 
-            return Some(game);
+            Some(game)
 
-        } else {None}
+        } else { None }
     }
 
     pub fn update(&mut self, window: &Window, renderer_data: &RendererData, audio: &mut Audio) {
@@ -140,7 +138,7 @@ impl Game {
             }
         }
     }
-    pub fn map_swap(self: &mut Self, renderer_data: &RendererData, new_map_index: usize) {
+    pub fn map_swap(&mut self, renderer_data: &RendererData, new_map_index: usize) {
         let path = Path::new("assets/maps/ggb");
         let entries_result = fs::read_dir(path);
         let mut entries: Vec<_> = match entries_result {
@@ -184,7 +182,6 @@ impl Game {
             }
             self.last_map_index = self.map_index;
             self.map_index = new_map_index;
-            return;
         }
     }
 }

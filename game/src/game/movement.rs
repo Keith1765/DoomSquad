@@ -115,7 +115,7 @@ pub fn find_blocks_were_currently_in(position: Point, map: &Map) -> Vec<Rc<Shape
             }
         }
     }
-    return Vec::from_iter(blocks_currently_inside.into_iter());
+    Vec::from_iter(blocks_currently_inside)
 }
 
 pub struct StepRayHit {

@@ -1,5 +1,5 @@
 use super::map::Map;
-use crate::{SCREEN_HEIGHT, audio::audio::Audio, game::{entities::{
+use crate::{SCREEN_HEIGHT, audio::audio_handler::Audio, game::{entities::{
     ARROW_COOLDOWN, BULLET_COOLDOWN, EntityEvent::{self, Spawn}, EntityType::{PlayerArrow, PlayerBullet}
 }, movement::find_blocks_were_currently_in}};
 use crate::game::generate_entities::generate_entities;
@@ -293,7 +293,8 @@ impl Player {
             step_successful = self.mover.step(self.move_speed, PI, map, self.godmode);
         }
 
-        // if we moved, play step sound
+        // if we moved, play step 
+        #[allow(clippy::neg_cmp_op_on_partial_ord)]
         if step_successful && !self.is_sliding && !((self.mover.foot_level - self.mover.floor_level).abs() > 0.3 ) {
             audio.play_step(1.0);
         }
@@ -333,13 +334,12 @@ impl Player {
             && !self.is_sliding
             && !self.godmode
             && self.slide_cooldown == 0
+            && self.move_speed > 1.5 
         {
-            if self.move_speed > 1.5 {
                 audio.play_sfx("slide", 1.0);
                 self.move_speed += 5.0;
                 self.is_sliding = true;
                 self.save_input(window);
-            }
         }
 
         //during slide speed decreases
@@ -348,6 +348,7 @@ impl Player {
         }
 
         //ending slide (either cause not pressed or slowed down)
+        #[allow(clippy::nonminimal_bool)]
         if (!window.is_key_down(Key::C) && self.is_sliding)
             || ((self.move_speed <= SPRINT_SPEED) && self.is_sliding)
         {
@@ -471,7 +472,7 @@ impl Player {
                 <= (lowest_ceiling_level - self.mover.height)
             {
                 // if we didnt bump our head, we just go up normally
-                self.mover.foot_level = self.mover.foot_level + self.vertical_velocity;
+                self.mover.foot_level += self.vertical_velocity;
             } else {
                 // if we bumped our head, we only go up to the ceiling and lose vertical velocity
                 self.mover.foot_level = lowest_ceiling_level - self.mover.height;
@@ -506,22 +507,18 @@ impl Player {
             }
         }
 
-        return events;
+        events
     }
 
     fn save_input(&mut self, window: &Window) {
         if window.is_key_down(Key::D) {
             self.last_input = D;
-            return;
         } else if window.is_key_down(Key::A) {
             self.last_input = A;
-            return;
         } else if window.is_key_down(Key::S) {
             self.last_input = S;
-            return;
         } else if window.is_key_down(Key::W) {
             self.last_input = W;
-            return;
         } else {
             self.last_input = No
         }
