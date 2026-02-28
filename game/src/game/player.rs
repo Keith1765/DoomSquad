@@ -42,6 +42,7 @@ const VERTICAL_AIM_SPEED: f64 = 0.12;
 const MOUSE_SENSE_X: f64 = 0.003;
 const MOUSE_SENSE_Y: f64 = 0.003;
 const AIM_MODE_SLOWDOWN: f64 = 0.1;
+const MOUSE_ENABLED: bool = false;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum LastInputDirection {
@@ -176,7 +177,7 @@ impl Player {
             }
         }
 
-        if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) || window.get_mouse_down(MouseButton::Left)) && self.bullet_cooldown == 0 {
+        if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) ||( window.get_mouse_down(MouseButton::Left)&& MOUSE_ENABLED)) && self.bullet_cooldown == 0 {
             audio.play_sfx("shoot", 1.0);
             let bullet = generate_entities(
                 PlayerBullet,
@@ -196,7 +197,7 @@ impl Player {
             self.bullet_cooldown -= 1;
         }
 
-        if (window.is_key_pressed(Key::RightShift, KeyRepeat::No) || window.get_mouse_down(MouseButton::Right))&& self.arrow_cooldown == 0 {
+        if (window.is_key_pressed(Key::RightShift, KeyRepeat::No) || (window.get_mouse_down(MouseButton::Right) && MOUSE_ENABLED))&& self.arrow_cooldown == 0 {
             audio.play_sfx("arrow", 2.0);
             let arrow = generate_entities(
                 PlayerArrow,
@@ -215,7 +216,7 @@ impl Player {
         }
 
         //f32 cause window.get_mouse_pos gives us f32
-        if let Some((mx,my)) = window.get_mouse_pos(MouseMode::Pass) {
+        if let Some((mx,my)) = window.get_mouse_pos(MouseMode::Pass)  && MOUSE_ENABLED {
             self.check_angle();
             let dx = mx - self.last_mouse_x; // mouse delta
             let dy = my - self.last_mouse_y; // mouse delta
