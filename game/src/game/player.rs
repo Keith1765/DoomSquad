@@ -38,9 +38,10 @@ const ROCKETLAUNCHER_HEIGHT_BOOST: f64 = 5.0;
 const JUMPING_ALLOWED_TIMER_AMOUNT: i32 = 10;
 const DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING: f64 = 0.3;
 const PROJECTILE_OFFSET_TO_MATCH_SCREEN_MIDDLE: f64 = 3.0;
-const VERTICAL_AIM_SPEED: f64 = 0.1;
+const VERTICAL_AIM_SPEED: f64 = 0.12;
 const MOUSE_SENSE_X: f64 = 0.003;
 const MOUSE_SENSE_Y: f64 = 0.003;
+const AIM_MODE_SLOWDOWN: f64 = 0.1;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum LastInputDirection {
@@ -75,6 +76,7 @@ pub struct Player {
     pub jumping_allowed: bool,
     pub jumping_allowed_timer: i32,
     pub vertcal_aim: f64,
+    pub aim_mode: bool,
 }
 
 impl Player {
@@ -111,6 +113,7 @@ impl Player {
             jumping_allowed: false,
             jumping_allowed_timer: 0,
             vertcal_aim: 0.0,
+            aim_mode: false,
         }
     }
 
@@ -147,6 +150,7 @@ impl Player {
             jumping_allowed_timer: 0,
             bullet_cooldown: 0,
             vertcal_aim: 0.0,
+            aim_mode: false
         }
     }
 
@@ -162,6 +166,14 @@ impl Player {
         self.interacting = false;
         if window.is_key_pressed(Key::F, KeyRepeat::No) {
             self.interacting = true;
+        }
+
+        //swap between aim_mode and not, during aim mode sense is lowered
+        if window.is_key_pressed(Key::E, KeyRepeat::No) {
+            match self.aim_mode {
+                true => self.aim_mode = false,
+                false => self.aim_mode = true,
+            }
         }
 
         if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) || window.get_mouse_down(MouseButton::Left)) && self.bullet_cooldown == 0 {
@@ -223,8 +235,11 @@ impl Player {
                     true => STRAIFING_SPEED * INCREASED_STRAFING_SPEED_RL,
                     false => STRAIFING_SPEED,
                 },
-                false => ROTATION_SPEED_KEYS,
-            };
+                false => match self.aim_mode {
+                    false => ROTATION_SPEED_KEYS,
+                    true => ROTATION_SPEED_KEYS * AIM_MODE_SLOWDOWN,
+            },
+        };
 
             self.check_angle();
             self.mover.facing_direction -= rotation_factor;
@@ -238,7 +253,10 @@ impl Player {
                     true => STRAIFING_SPEED * INCREASED_STRAFING_SPEED_RL,
                     false => STRAIFING_SPEED,
                 },
-                false => ROTATION_SPEED_KEYS,
+                false =>match self.aim_mode {
+                    false => ROTATION_SPEED_KEYS,
+                    true => ROTATION_SPEED_KEYS * AIM_MODE_SLOWDOWN,
+                },
             };
             self.check_angle();
             self.mover.facing_direction += rotation_factor;
@@ -475,11 +493,17 @@ impl Player {
 
         //aim (inverted controls because pixel grid is inverted too)
         if window.is_key_down(Key::Up){
-            self.vertcal_aim = (self.vertcal_aim - VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 );
+            match self.aim_mode {
+                false => self.vertcal_aim = (self.vertcal_aim - VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 ),
+                true => self.vertcal_aim = (self.vertcal_aim - VERTICAL_AIM_SPEED * AIM_MODE_SLOWDOWN ).clamp(-1.0, 1.0 ),
+            }
         }
 
         if window.is_key_down(Key::Down){
-            self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 );
+            match self.aim_mode {
+                false => self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 ),
+                true => self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED * AIM_MODE_SLOWDOWN ).clamp(-1.0, 1.0 ),
+            }
         }
 
         return events;
