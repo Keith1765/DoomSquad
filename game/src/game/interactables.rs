@@ -150,9 +150,7 @@ impl Interactable {
                     audio.play_sfx("button_press", 1.0);
                 }
                 ButtonType::Spawner => {
-                    println!("Spawner button pressed!");
                     let enemy_type = map_enemy_type(self.parameter_1 as i32);
-                    println!("Spawning entity of type: {}", enemy_type);
                     let entity = generate_entities(
                         enemy_type,
                         Point {
@@ -168,10 +166,8 @@ impl Interactable {
                     if let Some(entity) = entity { game_state.entities.push(entity); }
                 }
                 ButtonType::Heal => {
-                    println!("Player health before: {}", game_state.player.hp);
                     let player = &mut game_state.player;
                     player.hp += self.parameter_1;
-                    println!("Player healed! Current HP: {}", player.hp);
                     self.not_used = false;
                     audio.play_sfx("heal", 1.0);
                 }
