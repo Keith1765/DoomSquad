@@ -75,6 +75,7 @@ impl Menu {
 
         if self.draw_flat_button(buffer, &btn_start, mx, my) && clicked || click1 {
             *game = Game::new_game(renderer_data).unwrap(); // ! this unwrap is intentionally accepted
+            game.map_swap(renderer_data, 1); // we set the map to map with index 1, as 0 is the test map
             return AppState::Playing;
         }
 
