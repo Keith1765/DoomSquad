@@ -83,11 +83,8 @@ impl Menu {
                 if let Ok(index) = content.trim().parse::<usize>() {
                     *game = Game::new_game(renderer_data).unwrap();
                     game.map_swap(renderer_data, index);
-                    println!("Map {} erfolgreich geladen!", index);
                     return AppState::Playing;
                 }
-            } else {
-                println!("Kein Spielstand gefunden!");
             }
         }
 
@@ -121,7 +118,6 @@ impl Menu {
 
         if self.draw_flat_button(buffer, &btn_save, mx, my) && clicked || click1 {
             let _ = fs::write("savegame.txt", game.map_index.to_string());
-            println!("Map-Index {} gespeichert!", game.map_index);
             return AppState::StartScreen;
         }
 
@@ -162,7 +158,6 @@ impl Menu {
 
         if self.draw_flat_button(buffer, &btn_save, mx, my) && clicked || click2 {
             let _ = std::fs::write("savegame.txt", game.map_index.to_string());
-            println!("Map-Index {} gespeichert! Gehe ins Menü.", game.map_index);
             return AppState::StartScreen;
         }
 
@@ -172,7 +167,6 @@ impl Menu {
         }
 
         if self.draw_flat_button(buffer, &btn_menu, mx, my) && clicked {
-            println!("Spiel abgebrochen, nicht gespeichert.");
             return AppState::StartScreen;
         }
 
