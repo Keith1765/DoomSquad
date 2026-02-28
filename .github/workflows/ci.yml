@@ -46,8 +46,8 @@ jobs:
         run: cargo build --verbose
 
       # Quality Gate 2: Code-Analyse (Keine Warnungen erlaubt)
-      #- name: Cargo clippy
-      #  run: cargo clippy -- -D warnings
+      - name: Cargo clippy
+        run: cargo clippy -- -D warnings
 
       # Quality Gate 3: Unit Tests
       - name: Run tests
