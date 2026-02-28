@@ -1,2 +1,1 @@
-#[warn(clippy::module_inception)]
-pub mod audio;
+pub mod audio_handler;

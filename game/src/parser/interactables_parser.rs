@@ -46,10 +46,9 @@ pub fn read_interactables_from_file(
 
                 for attr in e.attributes() {
                     let attr = attr?;
-                    match attr.key.as_ref() {
+                    if attr.key.as_ref() == b"label" { 
                         //b"type" => element_type = Some(attr.unescape_value()?.to_string()),
-                        b"label" => label = attr.unescape_value()?.to_string(),
-                        _ => {}
+                        label = attr.unescape_value()?.to_string();
                     }
                 }
                 let interactable_string_type = split_string_uppercase(label.as_str());

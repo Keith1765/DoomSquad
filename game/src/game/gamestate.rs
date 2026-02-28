@@ -1,13 +1,11 @@
 use std::{fs, path::Path};
 
 use crate::{
-    audio::audio::Audio, game::{
+    audio::audio_handler::Audio, game::{
         entities::{Entity, EntityEvent::*},
         entity_behaviour::death_behaviour,
-        gamestate,
-        interactables::{ButtonType, Interactable, InteractableType},
-        map::Point,
-        map_grid::{self, MapGrid},
+        interactables::Interactable,
+        map_grid::MapGrid,
     }, parser::map_parser::parse_map, render::RendererData
 };
 
@@ -140,7 +138,7 @@ impl Game {
             }
         }
     }
-    pub fn map_swap(self: &mut Self, renderer_data: &RendererData, new_map_index: usize) {
+    pub fn map_swap(&mut self, renderer_data: &RendererData, new_map_index: usize) {
         let path = Path::new("assets/maps/ggb");
         let entries_result = fs::read_dir(path);
         let mut entries: Vec<_> = match entries_result {

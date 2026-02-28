@@ -2,9 +2,8 @@ use std::{f64::consts::PI, rc::Rc};
 
 use crate::game::entities::EntityType;
 use crate::game::movement::Mover;
-use crate::render::textures::Texture;
 use crate::{
-    game::{Game, entities::Entity},
+    game::{Game},
     render::{
         RendererData,
         camera_view::{RenderTask, RenderTaskOrderer, RenderTaskType},
@@ -170,7 +169,7 @@ pub fn task_sprite(
             let task = RenderTask {
                 texture_column: texture_column.clone(),
                 color: 0x000000, // default color, will not be read because texture exists
-                brightness: brightness,
+                brightness,
                 onscreen_bottom,
                 onscreen_top: onscreen_bottom + onscreen_height,
             };

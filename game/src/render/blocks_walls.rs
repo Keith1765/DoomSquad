@@ -110,7 +110,7 @@ pub fn task_side(
             renderer_data,
         );
         let task = RenderTask {
-            texture_column: texture_column,
+            texture_column,
             color: 0x000000,
             brightness,
             onscreen_bottom: side_bottom_onscreen,
@@ -191,8 +191,8 @@ pub fn task_surface(
             texture_column: None,
             color: slice.entry_hit.side.shape.surface_color,
             brightness,
-            onscreen_bottom: onscreen_bottom,
-            onscreen_top: onscreen_top,
+            onscreen_bottom,
+            onscreen_top,
         };
 
         //println!("{}|{}", task.onscreen_bottom, task.onscreen_top);
@@ -251,12 +251,12 @@ pub fn task_partial_surface(
         let task: RenderTask = RenderTask {
             texture_column: None,
             color: exit_hit.side.shape.surface_color,
-            brightness: brightness,
+            brightness,
             onscreen_bottom: 0,
             onscreen_top: exit_top_onscreen,
         };
         Some(RenderTaskOrderer {
-            task: task,
+            task,
             task_type: RenderTaskType::Floor(vert_dist),
             distance: exit_hit.distance,
         })
@@ -266,12 +266,12 @@ pub fn task_partial_surface(
         let task: RenderTask = RenderTask {
             texture_column: None,
             color: exit_hit.side.shape.surface_color,
-            brightness: brightness,
+            brightness,
             onscreen_bottom: exit_bottom_onscreen,
             onscreen_top: SCREEN_HEIGHT as isize,
         };
         Some(RenderTaskOrderer {
-            task: task,
+            task,
             task_type: RenderTaskType::Floor(vert_dist),
             distance: exit_hit.distance,
         })

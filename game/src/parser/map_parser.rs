@@ -126,16 +126,13 @@ fn reading_attr_from_ggb(xml_file: &mut ZipFile<File>) -> Result<map::Map> {
                     }
                 }
 
-                match command_name.as_deref() {
-                    Some("Polygon") => {
-                        read_polygon_command(
-                            &mut reader,
-                            &mut buf,
-                            "Polygon",
-                            &mut polygon_command_list,
-                        )?;
-                    }
-                    _ => {}
+                if let Some("Polygon") = command_name.as_deref() {
+                    read_polygon_command(
+                        &mut reader,
+                        &mut buf,
+                        "Polygon",
+                        &mut polygon_command_list,
+                    )?;
                 }
             }
 
@@ -308,7 +305,7 @@ fn read_polygon_command(
     let geogebrapolygon = GeogebraPolygonCommand {
         label: first_segment.clone(),
         vertices,
-        segments: segments,
+        segments,
     };
 
     polygon_command_list.push(geogebrapolygon);
@@ -332,15 +329,12 @@ fn read_polygon_element(
             Event::Empty(ref e) if e.name().as_ref() == b"show" => {
                 for attr in e.attributes() {
                     let attr = attr?;
-                    match attr.key.as_ref() {
-                        b"object" => {
-                            if attr.unescape_value()?.as_ref() == "true" {
-                                shape_type = ShapeType::Block;
-                            } else {
-                                shape_type = ShapeType::Wall;
-                            }
+                    if attr.key.as_ref() == b"object"  {
+                        if attr.unescape_value()?.as_ref() == "true" {
+                            shape_type = ShapeType::Block;
+                        } else {
+                            shape_type = ShapeType::Wall;
                         }
-                        _ => {}
                     }
                 }
             }

@@ -1,9 +1,9 @@
 use crate::game::{
-    entities::{self, Entity},
+    entities::Entity,
     interactables::Interactable,
     map::Point,
 };
-use std::{collections::HashMap, thread::current};
+use std::{collections::HashMap};
 
 //grid in each cell of MapGrid
 #[derive(PartialEq, Eq, Hash, Clone)]

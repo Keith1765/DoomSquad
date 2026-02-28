@@ -2,7 +2,7 @@ use core::f64;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-use crate::game::{Game, player};
+use crate::game::{Game};
 use crate::render::blocks_walls::task_column;
 use crate::render::crosshair::draw_crosshair;
 use crate::render::player_hp_bar::draw_player_hp_bar;

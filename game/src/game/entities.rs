@@ -1,6 +1,6 @@
 use minifb::{Key, Window};
 
-use crate::audio::audio::Audio;
+use crate::audio::audio_handler::Audio;
 use crate::game::entities::EntityType::*;
 use crate::game::entity_behaviour::{
     archer_behaviour, dummy_behaviour, enemy_arrow_behaviour, enemy_bullet_behaviour,
@@ -13,7 +13,6 @@ use crate::game::map::{Map, Point};
 use crate::game::movement::Mover;
 use crate::render::RendererData;
 use crate::render::sprites::Sprite;
-use crate::render::sprites::WalkCycleHandler;
 
 use std::fmt;
 
@@ -121,7 +120,6 @@ impl EntityType {
             EntityType::EnemyArrow => 2,
             EntityType::PlayerArrow => 1,
             EntityType::Button => 0,
-            _ => 0,
         }
     }
 }
@@ -180,19 +178,19 @@ impl Entity {
                 },
             gravity: GRAVITY_CONST,
             vertical_velocity: 0.0,
-            entity_type: entity_type,
+            entity_type,
             orientation_lock: false,
             action_cooldown: 0,
-            hp: hp,
-            size: size,
+            hp,
+            size,
             did_damage: false,
-            vertical_aim: vertical_aim,
+            vertical_aim,
         };
         Some(entity)
     }
 
     pub fn update(
-        self: &mut Self,
+        &mut self,
         window: &Window,
         map: &Map,
         player_mover: &Mover,
@@ -258,7 +256,7 @@ impl Entity {
     }
 
     pub fn normal_enemy_movement(
-        self: &mut Self,
+        &mut self,
         map: &Map,
         player_position: Point,
         move_speed: f64,
@@ -278,7 +276,7 @@ impl Entity {
     }
 
     //percentage should be 1.0 per default, lower for small gravity effect
-    pub fn gravity(self: &mut Self, map: &Map, percentage: f64) {
+    pub fn gravity(&mut self, map: &Map, percentage: f64) {
         // GRAVITY
         //adjust for gravity
         self.vertical_velocity += self.gravity * percentage;

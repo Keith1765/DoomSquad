@@ -1,6 +1,6 @@
 use minifb::Window;
 
-use crate::audio::audio::Audio;
+use crate::audio::audio_handler::Audio;
 use crate::parser::entities_parser::map_enemy_type;
 use crate::{
     game::{self, generate_entities::*, map::Point, movement::Mover},
@@ -24,7 +24,6 @@ impl InteractableType {
             Self::Button(ButtonType::Heal) => 27,
             Self::Elevator => 26,
             Self::SlotMachine => 30,
-            _ => 0,
         }
     }
 }
@@ -95,8 +94,8 @@ impl Interactable {
             interactable_type,
             player_in_range: false,
             last_player_state: false,
-            parameter_1: parameter_1,
-            parameter_2: parameter_2,
+            parameter_1,
+            parameter_2,
             not_used: true,
         };
         Some(interactable)

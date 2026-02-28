@@ -1,4 +1,4 @@
-use crate::{SCREEN_HEIGHT, SCREEN_WIDTH, game::map::Point, render::RendererData};
+use crate::{SCREEN_WIDTH, game::map::Point, render::RendererData};
 
 const CROSSHAIR_THICKNESS: usize = 2;
 const CROSSHAIR_SIZE: isize = 20;

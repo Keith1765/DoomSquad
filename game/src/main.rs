@@ -5,16 +5,11 @@ mod game;
 mod parser;
 mod render;
 
-use crate::audio::audio::Audio;
+use crate::audio::audio_handler::Audio;
 use crate::render::{RendererData, render_init};
 use minifb::{Key, Window, WindowOptions};
 use std::f64::consts::PI;
 use std::time::Instant;
-
-use crate::parser::entities_parser::*;
-use crate::parser::map_parser::*;
-
-use crate::game::interactables::*;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
@@ -67,7 +62,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ! this unwrap is acceptable, if the whole game is broken then crashing is pretty reasonable
     let mut game = game::Game::new_game(&renderer_data).unwrap();
 
-    // //TODO TEST
     // let map = parse_map("assets/maps/ggb/geogebra_test_map_with_jump+run+entities.ggb".to_string());
     // if let Ok(map) = map {
     //     game.map = map;
@@ -77,23 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut audio = Audio::init();
 
-    let mut prev_keys = (false, false, false, false, false); // (W, A, S, D, Space)
-
     while window.is_open() && !window.is_key_down(Key::Escape) && (game.player.hp > 0.0) {
-        let (_, _, _, _, prev_space) = prev_keys;
-
-        let cur_w = window.is_key_down(Key::W);
-        let cur_a = window.is_key_down(Key::A);
-        let cur_s = window.is_key_down(Key::S);
-        let cur_d = window.is_key_down(Key::D);
-        let cur_space = window.is_key_down(Key::Space);
-
-        let is_moving = cur_w || cur_a || cur_s || cur_d;
-        let just_jumped = cur_space && !prev_space;
-        
-        audio.handle_input(is_moving, just_jumped);
-
-        prev_keys = (cur_w, cur_a, cur_s, cur_d, cur_space);
 
         game.update(&window, &renderer_data, &mut audio);
         render::draw_screen(&mut buffer, &renderer_data, &game);

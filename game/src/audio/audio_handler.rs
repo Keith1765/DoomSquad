@@ -61,16 +61,6 @@ impl Audio {
         audio
     }
 
-    pub fn handle_input(&mut self, is_moving: bool, just_jumped: bool) {
-        // if is_moving {
-        //     self.play_step(1.0);
-        // }
-
-        // if just_jumped {
-        //     self.play_sfx("jump", 1.0);
-        // }
-    }
-
     pub fn load_sfx<P: AsRef<Path>>(
         &mut self,
         name: &str,

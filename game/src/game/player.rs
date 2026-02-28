@@ -1,5 +1,5 @@
 use super::map::Map;
-use crate::{SCREEN_HEIGHT, audio::audio::Audio, game::{entities::{
+use crate::{SCREEN_HEIGHT, audio::audio_handler::Audio, game::{entities::{
     ARROW_COOLDOWN, BULLET_COOLDOWN, EntityEvent::{self, Spawn}, EntityType::{PlayerArrow, PlayerBullet}
 }, movement::find_blocks_were_currently_in}};
 use crate::game::generate_entities::generate_entities;
@@ -330,6 +330,7 @@ impl Player {
         }
 
         //ending slide (either cause not pressed or slowed down)
+        #[allow(clippy::nonminimal_bool)]
         if (!window.is_key_down(Key::C) && self.is_sliding)
             || ((self.move_speed <= SPRINT_SPEED) && self.is_sliding)
         {
