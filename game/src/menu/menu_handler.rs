@@ -74,7 +74,7 @@ impl Menu {
         let btn_quit = ButtonDef { x: 230, y: 370, w: 340, h: 50, text: "[ESC] QUIT GAME".to_string() };
 
         if self.draw_flat_button(buffer, &btn_start, mx, my) && clicked || click1 {
-            *game = Game::new_game(renderer_data).unwrap();
+            *game = Game::new_game(renderer_data).unwrap(); // ! this unwrap is intentionally accepted
             return AppState::Playing;
         }
 
@@ -82,7 +82,7 @@ impl Menu {
         if self.draw_flat_button(buffer, &btn_load, mx, my) && clicked || click2 {
             if let Ok(content) = fs::read_to_string("savegame.txt") 
             && let Ok(index) = content.trim().parse::<usize>() {
-                *game = Game::new_game(renderer_data).unwrap();
+                *game = Game::new_game(renderer_data).unwrap(); // ! this unwrap is intentionally accepted
                 game.map_swap(renderer_data, index);
                 return AppState::Playing;
             }
