@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 use crate::game::map::Point;
 
 const AUDIO_DISTANCE_SCALE_COEFFICIENT: f32 = 0.025;
-const AUDIO_ENABLED: bool = false; 
+const AUDIO_ENABLED: bool = true;
 const BACKGROUND_MUSIC_VOLUME: f32 = 0.2;
 
 pub struct Audio {
@@ -19,6 +19,7 @@ pub struct Audio {
     sfx_data: HashMap<String, Arc<[u8]>>,
     last_step_time: Instant,
     step_interval: Duration,
+    pub is_muted: bool,
 }
 
 impl Audio {
@@ -31,14 +32,17 @@ impl Audio {
             sfx_data: HashMap::new(),
             last_step_time: Instant::now() - Duration::from_millis(250),
             step_interval: Duration::from_millis(250),
+            is_muted: false, // Standardmäßig ist der Ton an
         })
     }
 
     // Initialisiert Audio und lädt direkt alle Assets
     pub fn init() -> Self {
         // ! accept unwrap; if audio totally broken, crashing is okay; should never fail anyway
-        let mut audio = Self::new().ok().unwrap(); 
-        if !AUDIO_ENABLED {return audio;} // if audio not enabled, return empty
+        let mut audio = Self::new().ok().unwrap();
+        if !AUDIO_ENABLED {
+            return audio;
+        } // if audio not enabled, return empty
 
         let _ = audio.load_sfx("arrow", "assets/soundeffects/arrow.wav");
         let _ = audio.load_sfx("button_press", "assets/soundeffects/button_press.wav");
@@ -59,6 +63,17 @@ impl Audio {
         let _ = audio.play_music_loop("assets/music/doom_theme.wav", BACKGROUND_MUSIC_VOLUME);
 
         audio
+    }
+
+    pub fn set_muted(&mut self, muted: bool) {
+        self.is_muted = muted;
+        if let Some(sink) = &self.music_sink {
+            if muted {
+                sink.pause(); // Pausiert die Hintergrundmusik wenn Audio muted
+            } else {
+                sink.play(); // Setzt Hintergrundmusik fort
+            }
+        }
     }
 
     pub fn load_sfx<P: AsRef<Path>>(
@@ -83,7 +98,13 @@ impl Audio {
         let sink = Sink::try_new(&self.handle)?;
         sink.set_volume(volume);
         sink.append(source);
-        sink.play();
+
+        // Direkt pausieren, falls das Spiel beim Laden schon stummgeschaltet ist
+        if self.is_muted {
+            sink.pause();
+        } else {
+            sink.play();
+        }
 
         self.music_sink = Some(sink);
         Ok(())
@@ -96,6 +117,10 @@ impl Audio {
     }
 
     pub fn play_sfx(&mut self, name: &str, volume: f32) {
+        if self.is_muted {
+            return;
+        } // keine Audio wenn im Main Menu stummgeschaltet
+
         if let Some(data) = self.sfx_data.get(name) {
             let cursor = Cursor::new(Arc::clone(data));
             if let (Ok(decoder), Ok(sink)) = (
@@ -106,16 +131,31 @@ impl Audio {
                 sink.append(decoder);
                 sink.detach();
             }
-        } 
+        }
     }
 
-    pub fn play_sfx_distance_scaled(&mut self, name: &str, orignial_volume: f32,  player_position: Point, other_position: Point) {
+    pub fn play_sfx_distance_scaled(
+        &mut self,
+        name: &str,
+        orignial_volume: f32,
+        player_position: Point,
+        other_position: Point,
+    ) {
+        if self.is_muted {
+            return;
+        } // keine Audio wenn im Main Menu stummgeschaltet
+
         let distance = player_position.distance_to(&other_position) as f32;
-        let volume = (orignial_volume / (distance.max(0.01) * AUDIO_DISTANCE_SCALE_COEFFICIENT)).min(1.0);
+        let volume =
+            (orignial_volume / (distance.max(0.01) * AUDIO_DISTANCE_SCALE_COEFFICIENT)).min(1.0);
         self.play_sfx(name, volume);
     }
 
     pub fn play_step(&mut self, volume: f32) {
+        if self.is_muted {
+            return;
+        } // keine Audio wenn im Main Menu stummgeschaltet
+
         let now = Instant::now();
         if now.duration_since(self.last_step_time) < self.step_interval {
             return;
@@ -135,6 +175,10 @@ impl Audio {
     }
 
     pub fn play_step_distance_scaled(&mut self, player_position: Point, other_position: Point) {
+        if self.is_muted {
+            return;
+        } // keine Audio wenn im Main Menu stummgeschaltet
+
         let distance = player_position.distance_to(&other_position) as f32;
         let volume = (1.0 / (distance.max(0.01) * AUDIO_DISTANCE_SCALE_COEFFICIENT)).min(1.0);
         self.play_step(volume);
