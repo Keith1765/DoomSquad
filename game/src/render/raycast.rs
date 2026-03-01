@@ -3,8 +3,7 @@ use std::{
 };
 
 use crate::game::{
-    Game,
-    map::{Point, Shape, ShapeID, ShapeType, Side},
+    Game, map::{Map, Point, Shape, ShapeID, ShapeType, Side}, map_grid::MapGrid, movement::Mover, player::{self, PLAYER_VIEW_HEIGHT, Player}
 };
 
 #[derive(Clone, PartialEq)]
@@ -75,16 +74,16 @@ pub struct MapSlice {
 // TODO separate into multiple functions
 // TODO also return block were standing on/under in some form
 // cast a ray and return the ordered list of all hits, ending at the closest wall hit
-pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) -> MapSlice {
-    let ray_angle = player_angle + angle_relative_to_player;
+pub fn raycast(map: &Map, angle_relative_to_player: f64, player: &Player) -> MapSlice {
+    let ray_angle = player.mover.facing_direction + angle_relative_to_player;
 
     // find closest wall
     let mut closest_wall_hit: Option<RayHit> = None;
-    for w in &game.map.wall_sides {
+    for w in &map.wall_sides {
         let intersection: Option<RayHit> = intersect(
             Point {
-                x: game.player.mover.position.x,
-                y: game.player.mover.position.y,
+                x: player.mover.position.x,
+                y: player.mover.position.y,
             },
             ray_angle,
             Rc::clone(w), // TODO remove need for this clone
@@ -103,11 +102,11 @@ pub fn raycast(game: &Game, angle_relative_to_player: f64, player_angle: f64) ->
 
     // list all blocks closer than closest wall in order of distance
     let mut block_rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
-    for b in &game.map.block_sides {
+    for b in &map.block_sides {
         let intersection: Option<RayHit> = intersect(
             Point {
-                x: game.player.mover.position.x,
-                y: game.player.mover.position.y,
+                x: player.mover.position.x,
+                y: player.mover.position.y,
             },
             ray_angle,
             Rc::clone(b), // TODO remove need for this clone
@@ -392,3 +391,114 @@ fn test_intersect_angled_offset_behind_ray() {
 
     assert!(rh.is_none());
 }
+
+// #[test]
+// fn test_raycast() {
+//     let placeholder_shape = Rc::new(Shape {
+//         id: 0,
+//         shape_type: ShapeType::Block,
+//         bottom: 0.0,
+//         height: 5.0,
+//         color: 0x000000,
+//         surface_color: 0x000000,
+//     });
+
+//     let placeholder_wall_shape = Rc::new(Shape {
+//         id: 1,
+//         shape_type: ShapeType::Wall,
+//         bottom: 0.0,
+//         height: 5.0,
+//         color: 0x000000,
+//         surface_color: 0x000000,
+//     });
+
+//     let point0 = Point {
+//         x: 0.0,
+//         y: 0.0,
+//     };
+//     let point1a = Point {
+//         x: 5.0,
+//         y: 2.0,
+//     };
+//     let point2a = Point {
+//         x: 5.0,
+//         y: -2.0,
+//     };
+//     let point1b = Point {
+//         x: 5.0,
+//         y: 2.0,
+//     };
+//     let point2b = Point {
+//         x: 5.0,
+//         y: -2.0,
+//     };
+//     let point1c = Point {
+//         x: 5.0,
+//         y: 2.0,
+//     };
+//     let point2c = Point {
+//         x: 5.0,
+//         y: -2.0,
+//     };
+//     let side_in_ray_a = Rc::new(Side::new(0, point1a, point2a, Rc::clone(&placeholder_shape), 0));
+//     let side_in_ray_b = Rc::new(Side::new(0, point1b, point2b, Rc::clone(&placeholder_shape), 0));
+//     let side_in_ray_c = Rc::new(Side::new(0, point1b, point2b, Rc::clone(&placeholder_wall_shape), 0));
+
+//     let map = Map {
+//         id: 0,
+//         wall_sides: vec![side_in_ray_c],
+//         block_sides: vec![side_in_ray_a, side_in_ray_b],
+//         wall_shapes: vec![placeholder_wall_shape],
+//         block_shapes: vec![placeholder_shape],
+//         side_count: 3,
+//         shape_count: 2,
+//     };
+
+//     let placeholder_player = Player {
+//         mover: Mover {
+//             position: Point { x: 0.0, y: 0.0 },
+//             floor_level: 0.0,
+//             foot_level: 0.0,
+//             view_level: PLAYER_VIEW_HEIGHT,
+//             height: PLAYER_VIEW_HEIGHT,
+//             facing_direction: 0.0,
+//         },
+//         velocity_x: 0.0,
+//         velocity_y: 0.0,
+//         last_mouse_x: 0.0,
+//         last_mouse_y: 0.0,
+//         godmode: false,
+//         move_speed: 0.0,
+//         is_sliding: false,
+//         last_input: player::LastInputDirection::A,
+//         slide_cooldown: 0,
+//         is_jumping: false,
+//         vertical_velocity: 0.0,
+//         gravity: 0.0,
+//         rocketlauncher_cooldown: 0,
+//         hp: 0.0,
+//         arrow_cooldown: 0,
+//         bullet_cooldown: 0,
+//         size: 0.0,
+//         using_rocketlauncher: false,
+//         interacting: false,
+//         jumping_allowed: false,
+//         jumping_allowed_timer: 0.0,
+//         vertcal_aim: 0.0,
+//         aim_mode: true,
+//     };
+
+//     let game = Game {
+//         player: placeholder_player,
+//         entities: Vec::new(),
+//         interactables: Vec::new(),
+//         map,
+//         despawn_timer: 100,
+//         map_grid: MapGrid {}
+//     }
+
+//     let map_slice = raycast(game, 0.0, 0.0);
+
+//     assert!(rh.is_some());
+//     assert!((rh.unwrap().distance-5.0).abs() < 0.1);
+// }
