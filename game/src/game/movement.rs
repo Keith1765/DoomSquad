@@ -5,13 +5,14 @@ use core::f64;
 use std::f64::consts::PI;
 use std::{collections::HashSet, rc::Rc};
 
+// a struct that maintains all data relevant to movement/collisions
 #[derive(Clone)]
 pub struct Mover {
     pub position: Point,
-    pub floor_level: f64,
-    pub foot_level: f64,
-    pub view_level: f64,
-    pub height: f64,
+    pub floor_level: f64, // the level of the floor we are currently standing on, or airborne over
+    pub foot_level: f64, // the level of our feet (= floor level if not airborne)
+    pub view_level: f64, // directly tied to foot level
+    pub height: f64, // collision height
     pub facing_direction: f64,
 }
 
@@ -31,13 +32,13 @@ impl Mover {
         for w in &map.wall_sides {
             if let Some(_) =
                 step_intersect(self.position, absolute_direction, Rc::clone(w), step_size)
-                && !godmode
-            // in godmode, we can walk through walls
+                && !godmode // in godmode, we can walk through walls
             {
                 return false;
             }
         }
 
+        // how large of a step we are making in the x and y directions
         let step_x = absolute_direction.cos() * step_size;
         let step_y = absolute_direction.sin() * step_size;
         let new_position = self.position
@@ -100,7 +101,7 @@ impl Mover {
     }
 }
 
-// finds all block we are currently staning inside of in 2d space
+// finds all block we are currently staning inside of in 2d space (means laso over or under in 3d space)
 // if we intersect a blocks sides an even number of times, we are outside of it, if odd, we are inside
 pub fn find_blocks_were_currently_in(position: Point, map: &Map) -> Vec<Rc<Shape>> {
     let mut blocks_currently_inside: HashSet<Rc<Shape>> = HashSet::new();
@@ -124,8 +125,9 @@ pub struct StepRayHit {
     pub side: Rc<Side>,
 }
 
-//checks wether a ray intersect the line between two given points
-// adapted from intersect() in raycast.rs
+/// checks wether a ray intersect the line between two given points
+/// used to check if we are inside a block or walking into a wall
+/// adapted from intersect() in raycast.rs
 pub fn step_intersect(
     ray_origin: Point,
     ray_angle: f64,
@@ -171,6 +173,7 @@ pub fn step_intersect(
     })
 }
 
+// using roation matrix, same as equivalent funciton in renderer
 fn rotate_point_around_origin(point: Point, angle: f64) -> Point {
     let sin_of_angle = angle.sin();
     let cos_of_angle = angle.cos();

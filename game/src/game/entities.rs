@@ -16,7 +16,7 @@ use crate::render::sprites::Sprite;
 
 use std::fmt;
 
-const ENTITY_DEFAULT_VIEW_HEIGHT: f64 = 15.0;
+pub const ENTITY_DEFAULT_VIEW_HEIGHT: f64 = 15.0;
 const ENTITY_MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 const GRAVITY_CONST: f64 = -0.8;
 pub const BULLET_SPEED: f64 = 30.0;
@@ -190,6 +190,7 @@ impl Entity {
         Some(entity)
     }
 
+    //updates every tick
     pub fn update(
         &mut self,
         window: &Window,
@@ -198,6 +199,7 @@ impl Entity {
         renderer_data: &RendererData,
         audio: &mut Audio,
     ) -> Vec<EntityEvent> {
+        //collect all Spawn events for gamestate
         let mut events: Vec<EntityEvent> = Vec::new();
         if window.is_key_pressed(Key::L, minifb::KeyRepeat::No) {
             self.movement_locked = !self.movement_locked;
@@ -207,6 +209,7 @@ impl Entity {
             return events;
         }
 
+        //match entity behaviour
         match self.entity_type {
             Dummy => dummy_behaviour(self, map),
             PlayerBullet => player_bullet_behaviour(self, map),
@@ -245,6 +248,7 @@ impl Entity {
             self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
         }
 
+
         if let Some(switcher) = &mut self.sprite.action_sprite_switcher {
             if switcher.countdown == 0 {
                 self.sprite.action_sprite_switcher = None;
@@ -256,6 +260,7 @@ impl Entity {
         events
     }
 
+    //std movement constantly moves towards player
     pub fn normal_enemy_movement(
         &mut self,
         map: &Map,

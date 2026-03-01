@@ -10,6 +10,7 @@ use crate::{
     render::RendererData,
 };
 
+//function for standartised entity generation
 pub fn generate_entities(
     entity_type: EntityType,
     position: Point,

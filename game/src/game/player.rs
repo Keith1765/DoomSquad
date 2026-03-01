@@ -155,6 +155,7 @@ impl Player {
         }
     }
 
+    //updates every tick
     pub fn update(
         &mut self,
         window: &Window,
@@ -193,10 +194,11 @@ impl Player {
             }
         }
 
-         if self.bullet_cooldown > 0 {
+        if self.bullet_cooldown > 0 {
             self.bullet_cooldown -= 1;
         }
 
+        //shooting, generates arrow entity and gives it as a spawn event to gamestate
         if (window.is_key_pressed(Key::RightShift, KeyRepeat::No) || (window.get_mouse_down(MouseButton::Right) && MOUSE_ENABLED))&& self.arrow_cooldown == 0 {
             audio.play_sfx("arrow", 2.0);
             let arrow = generate_entities(
@@ -215,6 +217,7 @@ impl Player {
             self.arrow_cooldown -= 1;
         }
 
+        //mouse movement and shooting
         //f32 cause window.get_mouse_pos gives us f32
         if let Some((mx,my)) = window.get_mouse_pos(MouseMode::Pass)  && MOUSE_ENABLED {
             self.check_angle();
@@ -300,6 +303,8 @@ impl Player {
             audio.play_step(1.0);
         }
 
+
+        //god mode controls (not relevant for user)
         if window.is_key_down(Key::Space) && self.godmode {
             self.mover.foot_level += FLY_UP_DOWN_SPEED;
         }
@@ -327,6 +332,7 @@ impl Player {
             }
         }
 
+        //slide has cooldown
         if (self.slide_cooldown > 0) && !window.is_key_down(Key::C) {
             self.slide_cooldown -= 1;
         }

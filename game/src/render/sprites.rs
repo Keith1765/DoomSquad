@@ -1,4 +1,4 @@
-use std::{f64::consts::PI, rc::Rc};
+use std::{f64::consts::PI};
 
 use crate::game::entities::EntityType;
 use crate::game::movement::Mover;
@@ -10,12 +10,14 @@ use crate::{
     },
 };
 
+// used when an entity is performing an action such as attacking
 #[derive(Clone)]
 pub struct ActionSpriteSwitcher {
     pub texture_id: usize,
     pub countdown: usize,
 }
 
+// handles an entitys walk animation
 #[derive(Clone)]
 pub struct WalkCycleHandler {
     pub current_texture_id: usize,
@@ -24,6 +26,7 @@ pub struct WalkCycleHandler {
     pub countdown_full_value: usize,
 }
 
+// the texture of an entity or interactable, which will be rendered
 #[derive(Clone)]
 pub struct Sprite {
     pub default_texture_id: usize,
@@ -34,6 +37,9 @@ pub struct Sprite {
 }
 
 impl Sprite {
+
+    // returns the currently to-render texture id 
+    // for instance, if an action sprite switcher, that id should be returned, otherwise some other
     pub fn get_current_sprite_texture_id(&self) -> usize {
         if let Some(switcher) = &self.action_sprite_switcher {
             //println!("{}", switcher.countdown);
@@ -45,6 +51,7 @@ impl Sprite {
         }
     }
 
+    // instatiate an action sprite switcher, to display some action animation
     pub fn switch_sprite_for_action(&mut self, new_texture_id: usize, time: usize) {
         let switcher = ActionSpriteSwitcher {
             texture_id: new_texture_id,
@@ -53,11 +60,16 @@ impl Sprite {
         self.action_sprite_switcher = Some(switcher);
     }
 
+    // makes an entit display awalk animation
     pub fn continue_or_start_walk_cycle(&mut self, entity_type: &EntityType) {
+        // if a walk cycle is already ongoing
         if let Some(handler) = &mut self.walk_cycle_handler {
+            // if its time to switch texture as part of the animation
             if handler.countdown == 0 {
                 std::mem::swap(&mut handler.current_texture_id, &mut handler.other_texture_id);
                 handler.countdown = handler.countdown_full_value;
+            
+            // otherwise decrement the countdown to switch
             } else {
                 handler.countdown -= 1;
             }
@@ -67,7 +79,8 @@ impl Sprite {
     }
 }
 
-pub fn start_walk_cycle(entity_type: &EntityType) -> Option<WalkCycleHandler> {
+// begins a walk animatioon cylce by initializign a handler
+fn start_walk_cycle(entity_type: &EntityType) -> Option<WalkCycleHandler> {
         let (current_texture_id, other_texture_id, switch_time) = entity_type.get_walk_animation_data()?;
         Some(WalkCycleHandler {
             current_texture_id,
@@ -77,13 +90,8 @@ pub fn start_walk_cycle(entity_type: &EntityType) -> Option<WalkCycleHandler> {
         })
     }
 
-// currently unused
-struct SpriteSlice {
-    sprite: Rc<Sprite>,
-    proportion: f64,
-    distance: f64,
-}
-
+// an instruction to the renderer how to render a sprite
+// task columns of the sprite will be added into those of the screen at approtpriate screen x positions
 pub struct SpriteInstruction {
     pub sprite_left_screen_x: usize,
     pub sprite_right_screen_x: usize,
@@ -103,8 +111,7 @@ pub fn task_sprite(
     let distance: f64 = game.player.mover.position.distance_to(&mover.position);
     let normalized_distance = distance * angle_off_player_view.cos();
 
-    // TODO temporary, find cleaner solution ?
-    //idk what u mean by cleaner, but i had to change 0.0 to 0.1, because spamming bullets was crashing game, now its fine
+    // if entity behind, nothing is returned
     if normalized_distance < 0.1 {
         return None;
     }
@@ -119,10 +126,12 @@ pub fn task_sprite(
         * renderer_data.render_scale_coefficient) // scale correctly
         as isize;
 
+    // screen x coordinate of the center of the full sprite
     let center_screen_x: isize = ((renderer_data.screen_width_as_f64 / 2.0)
         + (angle_off_player_view.tan() * renderer_data.render_scale_coefficient))
         as isize;
 
+    // screen x coordinate of the left of the full sprite
     let left_screen_x = center_screen_x - (onscreen_width / 2);
 
     let angle_in_world = game.player.mover.position.angle_to(&mover.position) - 0.5 * PI; // straight line to player +90deg
@@ -135,6 +144,8 @@ pub fn task_sprite(
     let texture = renderer_data
         .textures
         .get(&sprite.get_current_sprite_texture_id());
+    
+    // the tasks, one of which will be added to each of the appropriate columns of the screen
     let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width.max(0) as usize);
 
     if let Some(texture) = texture {
@@ -156,7 +167,9 @@ pub fn task_sprite(
                 % texture.width;
 
             // if we've gone into a new pixel column on the texture, we need to recalculate texture_column
+            // otherwise, just remember from last time
             if texture_u != prev_texture_u {
+                // the scaled texture column => is as it will be shown on screen
                 texture_column = texture.get_texture_column(
                     texture_u,
                     onscreen_bottom,
@@ -178,7 +191,7 @@ pub fn task_sprite(
             tasks.push(RenderTaskOrderer::new(
                 task,
                 distance,
-                RenderTaskType::SpriteUnicolor,
+                RenderTaskType::Sprite,
             ));
         }
     }

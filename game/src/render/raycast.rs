@@ -23,15 +23,12 @@ pub struct RayHit {
 pub struct RayHitOrderer {
     pub rh: RayHit,
 }
-
 impl PartialEq for RayHitOrderer {
     fn eq(&self, other: &Self) -> bool {
         self.rh.distance == other.rh.distance
     }
 }
-
 impl Eq for RayHitOrderer {} // PartialEQ already handles functionality, but must be written out; do not remove
-
 impl PartialOrd for RayHitOrderer {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -64,11 +61,7 @@ pub struct BlockSlice {
     pub exit_hit: RayHit,
 }
 
-// struct BlockSliceOrderer {
-//     bs: BlockSlice // does not stand for bullshit
-// }
-
-// a slice of the map: the wall at the back, the bottom blocks and the top blocks
+// a rayhit-made slice of the map: the wall at the back, and all the slices through blocks 
 #[derive(Clone, PartialEq)]
 pub struct MapSlice {
     pub wall_hit: Option<RayHit>,
@@ -76,26 +69,24 @@ pub struct MapSlice {
     pub hits_blocks_currently_inside: Vec<RayHit>,
 }
 
-// TODO separate into multiple functions
-// TODO also return block were standing on/under in some form
 // cast a ray and return the ordered list of all hits, ending at the closest wall hit
 pub fn raycast(map: &Map, angle_relative_to_player: f64, player: &Player) -> MapSlice {
     let ray_angle = player.mover.facing_direction + angle_relative_to_player;
 
     // find closest wall
     let mut closest_wall_hit: Option<RayHit> = None;
-    for w in &map.wall_sides {
-        let intersection: Option<RayHit> = intersect(
+    for wall in &map.wall_sides {
+        let rayhit: Option<RayHit> = intersect(
             Point {
                 x: player.mover.position.x,
                 y: player.mover.position.y,
             },
             ray_angle,
-            Rc::clone(w), // TODO remove need for this clone
+            Rc::clone(wall),
         );
-        if let Some(rayhit) = intersection {
+        if let Some(rayhit) = rayhit {
             // didnt hit nothing
-            // if its a wall, discard if its not cloesest, otherwise overwrite closest
+            // if its a wall, discard if its not closest, otherwise overwrite closest
             if let Some(closest_wall_hit_value) = &closest_wall_hit
                 && closest_wall_hit_value.distance < rayhit.distance
             {
@@ -107,16 +98,16 @@ pub fn raycast(map: &Map, angle_relative_to_player: f64, player: &Player) -> Map
 
     // list all blocks closer than closest wall in order of distance
     let mut block_rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
-    for b in &map.block_sides {
-        let intersection: Option<RayHit> = intersect(
+    for block in &map.block_sides {
+        let rayhit: Option<RayHit> = intersect(
             Point {
                 x: player.mover.position.x,
                 y: player.mover.position.y,
             },
             ray_angle,
-            Rc::clone(b), // TODO remove need for this clone
+            Rc::clone(block),
         );
-        if let Some(rayhit) = intersection {
+        if let Some(rayhit) = rayhit {
             // didnt hit nothing
             if let Some(closest_wall_hit_value) = &closest_wall_hit
                 && closest_wall_hit_value.distance < rayhit.distance
@@ -127,16 +118,21 @@ pub fn raycast(map: &Map, angle_relative_to_player: f64, player: &Player) -> Map
         }
     }
 
+    // we have now established an ordered list of rayhits
     // we go through the rayhits back to front and remember which block (shape) it belonged to
     // when we find another rayhit for that shape, we've exited the shape and can
+    // put int inot a fully-made block_slice
     let mut block_slices: Vec<BlockSlice> = Vec::new();
-    let mut blocks_currently_over: HashMap<ShapeID, RayHit> = HashMap::new(); // block which the raycast if currentyl passing over or under
+
+    // block which the ray is currently passing through (in 2dim space), in its imagined backtrack through its own path
+    let mut blocks_currently_over: HashMap<ShapeID, RayHit> = HashMap::new(); 
+
     while !block_rayhits_ordered.is_empty() {
         if let Some(rh_ordering) = block_rayhits_ordered.pop() {
             let rh = rh_ordering.rh;
 
             if let Some(shape_exit_hit) = blocks_currently_over.remove(&rh.side.shape.id)
-            // if true, we just exited a block we were inside
+            // if true, we just exited a block we were  with our ray backtrack
             {
                 block_slices.push(BlockSlice {
                     entry_hit: rh,
@@ -148,6 +144,7 @@ pub fn raycast(map: &Map, angle_relative_to_player: f64, player: &Player) -> Map
         }
     }
 
+    // finish and return the whole slice of the whole map
     MapSlice {
         wall_hit: closest_wall_hit,
         block_slices,
@@ -155,7 +152,7 @@ pub fn raycast(map: &Map, angle_relative_to_player: f64, player: &Player) -> Map
     }
 }
 
-//checks wether a ray intersect the line between two given points
+/// checks wether a ray intersect the line between two given points
 pub fn intersect(ray_origin: Point, ray_angle: f64, side: Rc<Side>) -> Option<RayHit> {
     let side_point1 = side.point1; // point is a copy type
     let side_point2 = side.point2;
@@ -196,6 +193,7 @@ pub fn intersect(ray_origin: Point, ray_angle: f64, side: Rc<Side>) -> Option<Ra
     })
 }
 
+/// rotates using roation matrix
 fn rotate_point_around_origin(point: Point, angle: f64) -> Point {
     let sin_of_angle = angle.sin();
     let cos_of_angle = angle.cos();

@@ -126,16 +126,19 @@ impl Hash for Shape {
 #[derive(Clone)]
 pub struct Map {
     pub id: usize,
-    //pub border: Shape, // mainly for topdown renderer (maybe change to rectangle?)
     pub wall_sides: Vec<Rc<Side>>,
     pub wall_shapes: Vec<Rc<Shape>>,
     pub block_sides: Vec<Rc<Side>>,
-    pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed
+    pub block_shapes: Vec<Rc<Shape>>, //TODO are the shape vectors even needed anymore?
     pub side_count: usize,
     pub shape_count: usize,
 }
 
 impl Map {
+
+    /// a test map used throughhout development; star shaped wall, 
+    /// some blocks, a little stair with some obstacles to test movement/collisions, test entities
+    /// outdated an unnecessary now that we have the parser
     pub fn new_test_map() -> Option<Self> {
         let mut map = Self {
             id: 0,
@@ -160,7 +163,7 @@ impl Map {
             Point { x: 150.0, y: 200.0 },
         ];
         map.add_shape_from_points(
-            wall_points.clone(), // TODO remove this clone(), also the others
+            wall_points.clone(),
             ShapeType::Wall,
             0.0,
             LEVEL_HEIGHT,
@@ -181,7 +184,8 @@ impl Map {
             10.0,
             0x0000ff,
             0xffff00,
-            vec![0, 0, 1], // demonstrates separate textures for different sides
+            // demonstrates separate textures for different sides; capability theoretically possible, not currently used by parser tho
+            vec![0, 0, 1], 
         )?;
 
         let bottom_block_points_2: Vec<Point> = vec![
@@ -202,9 +206,6 @@ impl Map {
         )?;
 
         let top_block_points: Vec<Point> = vec![
-            // Point { x: 300.0, y: 225.0 },
-            // Point { x: 250.0, y: 225.0 },
-            // Point { x: 250.0, y: 200.0 },
             Point { x: 205.0, y: 205.0 },
             Point { x: 180.0, y: 205.0 },
             Point { x: 180.0, y: 178.0 },
@@ -397,8 +398,7 @@ impl Map {
         Some(map)
     }
 
-    // returns the sides in the shape and the shape itself as tuple
-    // add side vector from tuple into side list and shape into shape list
+    /// takes a list of points to form a shape (block or wall) with other relevant data to add the shape to the map
     #[allow(clippy::too_many_arguments)]
     pub fn add_shape_from_points(
         &mut self,

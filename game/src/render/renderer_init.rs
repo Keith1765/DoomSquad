@@ -18,6 +18,7 @@ pub struct RendererData {
     pub textures: HashMap<usize, Texture>,
 }
 
+/// returns renderer data, an object containing a lot of data regularly used by the renderrer and passed around as needed
 #[allow(clippy::too_many_arguments)]
 pub fn render_init(
     screen_width: usize,
@@ -29,7 +30,8 @@ pub fn render_init(
     block_default_color: u32,
     surface_default_color: u32,
 ) -> RendererData {
-    // thsee three will be used often => makes sense to calculate them only once and save
+    
+    // thsee will be used often => makes sense to calculate them only once and save
     let screen_width_as_f64 = screen_width as f64;
     let screen_height_as_f64 = screen_height as f64;
     let screen_height_as_isize: isize = screen_height as isize;
@@ -38,7 +40,7 @@ pub fn render_init(
     let vertical_fov: f64 =
         ((screen_height_as_f64 / screen_width as f64) * (horizontal_fov / 2.0).tan()).atan() * 2.0;
 
-    // would be the sam with height / vertical_fov: can be used for both horizontal and vertical scaling
+    // would be the same with height / vertical_fov: can be used for both horizontal and vertical scaling
     let render_scale_coefficient: f64 = (screen_width_as_f64 / 2.0) / (horizontal_fov / 2.0).tan();
 
     let textures = load_textures().unwrap_or_default();
