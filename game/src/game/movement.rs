@@ -16,7 +16,6 @@ pub struct Mover {
 }
 
 impl Mover {
-    // TODO test this properly
     // returns whether a step was made or blocked
     pub fn step(
         &mut self,
@@ -25,7 +24,6 @@ impl Mover {
         map: &Map,
         godmode: bool,
     ) -> bool {
-        //println!("{}", self.floor_level);
 
         let absolute_direction = self.facing_direction + relative_direction;
 
