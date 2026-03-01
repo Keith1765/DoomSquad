@@ -1,6 +1,7 @@
 use crate::game::map::{Map, Point, Shape, ShapeType, Side};
 use crate::game::player::MAX_STEP_UP_HEIGHT;
 use core::f64;
+#[allow(unused_imports)] // for some reason it complains even tho import is used
 use std::f64::consts::PI;
 use std::{collections::HashSet, rc::Rc};
 
