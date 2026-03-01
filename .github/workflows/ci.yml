@@ -9,11 +9,6 @@ on:
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
-    
-    # Da dein Rust-Projekt im Unterordner "game" liegt:
-    defaults:
-      run:
-        working-directory: game
 
     steps:
       - name: Checkout code
