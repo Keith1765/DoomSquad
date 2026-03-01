@@ -28,7 +28,7 @@ pub struct GeogebraPolygonElement {
     texture_id: usize,
     pub shape_type: ShapeType,
 }
-
+//defing a struct for ez Variable export
 pub struct GeogebraPolygone {
     label: String,
     shape_type: ShapeType, //show object ture/ false
@@ -69,10 +69,10 @@ fn reading_attr_from_ggb(xml_file: &mut ZipFile<File>) -> Result<map::Map> {
     //XML laden
     let mut xml_content = String::new();
     xml_file.read_to_string(&mut xml_content)?;
-
+    //reader erstellen
     let mut reader = Reader::from_str(&xml_content);
     let mut buf = Vec::new();
-
+    //list with all exportet points, segments and polygons(for the element/ command loop) from geogebra
     let mut point_list: Vec<GeogebraPoint> = Vec::new();
     let mut polygon_command_list: Vec<GeogebraPolygonCommand> = Vec::new();
     let mut polygon_element_list: Vec<GeogebraPolygonElement> = Vec::new();
@@ -87,7 +87,7 @@ fn reading_attr_from_ggb(xml_file: &mut ZipFile<File>) -> Result<map::Map> {
         side_count: 0,
         shape_count: 0,
     };
-
+    //first loop cheching for elements
     loop {
         match reader.read_event_into(&mut buf)? {
             Event::Start(ref e) if e.name().as_ref() == b"element" => {
@@ -102,7 +102,7 @@ fn reading_attr_from_ggb(xml_file: &mut ZipFile<File>) -> Result<map::Map> {
                         _ => {}
                     }
                 }
-
+                //second loop for the element types
                 match element_type.as_deref() {
                     Some("point") => read_point(&mut reader, &mut buf, &label, &mut point_list)?,
                     Some("segment") => read_segment(&mut reader, &mut buf, &label)?,
@@ -115,7 +115,7 @@ fn reading_attr_from_ggb(xml_file: &mut ZipFile<File>) -> Result<map::Map> {
                     _ => {}
                 }
             }
-
+            //first loop checking for commands
             Event::Start(ref e) if e.name().as_ref() == b"command" => {
                 let mut command_name = None;
 
@@ -142,7 +142,6 @@ fn reading_attr_from_ggb(xml_file: &mut ZipFile<File>) -> Result<map::Map> {
 
         buf.clear();
     }
-    //TODO Points und Segmente kombinieren
     for p in &polygon_command_list {
         let mut input_list_of_points: Vec<Point> = Vec::new();
         for vertex in &p.vertices {
@@ -154,6 +153,7 @@ fn reading_attr_from_ggb(xml_file: &mut ZipFile<File>) -> Result<map::Map> {
             }
         }
     }
+    //combining the element and command list to one list with all information for the map
     for e in &polygon_element_list {
         for c in &polygon_command_list {
             if c.label == e.label {
@@ -186,7 +186,7 @@ fn reading_attr_from_ggb(xml_file: &mut ZipFile<File>) -> Result<map::Map> {
             p.shape_type,
             p.bottom,
             p.height,
-            0xAAAAAA,
+            0xAAAAAA,//not needed bc we havbe textures
             p.surface_color,
             vec![p.texture_id; input_list_of_points.len()],
         );
@@ -265,6 +265,7 @@ fn read_segment(_reader: &mut Reader<&[u8]>, _buf: &mut Vec<u8>, _name: &str) ->
     Ok(())
 }
 
+//exporting info from command bc there is the information what points belong to which polygon
 fn read_polygon_command(
     reader: &mut Reader<&[u8]>,
     buf: &mut Vec<u8>,
@@ -312,6 +313,11 @@ fn read_polygon_command(
     Ok(())
 }
 
+//reading in command bc there is info about color and visibility
+//r => botom (the the polygon beginns)
+//g => height (how high the polygon is)
+//b => texture id (which texture the polygon has)
+//alpha => surface color (the top color of polygon)
 fn read_polygon_element(
     reader: &mut Reader<&[u8]>,
     buf: &mut Vec<u8>,
@@ -345,7 +351,7 @@ fn read_polygon_element(
                         b"r" => bottom = attr.unescape_value()?.parse::<u8>()? as f64,
                         b"g" => height = attr.unescape_value()?.parse::<u8>()? as f64,
                         b"b" => texture_id = attr.unescape_value()?.parse::<u8>()? as f64,
-                        b"alpha" => surface_color = attr.unescape_value()?.parse::<f64>()? * 100000.0, //alpha is between 0 and 1, we multiply it with 100000 to get a lager amount of coulors, because we only use the alpha value for the texture id, we can do this without losing any information
+                        b"alpha" => surface_color = attr.unescape_value()?.parse::<f64>()? * 100000000.0, //alpha is between 0 and 1, we multiply it with 100000 to get a lager amount of coulors, because we only use the alpha value for the texture id, we can do this without losing any information
                         _ => {}
                     }
                 }
