@@ -3,7 +3,8 @@
 -   refine-audio branch: started by Marco, continued by Ilja and Jakob to finish the audio system
 -   GitHub contributions line count for Kamil not accurate: inflated by large xml files
 -   Most merges onto main (resolving conflicts etc) were basically done in cooperation by Kamil, Jakob, and Ilja (not always all three at once)
--   entities branch (apologies for unfortuate spelling mistake lol) was mostly done by Ilja, but sometimes in pair programming with Kamil
+-   entities branch (apologies for unfortuate spelling mistake lol) was mostly done by Ilja, but sometimes in pair programming with Kamil; contains quite a bit of stuff unrelated to entities, whole thing got a bit chaotic at times
+-   commnting_parser branch was used somewhat differently than intended, contains updates to maps and some other stuff now too (didn't want the bother of renaming it)
 
 In other cases, who did what is mostly apparent from the Git history
 
