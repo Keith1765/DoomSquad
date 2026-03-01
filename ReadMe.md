@@ -59,7 +59,7 @@ Entities are rendered to always face the player; represent something that is abl
 Rendered in the same way as entities; can be interacted with using F for various effects
 
 -   Map Switcher: has a map icon; loads the player onto a different map, but only if there is max one entity left on the map
--   Spawner: has a yellow warning icon, spawns a Dummy TODO change
+-   Spawner: has a yellow warning icon, spawns a Dummy
 -   Heal Station: red heart icon; restores a small amount of health; onyl usable once
 -   Jump Pad (sometimes called Elevator in Code): propels the player upwards
 -   Slot Machine: randomly either restores some health, or spawns a melee enemy; small chance of swapping map to old test map that was used during development (10%)
@@ -73,7 +73,7 @@ A map consists of two types of geometry, both with textured sides:
 
 ## Game Progress
 
-Player will be spawned into a level; at the end of each level, there is an Interactable to swap to the next map; TODO no more entities?
+Player will be spawned into a level; at the end of each level, there is an Interactable to swap to the next map; only pssible when there is at most one entitiy left in the whole level
 
 Progress within a level can not be saved; when player dies or exits using Esc, they can choose to save their current level; next time the load from the main menu, they will be returned there (persistent even when closing game)
 
