@@ -1,4 +1,4 @@
-use std::{f64::consts::PI, rc::Rc};
+use std::{f64::consts::PI};
 
 use crate::game::entities::EntityType;
 use crate::game::movement::Mover;

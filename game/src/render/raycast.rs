@@ -75,8 +75,8 @@ pub fn raycast(map: &Map, angle_relative_to_player: f64, player: &Player) -> Map
 
     // find closest wall
     let mut closest_wall_hit: Option<RayHit> = None;
-    for w in &map.wall_sides {
-        let intersection: Option<RayHit> = intersect(
+    for wall in &map.wall_sides {
+        let rayhit: Option<RayHit> = intersect(
             Point {
                 x: player.mover.position.x,
                 y: player.mover.position.y,
@@ -98,7 +98,7 @@ pub fn raycast(map: &Map, angle_relative_to_player: f64, player: &Player) -> Map
 
     // list all blocks closer than closest wall in order of distance
     let mut block_rayhits_ordered: BinaryHeap<RayHitOrderer> = BinaryHeap::new();
-    for block in &game.map.block_sides {
+    for block in &map.block_sides {
         let rayhit: Option<RayHit> = intersect(
             Point {
                 x: player.mover.position.x,
