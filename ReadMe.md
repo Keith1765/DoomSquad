@@ -85,6 +85,10 @@ The rayhits that were found are then grouped according the blocks they belong to
 
 *Note: The collision system uses an essentially identical intersection function to see if the player walked into a wall; if a ray is cast in one direction and has an odd number of intersections with sides of one block, we are inside that block in 2d level space; this principle is used by the collider for collision with blocks.*
 
+## Parsers
+
+Maps, with the entities and interactables in them, can be created in GeoGebra, in an appropriate format (for example, the value of the red cahnnel of the RGB value of a polygons color in geoGebra corresponds to how high the bottom of that block is). An parser system exists to convert such GeoGebra files into ingame maps.
+
 # TESTING PHILOSOPHY
 
 Main method was "testing-by-doing"; given that this is a game, with lots of diffeent states, which are dependent on one another, we felt that this was sensible.
