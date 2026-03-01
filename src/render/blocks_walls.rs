@@ -61,7 +61,7 @@ pub fn task_column(
     }
 }
 
-/// turns a slice of a block (its entry and exit ray hit) into a side and (if applicable) a floor/ceiling tasking 
+/// turns a slice of a block (its entry and exit ray hit) into a side and (if applicable) a floor/ceiling tasking
 pub fn task_block_slice(
     slice: &BlockSlice,
     angle_relative_to_player: f64,
@@ -89,7 +89,7 @@ pub fn task_block_slice(
     tasks
 }
 
-/// creates a task to render a side of a wall or block 
+/// creates a task to render a side of a wall or block
 pub fn task_side(
     side_hit: &RayHit,
     angle_relative_to_player: f64,
@@ -136,14 +136,13 @@ pub fn task_side(
     None
 }
 
-/// creates a task to render a unicolored floor or ceiling for a block 
+/// creates a task to render a unicolored floor or ceiling for a block
 pub fn task_surface(
     slice: &BlockSlice,
     angle_relative_to_player: f64,
     renderer_data: &RendererData,
     game: &Game,
 ) -> Option<RenderTaskOrderer> {
-
     // the points on screen of the places in world space where our ray entered and exited the block
     let (exit_bottom_onscreen, exit_top_onscreen) = calculate_side_bottom_top(
         &slice.exit_hit,
@@ -158,7 +157,7 @@ pub fn task_surface(
         game,
     );
 
-    // finds the onscreen dimensions of the surface; depend on whether we need to render a ceiling or floor, depending on player height 
+    // finds the onscreen dimensions of the surface; depend on whether we need to render a ceiling or floor, depending on player height
     let onscreen_dimensions: Option<(isize, isize)> = match &slice.entry_hit.side.shape.shape_type {
         ShapeType::Block => {
             if slice.entry_hit.side.shape.bottom > game.player.mover.view_level {
@@ -239,7 +238,7 @@ pub fn task_surface(
 }
 
 // TODO optimize? kinda laggy for some reason rn
-/// creates the tasking for a surface which is not fully visible, because we are standing on its block 
+/// creates the tasking for a surface which is not fully visible, because we are standing on its block
 /// (=> some of it offcreen), meaning it wil go into the offscreen
 pub fn task_partial_surface(
     exit_hit: &RayHit,

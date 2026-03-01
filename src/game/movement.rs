@@ -10,9 +10,9 @@ use std::{collections::HashSet, rc::Rc};
 pub struct Mover {
     pub position: Point,
     pub floor_level: f64, // the level of the floor we are currently standing on, or airborne over
-    pub foot_level: f64, // the level of our feet (= floor level if not airborne)
-    pub view_level: f64, // directly tied to foot level
-    pub height: f64, // collision height
+    pub foot_level: f64,  // the level of our feet (= floor level if not airborne)
+    pub view_level: f64,  // directly tied to foot level
+    pub height: f64,      // collision height
     pub facing_direction: f64,
 }
 
@@ -25,14 +25,14 @@ impl Mover {
         map: &Map,
         godmode: bool,
     ) -> bool {
-
         let absolute_direction = self.facing_direction + relative_direction;
 
         // if we walk into any wall and arent in godmode, we stop
         for w in &map.wall_sides {
             if let Some(_) =
                 step_intersect(self.position, absolute_direction, Rc::clone(w), step_size)
-                && !godmode // in godmode, we can walk through walls
+                && !godmode
+            // in godmode, we can walk through walls
             {
                 return false;
             }
@@ -240,7 +240,6 @@ fn test_successive_rotations_are_additive() {
 }
 
 fn test_intersect_basic_hit() {
-
     let placeholder_shape = Shape {
         id: 0,
         shape_type: ShapeType::Wall,
@@ -250,29 +249,19 @@ fn test_intersect_basic_hit() {
         surface_color: 0x000000,
     };
 
-    let point0 = Point {
-        x: 0.0,
-        y: 0.0,
-    };
-    let point1 = Point {
-        x: 5.0,
-        y: 2.0,
-    };
-    let point2 = Point {
-        x: 5.0,
-        y: -2.0,
-    };
+    let point0 = Point { x: 0.0, y: 0.0 };
+    let point1 = Point { x: 5.0, y: 2.0 };
+    let point2 = Point { x: 5.0, y: -2.0 };
     let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = step_intersect(point0, 0.0, side_in_ray, 3.0);
 
     assert!(rh.is_some());
-    assert!((rh.unwrap().distance-5.0).abs() < 0.1);
+    assert!((rh.unwrap().distance - 5.0).abs() < 0.1);
 }
 
 #[test]
 fn test_intersect_basic_no_hit() {
-
     let placeholder_shape = Shape {
         id: 0,
         shape_type: ShapeType::Wall,
@@ -282,18 +271,9 @@ fn test_intersect_basic_no_hit() {
         surface_color: 0x000000,
     };
 
-    let point0 = Point {
-        x: 0.0,
-        y: 0.0,
-    };
-    let point1 = Point {
-        x: 5.0,
-        y: 2.0,
-    };
-    let point2 = Point {
-        x: 5.0,
-        y: 4.0,
-    };
+    let point0 = Point { x: 0.0, y: 0.0 };
+    let point1 = Point { x: 5.0, y: 2.0 };
+    let point2 = Point { x: 5.0, y: 4.0 };
     let side_not_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = step_intersect(point0, 0.0, side_not_in_ray, 3.0);
@@ -303,7 +283,6 @@ fn test_intersect_basic_no_hit() {
 
 #[test]
 fn test_intersect_basic_behind_ray() {
-
     let placeholder_shape = Shape {
         id: 0,
         shape_type: ShapeType::Wall,
@@ -313,18 +292,9 @@ fn test_intersect_basic_behind_ray() {
         surface_color: 0x000000,
     };
 
-    let point0 = Point {
-        x: 0.0,
-        y: 0.0,
-    };
-    let point1 = Point {
-        x: -5.0,
-        y: 2.0,
-    };
-    let point2 = Point {
-        x: -5.0,
-        y: -2.0,
-    };
+    let point0 = Point { x: 0.0, y: 0.0 };
+    let point1 = Point { x: -5.0, y: 2.0 };
+    let point2 = Point { x: -5.0, y: -2.0 };
     let side_behind_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = step_intersect(point0, 0.0, side_behind_ray, 3.0);
@@ -333,7 +303,8 @@ fn test_intersect_basic_behind_ray() {
 }
 
 #[test]
-fn test_intersect_angled_offset_hit() { // difference to above: player not at origin, ray angled at 45 degrees
+fn test_intersect_angled_offset_hit() {
+    // difference to above: player not at origin, ray angled at 45 degrees
 
     let placeholder_shape = Shape {
         id: 0,
@@ -344,29 +315,19 @@ fn test_intersect_angled_offset_hit() { // difference to above: player not at or
         surface_color: 0x000000,
     };
 
-    let point0 = Point {
-        x: 5.0,
-        y: -2.0,
-    };
-    let point1 = Point {
-        x: 5.0,
-        y: 0.0,
-    };
-    let point2 = Point {
-        x: 15.0,
-        y: 0.0,
-    };
+    let point0 = Point { x: 5.0, y: -2.0 };
+    let point1 = Point { x: 5.0, y: 0.0 };
+    let point2 = Point { x: 15.0, y: 0.0 };
     let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = step_intersect(point0, PI / 4.0, side_in_ray, 3.0);
 
     assert!(rh.is_some());
-    assert!((rh.unwrap().distance-2.8).abs() < 0.5);
+    assert!((rh.unwrap().distance - 2.8).abs() < 0.5);
 }
 
 #[test]
 fn test_intersect_angled_offset_no_hit() {
-
     let placeholder_shape = Shape {
         id: 0,
         shape_type: ShapeType::Wall,
@@ -376,18 +337,9 @@ fn test_intersect_angled_offset_no_hit() {
         surface_color: 0x000000,
     };
 
-    let point0 = Point {
-        x: 5.0,
-        y: -2.0,
-    };
-    let point1 = Point {
-        x: 15.0,
-        y: 0.0,
-    };
-    let point2 = Point {
-        x: 25.0,
-        y: 0.0,
-    };
+    let point0 = Point { x: 5.0, y: -2.0 };
+    let point1 = Point { x: 15.0, y: 0.0 };
+    let point2 = Point { x: 25.0, y: 0.0 };
     let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = step_intersect(point0, 0.0, side_in_ray, 3.0);
@@ -397,7 +349,6 @@ fn test_intersect_angled_offset_no_hit() {
 
 #[test]
 fn test_intersect_angled_offset_behind_ray() {
-
     let placeholder_shape = Shape {
         id: 0,
         shape_type: ShapeType::Block,
@@ -407,18 +358,9 @@ fn test_intersect_angled_offset_behind_ray() {
         surface_color: 0x000000,
     };
 
-     let point0 = Point {
-        x: 5.0,
-        y: -2.0,
-    };
-    let point1 = Point {
-        x: 5.0,
-        y: -4.0,
-    };
-    let point2 = Point {
-        x: 15.0,
-        y: -4.0,
-    };
+    let point0 = Point { x: 5.0, y: -2.0 };
+    let point1 = Point { x: 5.0, y: -4.0 };
+    let point2 = Point { x: 15.0, y: -4.0 };
     let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = step_intersect(point0, 0.0, side_in_ray, 3.0);
@@ -427,7 +369,6 @@ fn test_intersect_angled_offset_behind_ray() {
 }
 
 fn test_point_in_shape_inside() {
-
     let placeholder_shape = Rc::new(Shape {
         id: 0,
         shape_type: ShapeType::Wall,
@@ -437,31 +378,46 @@ fn test_point_in_shape_inside() {
         surface_color: 0x000000,
     });
 
-    let shape_point_1 = Point {
-        x: 0.0,
-        y: 1.0,
-    };
-    let shape_point_2 = Point {
-        x: 5.0,
-        y: 5.0,
-    };
-    let shape_point_3 = Point {
-        x: 5.0,
-        y: -5.0,
-    };
-    let shape_point_4 = Point {
-        x: -5.0,
-        y: -5.0,
-    };
-    let shape_point_5 = Point {
-        x: -5.0,
-        y: 5.0,
-    };
-    let side_1 = Rc::new(Side::new(0, shape_point_1, shape_point_2, Rc::clone(&placeholder_shape), 0));
-    let side_2 = Rc::new(Side::new(0, shape_point_2, shape_point_3, Rc::clone(&placeholder_shape), 0));
-    let side_3 = Rc::new(Side::new(0, shape_point_3, shape_point_4, Rc::clone(&placeholder_shape), 0));
-    let side_4 = Rc::new(Side::new(0, shape_point_4, shape_point_5, Rc::clone(&placeholder_shape), 0));
-    let side_5 = Rc::new(Side::new(0, shape_point_5, shape_point_1, Rc::clone(&placeholder_shape), 0));
+    let shape_point_1 = Point { x: 0.0, y: 1.0 };
+    let shape_point_2 = Point { x: 5.0, y: 5.0 };
+    let shape_point_3 = Point { x: 5.0, y: -5.0 };
+    let shape_point_4 = Point { x: -5.0, y: -5.0 };
+    let shape_point_5 = Point { x: -5.0, y: 5.0 };
+    let side_1 = Rc::new(Side::new(
+        0,
+        shape_point_1,
+        shape_point_2,
+        Rc::clone(&placeholder_shape),
+        0,
+    ));
+    let side_2 = Rc::new(Side::new(
+        0,
+        shape_point_2,
+        shape_point_3,
+        Rc::clone(&placeholder_shape),
+        0,
+    ));
+    let side_3 = Rc::new(Side::new(
+        0,
+        shape_point_3,
+        shape_point_4,
+        Rc::clone(&placeholder_shape),
+        0,
+    ));
+    let side_4 = Rc::new(Side::new(
+        0,
+        shape_point_4,
+        shape_point_5,
+        Rc::clone(&placeholder_shape),
+        0,
+    ));
+    let side_5 = Rc::new(Side::new(
+        0,
+        shape_point_5,
+        shape_point_1,
+        Rc::clone(&placeholder_shape),
+        0,
+    ));
 
     let map = Map {
         id: 0,
@@ -473,26 +429,11 @@ fn test_point_in_shape_inside() {
         shape_count: 1,
     };
 
-    let inside_point_1 = Point {
-        x: 0.0,
-        y: 0.0,
-    };
-    let inside_point_2 = Point {
-        x: -3.0,
-        y: -3.0,
-    };
-    let inside_point_3 = Point {
-        x: 0.0,
-        y: 1.0,
-    };
-    let outside_point_1 = Point {
-        x: 0.0,
-        y: 2.0,
-    };
-    let outside_point_2 = Point {
-        x: 10.0,
-        y: 10.0,
-    };
+    let inside_point_1 = Point { x: 0.0, y: 0.0 };
+    let inside_point_2 = Point { x: -3.0, y: -3.0 };
+    let inside_point_3 = Point { x: 0.0, y: 1.0 };
+    let outside_point_1 = Point { x: 0.0, y: 2.0 };
+    let outside_point_2 = Point { x: 10.0, y: 10.0 };
 
     assert!(!find_blocks_were_currently_in(inside_point_1, &map).is_empty());
     assert!(!find_blocks_were_currently_in(inside_point_2, &map).is_empty());

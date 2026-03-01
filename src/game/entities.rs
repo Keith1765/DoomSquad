@@ -176,7 +176,7 @@ impl Entity {
                 width: renderer_data.textures.get(&sprite_texture_id)?.width as f64,
                 action_sprite_switcher: None,
                 walk_cycle_handler: None,
-                },
+            },
             gravity: GRAVITY_CONST,
             vertical_velocity: 0.0,
             entity_type,
@@ -216,9 +216,14 @@ impl Entity {
             EnemyBullet => enemy_bullet_behaviour(self, map),
             RedBarrel => red_barrel_behaviour(self, map),
             ExplodedRedBarrel => exploded_red_barrel_behaviour(self),
-            RangedEnemy => {
-                ranged_enemy_behaviour(self, map, player_mover.position, renderer_data, &mut events, audio)
-            }
+            RangedEnemy => ranged_enemy_behaviour(
+                self,
+                map,
+                player_mover.position,
+                renderer_data,
+                &mut events,
+                audio,
+            ),
             Archer => {
                 archer_behaviour(self, map, player_mover.position, renderer_data, &mut events)
             }
@@ -248,7 +253,6 @@ impl Entity {
             self.mover.view_level = self.mover.foot_level + ENTITY_DEFAULT_VIEW_HEIGHT;
         }
 
-
         if let Some(switcher) = &mut self.sprite.action_sprite_switcher {
             if switcher.countdown == 0 {
                 self.sprite.action_sprite_switcher = None;
@@ -261,12 +265,7 @@ impl Entity {
     }
 
     //std movement constantly moves towards player
-    pub fn normal_enemy_movement(
-        &mut self,
-        map: &Map,
-        player_position: Point,
-        move_speed: f64,
-    ) {
+    pub fn normal_enemy_movement(&mut self, map: &Map, player_position: Point, move_speed: f64) {
         if !self.orientation_lock {
             self.mover.facing_direction = self.mover.position.angle_to(&player_position);
         }

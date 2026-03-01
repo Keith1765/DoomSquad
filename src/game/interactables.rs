@@ -86,8 +86,14 @@ impl Interactable {
             },
             sprite: Sprite {
                 default_texture_id: interactable_type.get_texture_id(),
-                height: renderer_data.textures.get(&interactable_type.get_texture_id())?.height as f64,
-                width: renderer_data.textures.get(&interactable_type.get_texture_id())?.width as f64,
+                height: renderer_data
+                    .textures
+                    .get(&interactable_type.get_texture_id())?
+                    .height as f64,
+                width: renderer_data
+                    .textures
+                    .get(&interactable_type.get_texture_id())?
+                    .width as f64,
                 action_sprite_switcher: None,
                 walk_cycle_handler: None,
             },
@@ -117,14 +123,20 @@ impl Interactable {
                     &button_type,
                     game_state,
                     &mut events,
-                    audio
+                    audio,
                 );
             }
             InteractableType::Elevator => {
                 self.jump_pad_behaviour(window, _renderer_data, game_state, audio);
             }
             InteractableType::SlotMachine => {
-                self.slot_maschine_behaviour(window, _renderer_data, game_state, audio, &mut events);
+                self.slot_maschine_behaviour(
+                    window,
+                    _renderer_data,
+                    game_state,
+                    audio,
+                    &mut events,
+                );
             }
         }
         events
@@ -146,7 +158,7 @@ impl Interactable {
         {
             match button_type {
                 ButtonType::Map => {
-                    if game_state.entities.len() <= 1{
+                    if game_state.entities.len() <= 1 {
                         events.push(InteractableEvent::SpawnMap(self.parameter_1 as usize));
                     }
                     audio.play_sfx("button_press", 1.0);
@@ -165,7 +177,9 @@ impl Interactable {
                         0.0,
                     );
                     audio.play_sfx("summoner", 1.0);
-                    if let Some(entity) = entity { game_state.entities.push(entity); }
+                    if let Some(entity) = entity {
+                        game_state.entities.push(entity);
+                    }
                 }
                 ButtonType::Heal => {
                     let player = &mut game_state.player;
@@ -212,9 +226,9 @@ impl Interactable {
             let roll: u8 = rng.random_range(0..100);
 
             match roll {
-                n if n > 90 =>{
+                n if n > 90 => {
                     events.push(InteractableEvent::SpawnMap(0)); //swap to easteregg (testmap)
-                },
+                }
                 n if n < 30 => {
                     let enemy_type = map_enemy_type(self.parameter_1 as i32);
                     let entity = generate_entities(
@@ -228,15 +242,16 @@ impl Interactable {
                         _renderer_data,
                         0.0,
                     );
-                    if let Some(entity) = entity { game_state.entities.push(entity); }
-                },
+                    if let Some(entity) = entity {
+                        game_state.entities.push(entity);
+                    }
+                }
                 n if n >= 30 => {
                     let player = &mut game_state.player;
                     player.hp += 10.0;
-                },
+                }
                 _ => unreachable!(),
             }
         }
     }
 }
-

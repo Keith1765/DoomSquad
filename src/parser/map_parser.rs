@@ -186,7 +186,7 @@ fn reading_attr_from_ggb(xml_file: &mut ZipFile<File>) -> Result<map::Map> {
             p.shape_type,
             p.bottom,
             p.height,
-            0xAAAAAA,//not needed bc we havbe textures
+            0xAAAAAA, //not needed bc we havbe textures
             p.surface_color,
             vec![p.texture_id; input_list_of_points.len()],
         );
@@ -335,7 +335,7 @@ fn read_polygon_element(
             Event::Empty(ref e) if e.name().as_ref() == b"show" => {
                 for attr in e.attributes() {
                     let attr = attr?;
-                    if attr.key.as_ref() == b"object"  {
+                    if attr.key.as_ref() == b"object" {
                         if attr.unescape_value()?.as_ref() == "true" {
                             shape_type = ShapeType::Block;
                         } else {
@@ -351,7 +351,9 @@ fn read_polygon_element(
                         b"r" => bottom = attr.unescape_value()?.parse::<u8>()? as f64,
                         b"g" => height = attr.unescape_value()?.parse::<u8>()? as f64,
                         b"b" => texture_id = attr.unescape_value()?.parse::<u8>()? as f64,
-                        b"alpha" => surface_color = attr.unescape_value()?.parse::<f64>()? * 100000000.0, //alpha is between 0 and 1, we multiply it with 100000 to get a lager amount of coulors, because we only use the alpha value for the texture id, we can do this without losing any information
+                        b"alpha" => {
+                            surface_color = attr.unescape_value()?.parse::<f64>()? * 100000000.0
+                        } //alpha is between 0 and 1, we multiply it with 100000 to get a lager amount of coulors, because we only use the alpha value for the texture id, we can do this without losing any information
                         _ => {}
                     }
                 }

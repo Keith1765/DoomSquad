@@ -30,7 +30,6 @@ pub fn render_init(
     block_default_color: u32,
     surface_default_color: u32,
 ) -> RendererData {
-    
     // thsee will be used often => makes sense to calculate them only once and save
     let screen_width_as_f64 = screen_width as f64;
     let screen_height_as_f64 = screen_height as f64;

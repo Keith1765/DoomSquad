@@ -1,14 +1,19 @@
-
-
 // for some reason used imports were being flagged??? idfk
 #[allow(unused_imports)]
 use std::{
-    cmp::Ordering, collections::{BinaryHeap, HashMap}, f64::consts::PI, rc::Rc
+    cmp::Ordering,
+    collections::{BinaryHeap, HashMap},
+    f64::consts::PI,
+    rc::Rc,
 };
 
 #[allow(unused_imports)]
 use crate::game::{
-    Game, map::{Map, Point, Shape, ShapeID, ShapeType, Side}, map_grid::MapGrid, movement::Mover, player::{self, PLAYER_VIEW_HEIGHT, Player}
+    Game,
+    map::{Map, Point, Shape, ShapeID, ShapeType, Side},
+    map_grid::MapGrid,
+    movement::Mover,
+    player::{self, PLAYER_VIEW_HEIGHT, Player},
 };
 
 #[derive(Clone, PartialEq)]
@@ -61,7 +66,7 @@ pub struct BlockSlice {
     pub exit_hit: RayHit,
 }
 
-// a rayhit-made slice of the map: the wall at the back, and all the slices through blocks 
+// a rayhit-made slice of the map: the wall at the back, and all the slices through blocks
 #[derive(Clone, PartialEq)]
 pub struct MapSlice {
     pub wall_hit: Option<RayHit>,
@@ -125,7 +130,7 @@ pub fn raycast(map: &Map, angle_relative_to_player: f64, player: &Player) -> Map
     let mut block_slices: Vec<BlockSlice> = Vec::new();
 
     // block which the ray is currently passing through (in 2dim space), in its imagined backtrack through its own path
-    let mut blocks_currently_over: HashMap<ShapeID, RayHit> = HashMap::new(); 
+    let mut blocks_currently_over: HashMap<ShapeID, RayHit> = HashMap::new();
 
     while !block_rayhits_ordered.is_empty() {
         if let Some(rh_ordering) = block_rayhits_ordered.pop() {
@@ -261,7 +266,6 @@ fn test_successive_rotations_are_additive() {
 
 #[test]
 fn test_intersect_basic_hit() {
-
     let placeholder_shape = Shape {
         id: 0,
         shape_type: ShapeType::Wall,
@@ -271,29 +275,19 @@ fn test_intersect_basic_hit() {
         surface_color: 0x000000,
     };
 
-    let point0 = Point {
-        x: 0.0,
-        y: 0.0,
-    };
-    let point1 = Point {
-        x: 5.0,
-        y: 2.0,
-    };
-    let point2 = Point {
-        x: 5.0,
-        y: -2.0,
-    };
+    let point0 = Point { x: 0.0, y: 0.0 };
+    let point1 = Point { x: 5.0, y: 2.0 };
+    let point2 = Point { x: 5.0, y: -2.0 };
     let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = intersect(point0, 0.0, side_in_ray);
 
     assert!(rh.is_some());
-    assert!((rh.unwrap().distance-5.0).abs() < 0.1);
+    assert!((rh.unwrap().distance - 5.0).abs() < 0.1);
 }
 
 #[test]
 fn test_intersect_basic_no_hit() {
-
     let placeholder_shape = Shape {
         id: 0,
         shape_type: ShapeType::Wall,
@@ -303,18 +297,9 @@ fn test_intersect_basic_no_hit() {
         surface_color: 0x000000,
     };
 
-    let point0 = Point {
-        x: 0.0,
-        y: 0.0,
-    };
-    let point1 = Point {
-        x: 5.0,
-        y: 2.0,
-    };
-    let point2 = Point {
-        x: 5.0,
-        y: 4.0,
-    };
+    let point0 = Point { x: 0.0, y: 0.0 };
+    let point1 = Point { x: 5.0, y: 2.0 };
+    let point2 = Point { x: 5.0, y: 4.0 };
     let side_not_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = intersect(point0, 0.0, side_not_in_ray);
@@ -324,7 +309,6 @@ fn test_intersect_basic_no_hit() {
 
 #[test]
 fn test_intersect_basic_behind_ray() {
-
     let placeholder_shape = Shape {
         id: 0,
         shape_type: ShapeType::Wall,
@@ -334,18 +318,9 @@ fn test_intersect_basic_behind_ray() {
         surface_color: 0x000000,
     };
 
-    let point0 = Point {
-        x: 0.0,
-        y: 0.0,
-    };
-    let point1 = Point {
-        x: -5.0,
-        y: 2.0,
-    };
-    let point2 = Point {
-        x: -5.0,
-        y: -2.0,
-    };
+    let point0 = Point { x: 0.0, y: 0.0 };
+    let point1 = Point { x: -5.0, y: 2.0 };
+    let point2 = Point { x: -5.0, y: -2.0 };
     let side_behind_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = intersect(point0, 0.0, side_behind_ray);
@@ -354,7 +329,8 @@ fn test_intersect_basic_behind_ray() {
 }
 
 #[test]
-fn test_intersect_angled_offset_hit() { // difference to above: player not at origin, ray angled at 45 degrees
+fn test_intersect_angled_offset_hit() {
+    // difference to above: player not at origin, ray angled at 45 degrees
 
     let placeholder_shape = Shape {
         id: 0,
@@ -365,29 +341,19 @@ fn test_intersect_angled_offset_hit() { // difference to above: player not at or
         surface_color: 0x000000,
     };
 
-    let point0 = Point {
-        x: 5.0,
-        y: -2.0,
-    };
-    let point1 = Point {
-        x: 5.0,
-        y: 0.0,
-    };
-    let point2 = Point {
-        x: 15.0,
-        y: 0.0,
-    };
+    let point0 = Point { x: 5.0, y: -2.0 };
+    let point1 = Point { x: 5.0, y: 0.0 };
+    let point2 = Point { x: 15.0, y: 0.0 };
     let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = intersect(point0, PI / 4.0, side_in_ray);
 
     assert!(rh.is_some());
-    assert!((rh.unwrap().distance-2.8).abs() < 0.5);
+    assert!((rh.unwrap().distance - 2.8).abs() < 0.5);
 }
 
 #[test]
 fn test_intersect_angled_offset_no_hit() {
-
     let placeholder_shape = Shape {
         id: 0,
         shape_type: ShapeType::Wall,
@@ -397,18 +363,9 @@ fn test_intersect_angled_offset_no_hit() {
         surface_color: 0x000000,
     };
 
-    let point0 = Point {
-        x: 5.0,
-        y: -2.0,
-    };
-    let point1 = Point {
-        x: 15.0,
-        y: 0.0,
-    };
-    let point2 = Point {
-        x: 25.0,
-        y: 0.0,
-    };
+    let point0 = Point { x: 5.0, y: -2.0 };
+    let point1 = Point { x: 15.0, y: 0.0 };
+    let point2 = Point { x: 25.0, y: 0.0 };
     let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = intersect(point0, 0.0, side_in_ray);
@@ -418,7 +375,6 @@ fn test_intersect_angled_offset_no_hit() {
 
 #[test]
 fn test_intersect_angled_offset_behind_ray() {
-
     let placeholder_shape = Shape {
         id: 0,
         shape_type: ShapeType::Wall,
@@ -428,18 +384,9 @@ fn test_intersect_angled_offset_behind_ray() {
         surface_color: 0x000000,
     };
 
-     let point0 = Point {
-        x: 5.0,
-        y: -2.0,
-    };
-    let point1 = Point {
-        x: 5.0,
-        y: -4.0,
-    };
-    let point2 = Point {
-        x: 15.0,
-        y: -4.0,
-    };
+    let point0 = Point { x: 5.0, y: -2.0 };
+    let point1 = Point { x: 5.0, y: -4.0 };
+    let point2 = Point { x: 15.0, y: -4.0 };
     let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
 
     let rh = intersect(point0, 0.0, side_in_ray);
@@ -467,37 +414,34 @@ fn test_raycast() {
         surface_color: 0x000000,
     });
 
-    let point0 = Point {
-        x: 0.0,
-        y: 0.0,
-    };
-    let point1a = Point {
-        x: 5.0,
-        y: 2.0,
-    };
-    let point2a = Point {
-        x: 5.0,
-        y: -2.0,
-    };
-    let point1b = Point {
-        x: 5.0,
-        y: 2.0,
-    };
-    let point2b = Point {
-        x: 5.0,
-        y: -2.0,
-    };
-    let point1c = Point {
-        x: 5.0,
-        y: 2.0,
-    };
-    let point2c = Point {
-        x: 5.0,
-        y: -2.0,
-    };
-    let side_in_ray_a = Rc::new(Side::new(0, point1a, point2a, Rc::clone(&placeholder_shape), 0));
-    let side_in_ray_b = Rc::new(Side::new(0, point1b, point2b, Rc::clone(&placeholder_shape), 0));
-    let side_in_ray_c = Rc::new(Side::new(0, point1c, point2c, Rc::clone(&placeholder_wall_shape), 0));
+    let point0 = Point { x: 0.0, y: 0.0 };
+    let point1a = Point { x: 5.0, y: 2.0 };
+    let point2a = Point { x: 5.0, y: -2.0 };
+    let point1b = Point { x: 5.0, y: 2.0 };
+    let point2b = Point { x: 5.0, y: -2.0 };
+    let point1c = Point { x: 5.0, y: 2.0 };
+    let point2c = Point { x: 5.0, y: -2.0 };
+    let side_in_ray_a = Rc::new(Side::new(
+        0,
+        point1a,
+        point2a,
+        Rc::clone(&placeholder_shape),
+        0,
+    ));
+    let side_in_ray_b = Rc::new(Side::new(
+        0,
+        point1b,
+        point2b,
+        Rc::clone(&placeholder_shape),
+        0,
+    ));
+    let side_in_ray_c = Rc::new(Side::new(
+        0,
+        point1c,
+        point2c,
+        Rc::clone(&placeholder_wall_shape),
+        0,
+    ));
 
     let map = Map {
         id: 0,

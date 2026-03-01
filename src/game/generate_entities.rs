@@ -3,7 +3,9 @@ use core::f64;
 use crate::{
     game::{
         entities::{
-            DUMMY_HP, DUMMY_SIZE, ENEMY_HP, ENEMY_SIZE, EXPLODED_RED_BARREL_HP, EXPLODED_RED_BARREL_SIZE, Entity, EntityType, PROJECTILE_HP, RED_BARREL_HP, RED_BARREL_SIZE, SUMMONER_HEIGHT, WEAK_ENEMY_MULTIPLICATOR
+            DUMMY_HP, DUMMY_SIZE, ENEMY_HP, ENEMY_SIZE, EXPLODED_RED_BARREL_HP,
+            EXPLODED_RED_BARREL_SIZE, Entity, EntityType, PROJECTILE_HP, RED_BARREL_HP,
+            RED_BARREL_SIZE, SUMMONER_HEIGHT, WEAK_ENEMY_MULTIPLICATOR,
         },
         map::Point,
     },
@@ -31,7 +33,7 @@ pub fn generate_entities(
             EntityType::PlayerBullet,
             PROJECTILE_HP,
             1.0,
-            vertical_aim
+            vertical_aim,
         ),
         EntityType::EnemyBullet => Entity::new(
             position,
@@ -44,7 +46,7 @@ pub fn generate_entities(
             EntityType::EnemyBullet,
             PROJECTILE_HP,
             1.0,
-            0.0
+            0.0,
         ),
         EntityType::PlayerArrow => Entity::new(
             position,
