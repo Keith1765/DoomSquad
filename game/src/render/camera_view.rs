@@ -54,7 +54,7 @@ impl Eq for RenderTaskOrderer {} // PartialEQ already handles functionality, but
 impl PartialOrd for RenderTaskOrderer {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         // surfaces should be rendered above sides when they are of equal (within floating point error) distance, to prevent flickering between the two
-        if (self.distance - other.distance).abs() < 0.01 {
+        if (self.distance - other.distance).abs() < 0.1 {
             match (self.task_type, other.task_type) {
                 // if both are ciling or both are floor, render the one that is vertically closer above further one (prevents flickering between surface of equal distance)
                 (RenderTaskType::Ceiling(s_vert_dist), RenderTaskType::Ceiling(o_vert_dist))
@@ -148,9 +148,9 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
 
         map_slices_and_angles[x] = Some((
             raycast(
-                game,
+                &game.map,
                 angle_relative_to_player,
-                game.player.mover.facing_direction,
+                &game.player,
             ),
             angle_relative_to_player,
         ));

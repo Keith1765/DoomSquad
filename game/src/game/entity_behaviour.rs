@@ -153,7 +153,7 @@ pub fn summoner_enemy_behaviour(
         let melee_enemy = generate_entities(
             WeakEnemy,
             entity.mover.position,
-            entity.mover.height,
+            entity.mover.foot_level,
             direction_to_player,
             renderer_data,
             0.0,

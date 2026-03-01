@@ -42,6 +42,7 @@ pub const EXPLODED_RED_BARREL_SIZE: f64 = 20000.0;
 pub const MELEE_ENEMY_ATTACK_COOLDOWN: i32 = 20;
 pub const MEELE_ENEMY_DMG: f64 = 25.0;
 pub const MELEE_ENEMY_RANGE: f64 = 5.0;
+pub const SUMMONER_HEIGHT: f64 = 50.0;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum EntityType {
@@ -164,7 +165,7 @@ impl Entity {
                 position, // Point { x: 230.0, y: 210.0 },
                 floor_level: start_floor_level,
                 foot_level: start_foot_level,
-                view_level: ENTITY_DEFAULT_VIEW_HEIGHT,
+                view_level: start_foot_level + ENTITY_DEFAULT_VIEW_HEIGHT,
                 height: collision_height,
                 facing_direction,
             },

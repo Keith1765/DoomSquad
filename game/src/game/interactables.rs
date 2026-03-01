@@ -124,7 +124,7 @@ impl Interactable {
                 self.jump_pad_behaviour(window, _renderer_data, game_state, audio);
             }
             InteractableType::SlotMachine => {
-                self.slot_maschine_behaviour(window, _renderer_data, game_state, audio);
+                self.slot_maschine_behaviour(window, _renderer_data, game_state, audio, &mut events);
             }
         }
         events
@@ -146,13 +146,13 @@ impl Interactable {
         {
             match button_type {
                 ButtonType::Map => {
-                    events.push(InteractableEvent::SpawnMap(self.parameter_1 as usize));
+                    if game_state.entities.len() <= 1{
+                        events.push(InteractableEvent::SpawnMap(self.parameter_1 as usize));
+                    }
                     audio.play_sfx("button_press", 1.0);
                 }
                 ButtonType::Spawner => {
-                    println!("Spawner button pressed!");
                     let enemy_type = map_enemy_type(self.parameter_1 as i32);
-                    println!("Spawning entity of type: {}", enemy_type);
                     let entity = generate_entities(
                         enemy_type,
                         Point {
@@ -168,10 +168,8 @@ impl Interactable {
                     if let Some(entity) = entity { game_state.entities.push(entity); }
                 }
                 ButtonType::Heal => {
-                    println!("Player health before: {}", game_state.player.hp);
                     let player = &mut game_state.player;
                     player.hp += self.parameter_1;
-                    println!("Player healed! Current HP: {}", player.hp);
                     self.not_used = false;
                     audio.play_sfx("heal", 1.0);
                 }
@@ -201,6 +199,7 @@ impl Interactable {
         _renderer_data: &RendererData,
         game_state: &mut game::Game,
         audio: &mut Audio,
+        events: &mut Vec<InteractableEvent>,
     ) {
         if self.player_in_range //checking if player is in range and pressing interact
             && game_state.player.interacting //checking if player pressed F for interact
@@ -213,8 +212,8 @@ impl Interactable {
             let roll: u8 = rng.random_range(0..100);
 
             match roll {
-                99 => {
-                    game_state.map_swap(_renderer_data, 8); //for just 8
+                n if n > 90 =>{
+                    events.push(InteractableEvent::SpawnMap(0)); //swap to easteregg (testmap)
                 },
                 n if n < 30 => {
                     let enemy_type = map_enemy_type(self.parameter_1 as i32);
