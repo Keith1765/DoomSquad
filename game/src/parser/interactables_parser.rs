@@ -47,10 +47,11 @@ pub fn read_interactables_from_file(
                 for attr in e.attributes() {
                     let attr = attr?;
                     if attr.key.as_ref() == b"label" { 
-                        //b"type" => element_type = Some(attr.unescape_value()?.to_string()),
                         label = attr.unescape_value()?.to_string();
                     }
                 }
+                //to code the right interactable we need to split the label and check the first two parts
+                //we use label instat of rgb values
                 let interactable_string_type = split_string_uppercase(label.as_str());
                 if interactable_string_type[0] == "Interactable" {
                     match interactable_string_type[1].as_str() {
@@ -80,6 +81,7 @@ pub fn read_interactables_from_file(
     }
     Ok(interactable_vector)
 }
+//function for buttons
 fn read_values_for_button(
     reader: &mut Reader<&[u8]>,
     buf: &mut Vec<u8>,
@@ -93,6 +95,7 @@ fn read_values_for_button(
     let mut parameter_1 = None;
     let mut parameter_2 = None;
     loop {
+        //reading the position
         match reader.read_event_into(buf)? {
             Event::Empty(ref e) if e.name().as_ref() == b"coords" => {
                 for attr in e.attributes() {
@@ -104,13 +107,14 @@ fn read_values_for_button(
                     }
                 }
             }
+            //reading the floor level and parameters
             Event::Empty(ref e) if e.name().as_ref() == b"objColor" => {
                 for attr in e.attributes() {
                     let attr = attr?;
 
                     match attr.key.as_ref() {
                         b"r" => floor_level = Some(attr.unescape_value()?.parse::<f64>()?),
-                        b"g" => parameter_1 = Some(attr.unescape_value()?.parse::<f64>()?),
+                        b"g" => parameter_1 = Some(attr.unescape_value()?.parse::<f64>()?),//a parameter that sets diffrent things for diffrent interactab
                         b"b" => parameter_2 = Some(attr.unescape_value()?.parse::<f64>()?),
                         //b"alpha" => idk = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
                         _ => {}
@@ -146,7 +150,7 @@ fn read_values_for_button(
     }
     Ok(())
 }
-
+//function for the rest of interactables
 fn read_values_for_rest(
     reader: &mut Reader<&[u8]>,
     buf: &mut Vec<u8>,
@@ -212,6 +216,7 @@ fn read_values_for_rest(
     Ok(())
 }
 
+//function to split the label of the interactables into parts
 pub fn split_string_uppercase(input: &str) -> Vec<String> {
     let cleaned = if let Some(prefix) = input.strip_suffix('}') {
         if let Some(pos) = prefix.rfind("_{") {
