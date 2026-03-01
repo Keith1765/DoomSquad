@@ -137,9 +137,9 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
 
         map_slices_and_angles[x] = Some((
             raycast(
-                game,
+                &game.map,
                 angle_relative_to_player,
-                game.player.mover.facing_direction,
+                &game.player,
             ),
             angle_relative_to_player,
         ));
