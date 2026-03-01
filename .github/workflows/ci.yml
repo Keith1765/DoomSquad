@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     
     # Da dein Rust-Projekt im Unterordner "game" liegt:
-    defaults:
-      run:
-        working-directory: game
+    #defaults:
+    #  run:
+    #    working-directory: game
 
     steps:
       - name: Checkout code
