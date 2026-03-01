@@ -15,8 +15,8 @@ use std::f64::consts::PI;
 
 const ROTATION_SPEED_MOUSE: f64 = 2.0;
 const ROTATION_SPEED_KEYS: f64 = 0.15;
-pub const MOVE_SPEED: f64 = 3.0;
-const FLY_UP_DOWN_SPEED: f64 = 1.0;
+pub const MOVE_SPEED: f64 = 1.0;
+const FLY_UP_DOWN_SPEED: f64 = 2.0;
 const MOVEMENT_SMOOTHING_SPEED: f64 = 1.5;
 pub const MAX_STEP_UP_HEIGHT: f64 = 6.0;
 const PLAYER_HEAD_HEIGHT: f64 = 20.0;
@@ -42,7 +42,7 @@ const VERTICAL_AIM_SPEED: f64 = 0.12;
 const MOUSE_SENSE_X: f64 = 0.003;
 const MOUSE_SENSE_Y: f64 = 0.003;
 const AIM_MODE_SLOWDOWN: f64 = 0.1;
-const MOUSE_ENABLED: bool = false;
+const MOUSE_ENABLED: bool = true;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum LastInputDirection {

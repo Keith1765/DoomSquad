@@ -118,16 +118,16 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     }
     draw_camera_view(buffer, renderer_data, game);
     //draw grid of reference points spaced each 50 pixels for debugging
-    if game.player.godmode {
-        draw_reference_points(buffer);
-    }
+    if !game.player.godmode {
+        
+    
 
     //draw playwer hp bar
     draw_player_hp_bar(buffer,renderer_data, game.player.hp);
 
     //draw crosshair
     draw_crosshair(buffer, game.player.vertcal_aim, renderer_data, game.player.aim_mode);
-
+    }
 }
 
 /// draws the camera view (screen without hud and such)
