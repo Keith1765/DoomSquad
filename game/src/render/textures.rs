@@ -63,8 +63,9 @@ impl Texture {
 pub fn load_textures() -> Option<HashMap<usize, Texture>> {
     let mut textures = HashMap::new();
 
-    for (texture_id, entry) in (fs::read_dir(Path::new("./assets/textures")).ok()?).enumerate() {
-        let entry = entry.ok()?;
+    let mut entries: Vec<_> = fs::read_dir(Path::new("./assets/textures")).ok()?.filter_map(Result::ok).collect();
+    entries.sort_by_key(|e| e.path()); // sort alphabetically
+    for (texture_id, entry) in entries.iter().enumerate() {
         let path = entry.path();
         // TODO make whole function not fail when one file doesnt work
         let image_buffer = ImageReader::open(&path)
