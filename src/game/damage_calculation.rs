@@ -1,4 +1,3 @@
-
 use crate::audio::audio_handler::Audio;
 use crate::game::entities::EntityType::{
     EnemyArrow, EnemyBullet, ExplodedRedBarrel, MeleeEnemy, PlayerArrow, PlayerBullet, WeakEnemy,
@@ -17,7 +16,6 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
 
     //prohibit proximity intersect between multiple entities
     game_state.projectile_that_hit.clear();
-
 
     //iterate over only entities that can do dmg to entities
     for i in 0..game_state.entities.len() {
@@ -39,7 +37,6 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
                 PlayerBullet | PlayerArrow | ExplodedRedBarrel
             );
 
-
             //no self collision
             if i == j {
                 continue;
@@ -54,14 +51,12 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
 
             //check for verticall hitbox overlap
             if distance_to_bullet <= game_state.entities[j].size + game_state.entities[i].size {
-                
                 //check if horizontal hitbox overlap
                 let shooting_height = game_state.entities[i].mover.foot_level; //foot lvl because these are bullets
                 let entity_bottom = game_state.entities[j].mover.foot_level;
                 let entity_top = game_state.entities[j].mover.height + entity_bottom;
 
                 if shooting_height <= entity_top && shooting_height >= entity_bottom {
-                    
                     let damage = match game_state.entities[i].entity_type {
                         PlayerBullet => BULLET_DMG,
                         PlayerArrow => ARROW_DMG,
@@ -71,13 +66,13 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
                     //DAMAGE THAT BITCH
                     game_state.entities[j].hp -= damage;
 
-                    if damage > 0.0{
+                    if damage > 0.0 {
                         audio.play_sfx_distance_scaled(
-                        "hit",
-                        1.0,
-                        game_state.player.mover.position,
-                        game_state.entities[j].mover.position
-                    );
+                            "hit",
+                            1.0,
+                            game_state.player.mover.position,
+                            game_state.entities[j].mover.position,
+                        );
                     }
 
                     //projectiles go brr
@@ -92,7 +87,6 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
         }
     }
 
-
     //calc damage to player
     let player_position = game_state.player.mover.position;
 
@@ -106,7 +100,8 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
         //check if vertical overlap of hitbox
         if (distance_to_player
             <= game_state.entities[j].size + game_state.player.size + MELEE_ENEMY_RANGE)
-            && !game_state.player.godmode // invincible in godmode
+            && !game_state.player.godmode
+        // invincible in godmode
         {
             //check if horizontal overlap of hitbox
             let shooting_height = game_state.entities[j].mover.view_level;
@@ -140,10 +135,7 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
                         WeakEnemy => game_state.entities[j].did_damage = true,
                         _ => {}
                     }
-                    audio.play_sfx(
-                        "hit",
-                        1.0,
-                    );
+                    audio.play_sfx("hit", 1.0);
                 }
 
                 //bullet go brr
@@ -161,10 +153,12 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
         game_state.entities[i].hp = 0.0; //o7
     }
 
-    //Interactables intersect 
+    //Interactables intersect
 
     for _i in 0..game_state.interactables.len() {
-        game_state.map_grid.update_interactables(&game_state.interactables);
+        game_state
+            .map_grid
+            .update_interactables(&game_state.interactables);
 
         for interactable in &mut game_state.interactables {
             interactable.player_in_range = false;
@@ -172,7 +166,9 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
 
         let player_position = game_state.player.mover.position;
 
-        let neighbours = game_state.map_grid.get_interactable_neighbours(player_position);
+        let neighbours = game_state
+            .map_grid
+            .get_interactable_neighbours(player_position);
 
         for j in neighbours {
             let interactable_position = game_state.interactables[j].mover.position;
@@ -183,5 +179,4 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
             }
         }
     }
-    
 }

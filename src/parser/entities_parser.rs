@@ -1,5 +1,5 @@
 use crate::game::entities::{Entity, EntityType};
-use crate::game::{generate_entities::*};
+use crate::game::generate_entities::*;
 use crate::game::map::Point;
 use crate::parser::map_parser::SCALING_FACTOR;
 use crate::render::RendererData;
@@ -40,7 +40,7 @@ pub fn read_entitties_from_file(
     let mut buf = Vec::new();
 
     let mut entities: Vec<Entity> = Vec::new();
-    
+
     loop {
         match reader.read_event_into(&mut buf)? {
             Event::Start(ref e) if e.name().as_ref() == b"element" => {
@@ -115,7 +115,8 @@ fn read_point(
         buf.clear();
     }
 
-    let entity_type = map_enemy_type(enemy_type_num.ok_or(Error::msg("Error Parsing entity at entity_type"))?);
+    let entity_type =
+        map_enemy_type(enemy_type_num.ok_or(Error::msg("Error Parsing entity at entity_type"))?);
     let entities_pushing = generate_entities(
         entity_type,
         Point {
@@ -128,7 +129,9 @@ fn read_point(
         0.0,
     );
 
-    if let Some(entities_pushing) = entities_pushing {player_vec.push(entities_pushing);}
+    if let Some(entities_pushing) = entities_pushing {
+        player_vec.push(entities_pushing);
+    }
     Ok(())
 }
 

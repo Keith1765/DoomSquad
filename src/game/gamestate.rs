@@ -1,12 +1,15 @@
 use std::{fs, path::Path};
 
 use crate::{
-    audio::audio_handler::Audio, game::{
+    audio::audio_handler::Audio,
+    game::{
         entities::{Entity, EntityEvent::*},
         entity_behaviour::death_behaviour,
         interactables::Interactable,
         map_grid::MapGrid,
-    }, parser::map_parser::parse_map, render::RendererData
+    },
+    parser::map_parser::parse_map,
+    render::RendererData,
 };
 
 use super::map::Map;
@@ -14,8 +17,8 @@ use super::player::Player;
 use crate::game::damage_calculation::damage_check;
 use crate::game::interactables::InteractableEvent::*;
 use crate::parser::entities_parser::parse_entities;
-use crate::parser::player_parser::parse_player_position;
 use crate::parser::interactables_parser::*;
+use crate::parser::player_parser::parse_player_position;
 use minifb::Window;
 
 const DESPAWN_TIME: i32 = 300;
@@ -47,7 +50,8 @@ impl Game {
             }
         };
         entries.sort_by_key(|e| e.path());
-        if let Some(entry) = entries.first() { // we initially load the first map
+        if let Some(entry) = entries.first() {
+            // we initially load the first map
             let path_buf = entry.path();
 
             let path = match path_buf.to_str() {
@@ -59,33 +63,22 @@ impl Game {
             };
             let game = Self {
                 player: Player::new_with_position(
-                    parse_player_position(
-                        path.to_string(),
-                        renderer_data,
-                    )
-                    .ok()?,
+                    parse_player_position(path.to_string(), renderer_data).ok()?,
                 ),
-                entities: parse_entities(
-                    path.to_string(),
-                    renderer_data,
-                )
-                .ok()?,
-                interactables: parse_interactables(
-                    path.to_string(),
-                    renderer_data,
-                )
-                .ok()?,
+                entities: parse_entities(path.to_string(), renderer_data).ok()?,
+                interactables: parse_interactables(path.to_string(), renderer_data).ok()?,
                 map: parse_map(path.to_string()).ok()?, // TODO remove unwrap
                 despawn_timer: DESPAWN_TIME,
                 map_grid: MapGrid::new(MAP_GRID_CELL_SIZE),
                 projectile_that_hit: Vec::new(),
                 map_index: 0,
-                last_map_index:0,
+                last_map_index: 0,
             };
 
             Some(game)
-
-        } else { None }
+        } else {
+            None
+        }
     }
 
     pub fn update(&mut self, window: &Window, renderer_data: &RendererData, audio: &mut Audio) {
@@ -118,7 +111,12 @@ impl Game {
         //on death behaviour
         for entity in &mut self.entities {
             if entity.hp <= 0.0 {
-                entity_spawns.extend(death_behaviour(entity, renderer_data,self.player.mover.position, audio));
+                entity_spawns.extend(death_behaviour(
+                    entity,
+                    renderer_data,
+                    self.player.mover.position,
+                    audio,
+                ));
             }
         }
 

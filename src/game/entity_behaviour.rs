@@ -1,6 +1,7 @@
 use crate::audio::audio_handler::Audio;
 use crate::game::entities::{
-    ARROW_COOLDOWN, ARROW_SPEED, BULLET_SPEED, ENTITY_DEFAULT_VIEW_HEIGHT, Entity, EntityEvent, MELEE_ENEMY_ATTACK_COOLDOWN, SHOOTING_COOLDOWN, SUMMONING_COOLDOWN
+    ARROW_COOLDOWN, ARROW_SPEED, BULLET_SPEED, ENTITY_DEFAULT_VIEW_HEIGHT, Entity, EntityEvent,
+    MELEE_ENEMY_ATTACK_COOLDOWN, SHOOTING_COOLDOWN, SUMMONING_COOLDOWN,
 };
 
 use crate::game::entities::EntityEvent::*;
@@ -20,14 +21,15 @@ pub fn player_bullet_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25; //prevent long projectile life
     let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(BULLET_SPEED, 0.0, map, false);
-    entity.mover.foot_level -= entity.vertical_aim*BULLET_FLIGHT_COEFICIENT; //adjust trajectory based on player aim
+    entity.mover.foot_level -= entity.vertical_aim * BULLET_FLIGHT_COEFICIENT; //adjust trajectory based on player aim
 
     //if projectiles hits floor or hit a wall and stopped moving, we delete it for performance issues
-    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
+    if (entity.mover.foot_level <= entity.mover.floor_level)
+        || (temp_position == entity.mover.position)
+    {
         entity.hp = 0.0;
     }
 }
-
 
 pub fn enemy_bullet_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25; //prevent long projectile life
@@ -35,7 +37,9 @@ pub fn enemy_bullet_behaviour(entity: &mut Entity, map: &Map) {
     entity.mover.step(BULLET_SPEED, 0.0, map, false);
 
     //if projectiles hits floor or hit a wall and stopped moving, we delete it for performance issues
-    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
+    if (entity.mover.foot_level <= entity.mover.floor_level)
+        || (temp_position == entity.mover.position)
+    {
         entity.hp = 0.0;
     }
 }
@@ -44,11 +48,13 @@ pub fn player_arrow_behaviour(entity: &mut Entity, map: &Map) {
     entity.hp -= 0.25; //prevent long projectile life
     let temp_position = entity.mover.position; //safe last pos before moving, if doesnt change after move, delete entity
     entity.mover.step(ARROW_SPEED, 0.0, map, false);
-    entity.mover.foot_level -= entity.vertical_aim*ARROW_FLIGHT_COEFICIENT;
+    entity.mover.foot_level -= entity.vertical_aim * ARROW_FLIGHT_COEFICIENT;
     entity.gravity(map, 0.1);
 
     //if projectiles hits floor or hit a wall and stopped moving, we delete it for performance issues
-    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
+    if (entity.mover.foot_level <= entity.mover.floor_level)
+        || (temp_position == entity.mover.position)
+    {
         entity.hp = 0.0;
     }
 }
@@ -59,7 +65,9 @@ pub fn enemy_arrow_behaviour(entity: &mut Entity, map: &Map) {
     entity.mover.step(ARROW_SPEED, 0.0, map, false);
     entity.gravity(map, 0.1);
     //if projectiles hits floor or hit a wall and stopped moving, we delete it for performance issues
-    if (entity.mover.foot_level <= entity.mover.floor_level) || (temp_position == entity.mover.position) {
+    if (entity.mover.foot_level <= entity.mover.floor_level)
+        || (temp_position == entity.mover.position)
+    {
         entity.hp = 0.0;
     }
 }
@@ -97,10 +105,16 @@ pub fn ranged_enemy_behaviour(
             0.0,
         );
         audio.play_sfx_distance_scaled("enemy_shoot", 1.0, player_position, entity.mover.position);
-        if let Some(bullet) = bullet { events.push(Spawn(bullet)); }
+        if let Some(bullet) = bullet {
+            events.push(Spawn(bullet));
+        }
         // attack animation
-        if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
-            entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
+        if let Some((action_texture_id, action_cooldown)) =
+            entity.entity_type.get_action_animation_data()
+        {
+            entity
+                .sprite
+                .switch_sprite_for_action(action_texture_id, action_cooldown);
         }
     }
 }
@@ -128,10 +142,16 @@ pub fn archer_behaviour(
             renderer_data,
             0.0,
         );
-        if let Some(arrow) = arrow { events.push(Spawn(arrow)); }
+        if let Some(arrow) = arrow {
+            events.push(Spawn(arrow));
+        }
         // attack animation
-        if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
-            entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
+        if let Some((action_texture_id, action_cooldown)) =
+            entity.entity_type.get_action_animation_data()
+        {
+            entity
+                .sprite
+                .switch_sprite_for_action(action_texture_id, action_cooldown);
         }
     }
 }
@@ -159,17 +179,28 @@ pub fn summoner_enemy_behaviour(
             0.0,
         );
         audio.play_sfx_distance_scaled("summoner", 1.0, player_position, entity.mover.position);
-        if let Some(melee_enemy) = melee_enemy { events.push(Spawn(melee_enemy)); }
+        if let Some(melee_enemy) = melee_enemy {
+            events.push(Spawn(melee_enemy));
+        }
         // attack animation
-        if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
-            entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
+        if let Some((action_texture_id, action_cooldown)) =
+            entity.entity_type.get_action_animation_data()
+        {
+            entity
+                .sprite
+                .switch_sprite_for_action(action_texture_id, action_cooldown);
         }
     } else {
         entity.action_cooldown -= 1;
     }
 }
 
-pub fn melee_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Point, audio: &mut Audio) {
+pub fn melee_enemy_behaviour(
+    entity: &mut Entity,
+    map: &Map,
+    player_position: Point,
+    audio: &mut Audio,
+) {
     entity.gravity(map, 1.0);
 
     entity.normal_enemy_movement(map, player_position, MOVE_SPEED);
@@ -183,14 +214,28 @@ pub fn melee_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Po
         entity.action_cooldown = MELEE_ENEMY_ATTACK_COOLDOWN;
         entity.did_damage = false;
         // attack animation
-        if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
-            entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
+        if let Some((action_texture_id, action_cooldown)) =
+            entity.entity_type.get_action_animation_data()
+        {
+            entity
+                .sprite
+                .switch_sprite_for_action(action_texture_id, action_cooldown);
         }
-        audio.play_sfx_distance_scaled("spider_attack", 1.0, player_position, entity.mover.position);
+        audio.play_sfx_distance_scaled(
+            "spider_attack",
+            1.0,
+            player_position,
+            entity.mover.position,
+        );
     }
 }
 
-pub fn weak_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Point, audio: &mut Audio) {
+pub fn weak_enemy_behaviour(
+    entity: &mut Entity,
+    map: &Map,
+    player_position: Point,
+    audio: &mut Audio,
+) {
     entity.gravity(map, 1.0);
     entity.normal_enemy_movement(map, player_position, MOVE_SPEED * 0.5);
 
@@ -203,14 +248,23 @@ pub fn weak_enemy_behaviour(entity: &mut Entity, map: &Map, player_position: Poi
         entity.action_cooldown = MELEE_ENEMY_ATTACK_COOLDOWN;
         entity.did_damage = false;
         // attack animation
-        if let Some((action_texture_id, action_cooldown)) = entity.entity_type.get_action_animation_data() {
-            entity.sprite.switch_sprite_for_action(action_texture_id, action_cooldown);
+        if let Some((action_texture_id, action_cooldown)) =
+            entity.entity_type.get_action_animation_data()
+        {
+            entity
+                .sprite
+                .switch_sprite_for_action(action_texture_id, action_cooldown);
         }
         audio.play_sfx_distance_scaled("monster_bite", 1.0, player_position, entity.mover.position);
     }
 }
 
-pub fn death_behaviour(entity: &mut Entity, renderer_data: &RendererData, player_position: Point, audio: &mut Audio) -> Vec<EntityEvent> {
+pub fn death_behaviour(
+    entity: &mut Entity,
+    renderer_data: &RendererData,
+    player_position: Point,
+    audio: &mut Audio,
+) -> Vec<EntityEvent> {
     let mut events = Vec::new();
     if entity.entity_type == RedBarrel {
         let explosion = generate_entities(
@@ -222,7 +276,9 @@ pub fn death_behaviour(entity: &mut Entity, renderer_data: &RendererData, player
             0.0,
         );
         audio.play_sfx_distance_scaled("explosion", 3.0, player_position, entity.mover.position);
-        if let Some(explosion) = explosion { events.push(Spawn(explosion)); }
+        if let Some(explosion) = explosion {
+            events.push(Spawn(explosion));
+        }
     }
 
     events

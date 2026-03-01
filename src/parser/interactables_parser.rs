@@ -46,7 +46,7 @@ pub fn read_interactables_from_file(
 
                 for attr in e.attributes() {
                     let attr = attr?;
-                    if attr.key.as_ref() == b"label" { 
+                    if attr.key.as_ref() == b"label" {
                         label = attr.unescape_value()?.to_string();
                     }
                 }
@@ -114,7 +114,7 @@ fn read_values_for_button(
 
                     match attr.key.as_ref() {
                         b"r" => floor_level = Some(attr.unescape_value()?.parse::<f64>()?),
-                        b"g" => parameter_1 = Some(attr.unescape_value()?.parse::<f64>()?),//a parameter that sets diffrent things for diffrent interactab
+                        b"g" => parameter_1 = Some(attr.unescape_value()?.parse::<f64>()?), //a parameter that sets diffrent things for diffrent interactab
                         b"b" => parameter_2 = Some(attr.unescape_value()?.parse::<f64>()?),
                         //b"alpha" => idk = Some(attr.unescape_value()?.parse::<u8>()?), //left for later use
                         _ => {}

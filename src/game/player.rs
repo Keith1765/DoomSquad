@@ -1,9 +1,18 @@
 use super::map::Map;
-use crate::{SCREEN_HEIGHT, audio::audio_handler::Audio, game::{entities::{
-    ARROW_COOLDOWN, BULLET_COOLDOWN, EntityEvent::{self, Spawn}, EntityType::{PlayerArrow, PlayerBullet}
-}, movement::find_blocks_were_currently_in}};
 use crate::game::generate_entities::generate_entities;
 use crate::game::player::LastInputDirection::*;
+use crate::{
+    SCREEN_HEIGHT,
+    audio::audio_handler::Audio,
+    game::{
+        entities::{
+            ARROW_COOLDOWN, BULLET_COOLDOWN,
+            EntityEvent::{self, Spawn},
+            EntityType::{PlayerArrow, PlayerBullet},
+        },
+        movement::find_blocks_were_currently_in,
+    },
+};
 
 use crate::{
     SCREEN_WIDTH,
@@ -28,7 +37,7 @@ const ROCKETLAUNCHER_COOLDOWN_TIME: i32 = 100;
 const STRAIFING_SPEED: f64 = 0.035;
 const JUMP_STRENGTH: f64 = 3.0;
 const GRAVITY_CONST: f64 = -0.8;
-const PLAYER_HP: f64 = 100.0; 
+const PLAYER_HP: f64 = 100.0;
 const PLAYER_SIZE: f64 = 3.0;
 const JUMP_SPEED_BOOST_MULTIPLICATOR: f64 = 0.4;
 const JUMP_SPEED_BOOST: f64 = 0.0;
@@ -151,7 +160,7 @@ impl Player {
             jumping_allowed_timer: 0,
             bullet_cooldown: 0,
             vertcal_aim: 0.0,
-            aim_mode: false
+            aim_mode: false,
         }
     }
 
@@ -178,15 +187,18 @@ impl Player {
             }
         }
 
-        if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No) ||( window.get_mouse_down(MouseButton::Left)&& MOUSE_ENABLED)) && self.bullet_cooldown == 0 {
+        if (window.is_key_pressed(Key::RightCtrl, KeyRepeat::No)
+            || (window.get_mouse_down(MouseButton::Left) && MOUSE_ENABLED))
+            && self.bullet_cooldown == 0
+        {
             audio.play_sfx("shoot", 1.0);
             let bullet = generate_entities(
                 PlayerBullet,
                 self.mover.position,
-                self.mover.view_level - PROJECTILE_OFFSET_TO_MATCH_SCREEN_MIDDLE, 
+                self.mover.view_level - PROJECTILE_OFFSET_TO_MATCH_SCREEN_MIDDLE,
                 self.mover.facing_direction,
                 renderer_data,
-                self.vertcal_aim
+                self.vertcal_aim,
             );
             if let Some(bullet) = bullet {
                 events.push(Spawn(bullet));
@@ -199,7 +211,10 @@ impl Player {
         }
 
         //shooting, generates arrow entity and gives it as a spawn event to gamestate
-        if (window.is_key_pressed(Key::RightShift, KeyRepeat::No) || (window.get_mouse_down(MouseButton::Right) && MOUSE_ENABLED))&& self.arrow_cooldown == 0 {
+        if (window.is_key_pressed(Key::RightShift, KeyRepeat::No)
+            || (window.get_mouse_down(MouseButton::Right) && MOUSE_ENABLED))
+            && self.arrow_cooldown == 0
+        {
             audio.play_sfx("arrow", 2.0);
             let arrow = generate_entities(
                 PlayerArrow,
@@ -209,7 +224,9 @@ impl Player {
                 renderer_data,
                 self.vertcal_aim,
             );
-            if let Some(arrow) = arrow {events.push(Spawn(arrow));}
+            if let Some(arrow) = arrow {
+                events.push(Spawn(arrow));
+            }
             self.arrow_cooldown = ARROW_COOLDOWN;
         }
 
@@ -219,13 +236,15 @@ impl Player {
 
         //mouse movement and shooting
         //f32 cause window.get_mouse_pos gives us f32
-        if let Some((mx,my)) = window.get_mouse_pos(MouseMode::Pass)  && MOUSE_ENABLED {
+        if let Some((mx, my)) = window.get_mouse_pos(MouseMode::Pass)
+            && MOUSE_ENABLED
+        {
             self.check_angle();
             let dx = mx - self.last_mouse_x; // mouse delta
             let dy = my - self.last_mouse_y; // mouse delta
             self.mover.facing_direction += dx as f64 * MOUSE_SENSE_X; // sensitivity
 
-            self.vertcal_aim = (self.vertcal_aim + dy  as f64 * MOUSE_SENSE_Y ).clamp(-1.0, 1.0 );
+            self.vertcal_aim = (self.vertcal_aim + dy as f64 * MOUSE_SENSE_Y).clamp(-1.0, 1.0);
 
             self.last_mouse_x = mx; // store for next frame
             self.last_mouse_y = my;
@@ -242,8 +261,8 @@ impl Player {
                 false => match self.aim_mode {
                     false => ROTATION_SPEED_KEYS,
                     true => ROTATION_SPEED_KEYS * AIM_MODE_SLOWDOWN,
-            },
-        };
+                },
+            };
 
             self.check_angle();
             self.mover.facing_direction -= rotation_factor;
@@ -257,7 +276,7 @@ impl Player {
                     true => STRAIFING_SPEED * INCREASED_STRAFING_SPEED_RL,
                     false => STRAIFING_SPEED,
                 },
-                false =>match self.aim_mode {
+                false => match self.aim_mode {
                     false => ROTATION_SPEED_KEYS,
                     true => ROTATION_SPEED_KEYS * AIM_MODE_SLOWDOWN,
                 },
@@ -279,14 +298,16 @@ impl Player {
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == A))
             || (self.is_jumping && (self.last_input == A))
         {
-            step_successful = self.mover
+            step_successful = self
+                .mover
                 .step(self.move_speed, -PI / 2.0, map, self.godmode);
         }
         if (window.is_key_down(Key::D)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == D))
             || (self.is_jumping && (self.last_input == D))
         {
-            step_successful = self.mover
+            step_successful = self
+                .mover
                 .step(self.move_speed, PI / 2.0, map, self.godmode);
         }
 
@@ -297,12 +318,14 @@ impl Player {
             step_successful = self.mover.step(self.move_speed, PI, map, self.godmode);
         }
 
-        // if we moved, play step 
+        // if we moved, play step
         #[allow(clippy::neg_cmp_op_on_partial_ord)]
-        if step_successful && !self.is_sliding && !((self.mover.foot_level - self.mover.floor_level).abs() > 0.3 ) {
+        if step_successful
+            && !self.is_sliding
+            && !((self.mover.foot_level - self.mover.floor_level).abs() > 0.3)
+        {
             audio.play_step(1.0);
         }
-
 
         //god mode controls (not relevant for user)
         if window.is_key_down(Key::Space) && self.godmode {
@@ -341,12 +364,12 @@ impl Player {
             && !self.is_sliding
             && !self.godmode
             && self.slide_cooldown == 0
-            && self.move_speed > 1.5 
+            && self.move_speed > 1.5
         {
-                audio.play_sfx("slide", 1.0);
-                self.move_speed += 5.0;
-                self.is_sliding = true;
-                self.save_input(window);
+            audio.play_sfx("slide", 1.0);
+            self.move_speed += 5.0;
+            self.is_sliding = true;
+            self.save_input(window);
         }
 
         //during slide speed decreases
@@ -388,7 +411,6 @@ impl Player {
                 || self.jumping_allowed))
             || window.is_key_pressed(Key::R, KeyRepeat::No)
         {
-
             self.gravity = GRAVITY_CONST;
             self.is_jumping = true;
             if self.is_sliding {
@@ -399,9 +421,8 @@ impl Player {
             }
             //normal jump init
             if window.is_key_pressed(Key::Space, KeyRepeat::No) {
-
                 audio.play_sfx("jump", 1.0);
-                
+
                 self.move_speed += self.move_speed * JUMP_SPEED_BOOST_MULTIPLICATOR;
                 let speed_bonus = self.move_speed * 0.8;
                 self.vertical_velocity = JUMP_STRENGTH + speed_bonus;
@@ -410,8 +431,7 @@ impl Player {
 
             //rocketlauncher
             if window.is_key_pressed(Key::R, KeyRepeat::No) && (self.rocketlauncher_cooldown == 0) {
-
-                audio.play_sfx("rocketlauncher", 1.0); 
+                audio.play_sfx("rocketlauncher", 1.0);
 
                 self.using_rocketlauncher = true;
                 self.move_speed +=
@@ -500,17 +520,27 @@ impl Player {
         }
 
         //aim (inverted controls because pixel grid is inverted too)
-        if window.is_key_down(Key::Up){
+        if window.is_key_down(Key::Up) {
             match self.aim_mode {
-                false => self.vertcal_aim = (self.vertcal_aim - VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 ),
-                true => self.vertcal_aim = (self.vertcal_aim - VERTICAL_AIM_SPEED * AIM_MODE_SLOWDOWN ).clamp(-1.0, 1.0 ),
+                false => {
+                    self.vertcal_aim = (self.vertcal_aim - VERTICAL_AIM_SPEED).clamp(-1.0, 1.0)
+                }
+                true => {
+                    self.vertcal_aim =
+                        (self.vertcal_aim - VERTICAL_AIM_SPEED * AIM_MODE_SLOWDOWN).clamp(-1.0, 1.0)
+                }
             }
         }
 
-        if window.is_key_down(Key::Down){
+        if window.is_key_down(Key::Down) {
             match self.aim_mode {
-                false => self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED ).clamp(-1.0, 1.0 ),
-                true => self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED * AIM_MODE_SLOWDOWN ).clamp(-1.0, 1.0 ),
+                false => {
+                    self.vertcal_aim = (self.vertcal_aim + VERTICAL_AIM_SPEED).clamp(-1.0, 1.0)
+                }
+                true => {
+                    self.vertcal_aim =
+                        (self.vertcal_aim + VERTICAL_AIM_SPEED * AIM_MODE_SLOWDOWN).clamp(-1.0, 1.0)
+                }
             }
         }
 

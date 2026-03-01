@@ -2,7 +2,7 @@ use core::f64;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-use crate::game::{Game};
+use crate::game::Game;
 use crate::render::blocks_walls::task_column;
 use crate::render::crosshair::draw_crosshair;
 use crate::render::player_hp_bar::draw_player_hp_bar;
@@ -123,35 +123,34 @@ pub fn draw_screen(buffer: &mut [u32], renderer_data: &RendererData, game: &Game
     }
 
     //draw playwer hp bar
-    draw_player_hp_bar(buffer,renderer_data, game.player.hp);
+    draw_player_hp_bar(buffer, renderer_data, game.player.hp);
 
     //draw crosshair
-    draw_crosshair(buffer, game.player.vertcal_aim, renderer_data, game.player.aim_mode);
-
+    draw_crosshair(
+        buffer,
+        game.player.vertcal_aim,
+        renderer_data,
+        game.player.aim_mode,
+    );
 }
 
 /// draws the camera view (screen without hud and such)
 fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Game) {
-
     // for every column of the screen, create a slice of the map with a raycast
 
     // stores every map slice together with the angle relative to the player with which it was cast
     // this angle will be needed for distortion correction
-    let mut map_slices_and_angles: [Option<(MapSlice, f64)>; SCREEN_WIDTH] = [const { None }; SCREEN_WIDTH];
+    let mut map_slices_and_angles: [Option<(MapSlice, f64)>; SCREEN_WIDTH] =
+        [const { None }; SCREEN_WIDTH];
 
     #[allow(clippy::needless_range_loop)]
     for x in 0..SCREEN_WIDTH {
         let pixel_distance_from_screen_middle: f64 = x as f64 - SCREEN_WIDTH as f64 / 2.0;
-        let angle_relative_to_player: f64 = (pixel_distance_from_screen_middle
-            / renderer_data.render_scale_coefficient)
-            .atan();
+        let angle_relative_to_player: f64 =
+            (pixel_distance_from_screen_middle / renderer_data.render_scale_coefficient).atan();
 
         map_slices_and_angles[x] = Some((
-            raycast(
-                &game.map,
-                angle_relative_to_player,
-                &game.player,
-            ),
+            raycast(&game.map, angle_relative_to_player, &game.player),
             angle_relative_to_player,
         ));
     }
@@ -185,7 +184,8 @@ fn draw_camera_view(buffer: &mut [u32], renderer_data: &RendererData, game: &Gam
                     continue;
                 }
 
-                if let Some(column_tasks) = &mut columns_tasked[instruction.sprite_right_screen_x - x - 1]
+                if let Some(column_tasks) =
+                    &mut columns_tasked[instruction.sprite_right_screen_x - x - 1]
                     && let Some(sprite_task) = instruction.tasks.pop()
                     && sprite_task.distance <= column_tasks.wall_distance
                 {
@@ -309,7 +309,6 @@ fn draw_tasks(
 
     screen_column
 }
-
 
 ///draw refernce points spaced 50 pixels apart for debugging
 fn draw_reference_points(buffer: &mut [u32]) {

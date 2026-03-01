@@ -135,8 +135,7 @@ pub struct Map {
 }
 
 impl Map {
-
-    /// a test map used throughhout development; star shaped wall, 
+    /// a test map used throughhout development; star shaped wall,
     /// some blocks, a little stair with some obstacles to test movement/collisions, test entities
     /// outdated an unnecessary now that we have the parser
     pub fn new_test_map() -> Option<Self> {
@@ -185,7 +184,7 @@ impl Map {
             0x0000ff,
             0xffff00,
             // demonstrates separate textures for different sides; capability theoretically possible, not currently used by parser tho
-            vec![0, 0, 1], 
+            vec![0, 0, 1],
         )?;
 
         let bottom_block_points_2: Vec<Point> = vec![

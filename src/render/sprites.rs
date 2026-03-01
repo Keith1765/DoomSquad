@@ -1,9 +1,9 @@
-use std::{f64::consts::PI};
+use std::f64::consts::PI;
 
 use crate::game::entities::EntityType;
 use crate::game::movement::Mover;
 use crate::{
-    game::{Game},
+    game::Game,
     render::{
         RendererData,
         camera_view::{RenderTask, RenderTaskOrderer, RenderTaskType},
@@ -37,8 +37,7 @@ pub struct Sprite {
 }
 
 impl Sprite {
-
-    // returns the currently to-render texture id 
+    // returns the currently to-render texture id
     // for instance, if an action sprite switcher, that id should be returned, otherwise some other
     pub fn get_current_sprite_texture_id(&self) -> usize {
         if let Some(switcher) = &self.action_sprite_switcher {
@@ -66,14 +65,18 @@ impl Sprite {
         if let Some(handler) = &mut self.walk_cycle_handler {
             // if its time to switch texture as part of the animation
             if handler.countdown == 0 {
-                std::mem::swap(&mut handler.current_texture_id, &mut handler.other_texture_id);
+                std::mem::swap(
+                    &mut handler.current_texture_id,
+                    &mut handler.other_texture_id,
+                );
                 handler.countdown = handler.countdown_full_value;
-            
+
             // otherwise decrement the countdown to switch
             } else {
                 handler.countdown -= 1;
             }
-        } else { // if we are currently not animating a walk cycle, start one
+        } else {
+            // if we are currently not animating a walk cycle, start one
             self.walk_cycle_handler = start_walk_cycle(entity_type);
         }
     }
@@ -81,14 +84,15 @@ impl Sprite {
 
 // begins a walk animatioon cylce by initializign a handler
 fn start_walk_cycle(entity_type: &EntityType) -> Option<WalkCycleHandler> {
-        let (current_texture_id, other_texture_id, switch_time) = entity_type.get_walk_animation_data()?;
-        Some(WalkCycleHandler {
-            current_texture_id,
-            other_texture_id,
-            countdown: switch_time,
-            countdown_full_value: switch_time,
-        })
-    }
+    let (current_texture_id, other_texture_id, switch_time) =
+        entity_type.get_walk_animation_data()?;
+    Some(WalkCycleHandler {
+        current_texture_id,
+        other_texture_id,
+        countdown: switch_time,
+        countdown_full_value: switch_time,
+    })
+}
 
 // an instruction to the renderer how to render a sprite
 // task columns of the sprite will be added into those of the screen at approtpriate screen x positions
@@ -144,7 +148,7 @@ pub fn task_sprite(
     let texture = renderer_data
         .textures
         .get(&sprite.get_current_sprite_texture_id());
-    
+
     // the tasks, one of which will be added to each of the appropriate columns of the screen
     let mut tasks: Vec<RenderTaskOrderer> = Vec::with_capacity(onscreen_width.max(0) as usize);
 
