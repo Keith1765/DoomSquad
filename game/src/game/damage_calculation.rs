@@ -104,8 +104,9 @@ pub fn damage_check(game_state: &mut Game, audio: &mut Audio) {
             player_position.distance_to(&game_state.entities[j].mover.position);
 
         //check if vertical overlap of hitbox
-        if distance_to_player
-            <= game_state.entities[j].size + game_state.player.size + MELEE_ENEMY_RANGE
+        if (distance_to_player
+            <= game_state.entities[j].size + game_state.player.size + MELEE_ENEMY_RANGE)
+            && !game_state.player.godmode // invincible in godmode
         {
             //check if horizontal overlap of hitbox
             let shooting_height = game_state.entities[j].mover.view_level;
