@@ -3,6 +3,22 @@
 version = 4
 
 [[package]]
+name = "DoomSquad"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "font8x8",
+ "image",
+ "minifb",
+ "quick-xml",
+ "rand 0.10.0",
+ "rodio",
+ "ron",
+ "serde",
+ "zip",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -745,22 +761,6 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "slab",
-]
-
-[[package]]
-name = "game"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "font8x8",
- "image",
- "minifb",
- "quick-xml",
- "rand 0.10.0",
- "rodio",
- "ron",
- "serde",
- "zip",
 ]
 
 [[package]]
