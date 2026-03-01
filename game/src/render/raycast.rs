@@ -1,12 +1,10 @@
 use std::{
-    cmp::Ordering,
-    collections::{BinaryHeap, HashMap},
-    rc::Rc,
+    cmp::Ordering, collections::{BinaryHeap, HashMap}, f64::consts::PI, rc::Rc
 };
 
 use crate::game::{
     Game,
-    map::{Point, ShapeID, Side},
+    map::{Point, Shape, ShapeID, ShapeType, Side},
 };
 
 #[derive(Clone, PartialEq)]
@@ -205,4 +203,192 @@ fn rotate_point_around_origin(point: Point, angle: f64) -> Point {
         x: transformed_x,
         y: transformed_y,
     }
+}
+
+#[test]
+fn test_intersect_basic_hit() {
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+    let point0 = Point {
+        x: 0.0,
+        y: 0.0,
+    };
+    let point1 = Point {
+        x: 5.0,
+        y: 2.0,
+    };
+    let point2 = Point {
+        x: 5.0,
+        y: -2.0,
+    };
+    let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = intersect(point0, 0.0, side_in_ray);
+
+    assert!(rh.is_some());
+    assert!((rh.unwrap().distance-5.0).abs() < 0.1);
+}
+
+#[test]
+fn test_intersect_basic_no_hit() {
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+    let point0 = Point {
+        x: 0.0,
+        y: 0.0,
+    };
+    let point1 = Point {
+        x: 5.0,
+        y: 2.0,
+    };
+    let point2 = Point {
+        x: 5.0,
+        y: 4.0,
+    };
+    let side_not_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = intersect(point0, 0.0, side_not_in_ray);
+
+    assert!(rh.is_none());
+}
+
+#[test]
+fn test_intersect_basic_behind_ray() {
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+    let point0 = Point {
+        x: 0.0,
+        y: 0.0,
+    };
+    let point1 = Point {
+        x: -5.0,
+        y: 2.0,
+    };
+    let point2 = Point {
+        x: -5.0,
+        y: -2.0,
+    };
+    let side_behind_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = intersect(point0, 0.0, side_behind_ray);
+
+    assert!(rh.is_none());
+}
+
+#[test]
+fn test_intersect_angled_offset_hit() { // difference to above: player not at origin, ray angled at 45 degrees
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+    let point0 = Point {
+        x: 5.0,
+        y: -2.0,
+    };
+    let point1 = Point {
+        x: 5.0,
+        y: 0.0,
+    };
+    let point2 = Point {
+        x: 15.0,
+        y: 0.0,
+    };
+    let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = intersect(point0, PI / 4.0, side_in_ray);
+
+    assert!(rh.is_some());
+    assert!((rh.unwrap().distance-2.8).abs() < 0.5);
+}
+
+#[test]
+fn test_intersect_angled_offset_no_hit() {
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+    let point0 = Point {
+        x: 5.0,
+        y: -2.0,
+    };
+    let point1 = Point {
+        x: 15.0,
+        y: 0.0,
+    };
+    let point2 = Point {
+        x: 25.0,
+        y: 0.0,
+    };
+    let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = intersect(point0, 0.0, side_in_ray);
+
+    assert!(rh.is_none());
+}
+
+#[test]
+fn test_intersect_angled_offset_behind_ray() {
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+     let point0 = Point {
+        x: 5.0,
+        y: -2.0,
+    };
+    let point1 = Point {
+        x: 5.0,
+        y: -4.0,
+    };
+    let point2 = Point {
+        x: 15.0,
+        y: -4.0,
+    };
+    let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = intersect(point0, 0.0, side_in_ray);
+
+    assert!(rh.is_none());
 }
