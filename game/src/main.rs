@@ -2,14 +2,14 @@
 
 mod audio;
 mod game;
+mod menu;
 mod parser;
 mod render;
-mod menu;
 
 use crate::audio::audio_handler::Audio;
+use crate::menu::menu_handler::{AppState, Menu};
 use crate::render::{RendererData, render_init};
-use crate::menu::menu_handler::{Menu, AppState};
-use minifb::{KeyRepeat, Key, Window, WindowOptions};
+use minifb::{Key, KeyRepeat, Window, WindowOptions};
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -28,26 +28,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut frame_count = 0;
     let mut fps_value;
 
-    let mut window = match Window::new("DoomSquad", SCREEN_WIDTH, SCREEN_HEIGHT, WindowOptions::default()) {
+    let mut window = match Window::new(
+        "DoomSquad",
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
+        WindowOptions::default(),
+    ) {
         Ok(w) => w,
         Err(e) => {
             eprint!("failed to create Window");
             return Err(Box::new(e));
         }
     };
-    
+
     window.set_target_fps(TARGET_FPS);
     let mut buffer: Vec<u32> = vec![0; SCREEN_WIDTH * SCREEN_HEIGHT];
 
     let renderer_data: RendererData = render_init(
-        SCREEN_WIDTH, SCREEN_HEIGHT, HORIZONTAL_FOV, BACKGROUND_COLOR, DISTANCE_DARKNESS_COEFFICIENT,
-        WALL_DEFAULT_COLOR, BLOCK_DEFAULT_COLOR, SURFACE_DEFAULT_COLOR,
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
+        HORIZONTAL_FOV,
+        BACKGROUND_COLOR,
+        DISTANCE_DARKNESS_COEFFICIENT,
+        WALL_DEFAULT_COLOR,
+        BLOCK_DEFAULT_COLOR,
+        SURFACE_DEFAULT_COLOR,
     );
 
     let mut game = game::Game::new_game(&renderer_data).unwrap();
     let mut audio = Audio::init();
     let mut menu = Menu::new();
-    
+
     let mut app_state = AppState::StartScreen;
 
     while window.is_open() {
@@ -56,19 +67,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         match app_state {
             AppState::StartScreen => {
                 window.set_cursor_visibility(true);
-                
-                if escape_clicked { 
-                    break; 
+
+                if escape_clicked {
+                    break;
                 } else {
-                    app_state = menu.update_and_draw_start_menu(&mut window, &mut buffer, &mut game, &renderer_data, &mut audio);
+                    app_state = menu.update_and_draw_start_menu(
+                        &mut window,
+                        &mut buffer,
+                        &mut game,
+                        &renderer_data,
+                        &mut audio,
+                    );
                 }
             }
 
             AppState::Playing => {
                 window.set_cursor_visibility(false);
-                
+
                 if escape_clicked {
-                    app_state = AppState::GameExited;
+                    app_state = AppState::GamePaused;
                 } else if game.player.hp <= 0.0 {
                     app_state = AppState::GameOver;
                 } else {
@@ -86,19 +103,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
 
-            AppState::GameExited => {
+            AppState::GamePaused => {
                 window.set_cursor_visibility(true);
-                
+
                 if escape_clicked {
                     app_state = AppState::StartScreen;
                 } else {
-                    app_state = menu.update_and_draw_game_exited(&mut window, &mut buffer, &mut game, &mut audio);
+                    app_state = menu.update_and_draw_game_paused(
+                        &mut window,
+                        &mut buffer,
+                        &mut game,
+                        &mut audio,
+                    );
                 }
             }
 
             AppState::GameOver => {
                 window.set_cursor_visibility(true);
-                
+
                 if escape_clicked {
                     app_state = AppState::StartScreen;
                 } else {
@@ -107,7 +129,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             AppState::Quit => {
-                break; 
+                break;
             }
         }
 
