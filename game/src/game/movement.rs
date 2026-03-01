@@ -1,6 +1,7 @@
-use crate::game::map::{Map, Point, Shape, Side};
+use crate::game::map::{Map, Point, Shape, ShapeType, Side};
 use crate::game::player::MAX_STEP_UP_HEIGHT;
 use core::f64;
+use std::f64::consts::PI;
 use std::{collections::HashSet, rc::Rc};
 
 #[derive(Clone)]
@@ -184,4 +185,316 @@ fn rotate_point_around_origin(point: Point, angle: f64) -> Point {
     }
 }
 
-// TODO tests fro blocks_were_inside() etc
+#[test]
+fn test_zero_rotation_leaves_point_unchanged() {
+    let point = Point { x: 3.0, y: 4.0 };
+    let result = rotate_point_around_origin(point, 0.0);
+    assert!((result.x - 3.0).abs() < 0.1);
+    assert!((result.y - 4.0).abs() < 0.1);
+}
+
+#[test]
+fn test_rotate_45_degrees() {
+    let point = Point { x: 1.0, y: 0.0 };
+    let result = rotate_point_around_origin(point, PI / 4.0);
+    let expected = 1.0 / 2.0_f64.sqrt();
+    assert!((result.x - expected).abs() < 0.1);
+    assert!((result.y - expected).abs() < 0.1);
+}
+
+#[test]
+fn test_rotate_negative_90_degrees() {
+    let point = Point { x: 1.0, y: 0.0 };
+    let result = rotate_point_around_origin(point, -PI / 2.0);
+    assert!((result.x - 0.0).abs() < 0.1);
+    assert!((result.y - -1.0).abs() < 0.1);
+}
+
+#[test]
+fn test_rotate_360_degrees_returns_original() {
+    let point = Point { x: 3.0, y: 4.0 };
+    let result = rotate_point_around_origin(point, 2.0 * PI);
+    assert!((result.x - point.x).abs() < 0.1);
+    assert!((result.y - point.y).abs() < 0.1);
+}
+
+#[test]
+fn test_distance_from_origin_preserved() {
+    let point = Point { x: 3.0, y: 4.0 };
+    let original_dist = (point.x.powi(2) + point.y.powi(2)).sqrt();
+    let result = rotate_point_around_origin(point, PI / 7.0);
+    let rotated_dist = (result.x.powi(2) + result.y.powi(2)).sqrt();
+    assert!((original_dist - rotated_dist).abs() < 0.1);
+}
+
+#[test]
+fn test_successive_rotations_are_additive() {
+    let point = Point { x: 3.0, y: 4.0 };
+    let once = rotate_point_around_origin(point, PI / 4.0);
+    let twice = rotate_point_around_origin(once, PI / 4.0);
+    let combined = rotate_point_around_origin(point, PI / 2.0);
+    assert!((twice.x - combined.x).abs() < 0.1);
+    assert!((twice.y - combined.y).abs() < 0.1);
+}
+
+fn test_intersect_basic_hit() {
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+    let point0 = Point {
+        x: 0.0,
+        y: 0.0,
+    };
+    let point1 = Point {
+        x: 5.0,
+        y: 2.0,
+    };
+    let point2 = Point {
+        x: 5.0,
+        y: -2.0,
+    };
+    let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = step_intersect(point0, 0.0, side_in_ray, 3.0);
+
+    assert!(rh.is_some());
+    assert!((rh.unwrap().distance-5.0).abs() < 0.1);
+}
+
+#[test]
+fn test_intersect_basic_no_hit() {
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+    let point0 = Point {
+        x: 0.0,
+        y: 0.0,
+    };
+    let point1 = Point {
+        x: 5.0,
+        y: 2.0,
+    };
+    let point2 = Point {
+        x: 5.0,
+        y: 4.0,
+    };
+    let side_not_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = step_intersect(point0, 0.0, side_not_in_ray, 3.0);
+
+    assert!(rh.is_none());
+}
+
+#[test]
+fn test_intersect_basic_behind_ray() {
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+    let point0 = Point {
+        x: 0.0,
+        y: 0.0,
+    };
+    let point1 = Point {
+        x: -5.0,
+        y: 2.0,
+    };
+    let point2 = Point {
+        x: -5.0,
+        y: -2.0,
+    };
+    let side_behind_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = step_intersect(point0, 0.0, side_behind_ray, 3.0);
+
+    assert!(rh.is_none());
+}
+
+#[test]
+fn test_intersect_angled_offset_hit() { // difference to above: player not at origin, ray angled at 45 degrees
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+    let point0 = Point {
+        x: 5.0,
+        y: -2.0,
+    };
+    let point1 = Point {
+        x: 5.0,
+        y: 0.0,
+    };
+    let point2 = Point {
+        x: 15.0,
+        y: 0.0,
+    };
+    let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = step_intersect(point0, PI / 4.0, side_in_ray, 3.0);
+
+    assert!(rh.is_some());
+    assert!((rh.unwrap().distance-2.8).abs() < 0.5);
+}
+
+#[test]
+fn test_intersect_angled_offset_no_hit() {
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+    let point0 = Point {
+        x: 5.0,
+        y: -2.0,
+    };
+    let point1 = Point {
+        x: 15.0,
+        y: 0.0,
+    };
+    let point2 = Point {
+        x: 25.0,
+        y: 0.0,
+    };
+    let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = step_intersect(point0, 0.0, side_in_ray, 3.0);
+
+    assert!(rh.is_none());
+}
+
+#[test]
+fn test_intersect_angled_offset_behind_ray() {
+
+    let placeholder_shape = Shape {
+        id: 0,
+        shape_type: ShapeType::Block,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    };
+
+     let point0 = Point {
+        x: 5.0,
+        y: -2.0,
+    };
+    let point1 = Point {
+        x: 5.0,
+        y: -4.0,
+    };
+    let point2 = Point {
+        x: 15.0,
+        y: -4.0,
+    };
+    let side_in_ray = Rc::new(Side::new(0, point1, point2, Rc::new(placeholder_shape), 0));
+
+    let rh = step_intersect(point0, 0.0, side_in_ray, 3.0);
+
+    assert!(rh.is_none());
+}
+
+fn test_point_in_shape_inside() {
+
+    let placeholder_shape = Rc::new(Shape {
+        id: 0,
+        shape_type: ShapeType::Wall,
+        bottom: 0.0,
+        height: 5.0,
+        color: 0x000000,
+        surface_color: 0x000000,
+    });
+
+    let shape_point_1 = Point {
+        x: 0.0,
+        y: 1.0,
+    };
+    let shape_point_2 = Point {
+        x: 5.0,
+        y: 5.0,
+    };
+    let shape_point_3 = Point {
+        x: 5.0,
+        y: -5.0,
+    };
+    let shape_point_4 = Point {
+        x: -5.0,
+        y: -5.0,
+    };
+    let shape_point_5 = Point {
+        x: -5.0,
+        y: 5.0,
+    };
+    let side_1 = Rc::new(Side::new(0, shape_point_1, shape_point_2, Rc::clone(&placeholder_shape), 0));
+    let side_2 = Rc::new(Side::new(0, shape_point_2, shape_point_3, Rc::clone(&placeholder_shape), 0));
+    let side_3 = Rc::new(Side::new(0, shape_point_3, shape_point_4, Rc::clone(&placeholder_shape), 0));
+    let side_4 = Rc::new(Side::new(0, shape_point_4, shape_point_5, Rc::clone(&placeholder_shape), 0));
+    let side_5 = Rc::new(Side::new(0, shape_point_5, shape_point_1, Rc::clone(&placeholder_shape), 0));
+
+    let map = Map {
+        id: 0,
+        wall_sides: Vec::new(),
+        block_sides: vec![side_1, side_2, side_3, side_4, side_5],
+        wall_shapes: Vec::new(),
+        block_shapes: vec![placeholder_shape],
+        side_count: 5,
+        shape_count: 1,
+    };
+
+    let inside_point_1 = Point {
+        x: 0.0,
+        y: 0.0,
+    };
+    let inside_point_2 = Point {
+        x: -3.0,
+        y: -3.0,
+    };
+    let inside_point_3 = Point {
+        x: 0.0,
+        y: 1.0,
+    };
+    let outside_point_1 = Point {
+        x: 0.0,
+        y: 2.0,
+    };
+    let outside_point_2 = Point {
+        x: 10.0,
+        y: 10.0,
+    };
+
+    assert!(!find_blocks_were_currently_in(inside_point_1, &map).is_empty());
+    assert!(!find_blocks_were_currently_in(inside_point_2, &map).is_empty());
+    assert!(!find_blocks_were_currently_in(inside_point_3, &map).is_empty());
+    assert!(find_blocks_were_currently_in(outside_point_1, &map).is_empty());
+    assert!(find_blocks_were_currently_in(outside_point_2, &map).is_empty());
+}

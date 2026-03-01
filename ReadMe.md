@@ -1,16 +1,10 @@
-  
-
 # DOCUMENTATION
 
 DoomSquad is a simple shooter inspired by games like Doom and Wolfenstein, using a raycast-based rendering engine.
 
-  
-
 ## Startup:
 
 Game can be started by simply calling cargo run
-
-  
 
 ## Features:
 
@@ -47,8 +41,6 @@ Game can be started by simply calling cargo run
 
 Pressing C+Space+Shift+W/A/S/D simultaneously (within one frame) will result in a "Kamil Jump": larger than normal Jump, smaller than Rocket Jump. Sliding cooldown must be finished for this to work as, the jump is bigger because of the greater speed a slide provides.
 
-  
-
 ### Entities:
 
 Entities are rendered to always face the player; represent something that is able to move and do things (as opposed to static map geometry); they are able to display animations when moving or performing an action (like attacking)
@@ -62,8 +54,6 @@ Entities are rendered to always face the player; represent something that is abl
 -   Arrows: deal damage like bullets, but can only be fired by player; deal more damage; are affected by gravity (traces of an archer enemy can be found in the code, but that is not implemented)
 -   Dummy: does nothing, just stands around; has quite a lot of health
 
-  
-
 ### Interactables
 
 Rendered in the same way as entities; can be interacted with using F for various effects
@@ -74,8 +64,6 @@ Rendered in the same way as entities; can be interacted with using F for various
 -   Jump Pad (sometimes called Elevator in Code): propels the player upwards
 -   Slot Machine: randomly either restores some health, or spawns a melee enemy; small chance of swapping map to old test map that was used during development (10%)
 
-  
-
 ## Map Geometry
 
 A map consists of two types of geometry, both with textured sides:
@@ -83,15 +71,11 @@ A map consists of two types of geometry, both with textured sides:
 -   Walls: meant to enclose a level; if a the renderers rays encounter a wall, anything behind it will not be rendered (=> performance); unless in Godmode, they completelyblock movement
 -   Blocks: meant to construct the details of a level; have a unicolored floor/ceiling (collectively called surface in the code); can be walked (or jumped...) onto, if not too high
 
-  
-
 ## Game Progress
 
 Player will be spawned into a level; at the end of each level, there is an Interactable to swap to the next map; TODO no more entities?
 
 Progress within a level can not be saved; when player dies or exits using Esc, they can choose to save their current level; next time the load from the main menu, they will be returned there (persistent even when closing game)
-
-  
 
 ## Simple explanation of Renderer
 
@@ -101,15 +85,13 @@ The rayhits that were found are then grouped into according to the blocks they b
 
 *Note: The collision system uses an essentially identical intersection function to see if the player walked into a wall; if a ray is cast in one direction and has an odd number of intersections with sides of one block, we are inside that block in 2d level space; this principle is used by the collider for collision with blocks.*
 
-  
-
 # TESTING PHILOSOPHY
 
 Main method was "testing-by-doing"; given that this is a game, with lots of diffeent states, which are dependent on one another, we felt that this was sensible.
 
 Some smaller/simpler functions have direct tests added for the sake of completeness, although their correct working is apparent when simply playing the game too.
 
-  
+Tests can be found at the bottom of the files of their respective functions.
 
 # AI USE DISCLAIMER
 
