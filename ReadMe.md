@@ -58,8 +58,8 @@ Entities are rendered to always face the player; represent something that is abl
 
 Rendered in the same way as entities; can be interacted with using F for various effects
 
--   Map Switcher: has a map icon; loads the player onto a different map
--   Spawner: has a yellow warning icon, spawns a Dummy TODO change
+-   Map Switcher: has a map icon; loads the player onto a different map, but only if there is max one entity left on the map
+-   Spawner: has a yellow warning icon, spawns a Dummy
 -   Heal Station: red heart icon; restores a small amount of health; onyl usable once
 -   Jump Pad (sometimes called Elevator in Code): propels the player upwards
 -   Slot Machine: randomly either restores some health, or spawns a melee enemy; small chance of swapping map to old test map that was used during development (10%)
@@ -73,7 +73,7 @@ A map consists of two types of geometry, both with textured sides:
 
 ## Game Progress
 
-Player will be spawned into a level; at the end of each level, there is an Interactable to swap to the next map; TODO no more entities?
+Player will be spawned into a level; at the end of each level, there is an Interactable to swap to the next map; only pssible when there is at most one entitiy left in the whole level
 
 Progress within a level can not be saved; when player dies or exits using Esc, they can choose to save their current level; next time the load from the main menu, they will be returned there (persistent even when closing game)
 
@@ -81,7 +81,7 @@ Progress within a level can not be saved; when player dies or exits using Esc, t
 
 The map consits of "sides" belonging either to a block or a wall; for every column of the screen ,a ray is sent out, which checks for inersection with each side. it does this by applying an affine linear transformation to the sapce so that the side is on the x axis if the ray intersects it (see image "intersectfunctionexplainer.png); this also makes determining the distance, and how far along the side the intersection was, easy.
 
-The rayhits that were found are then grouped into according to the blocks they belong to (creating block slices), from which Renderer Tasks are created, which can then be drawn onto the screen.
+The rayhits that were found are then grouped according the blocks they belong to (creating block slices), from which Renderer Tasks are created, which can then be drawn onto the screen. RendererTasks for entities and sides of bloocks/walls include a texture, which must be scaled correctly.
 
 *Note: The collision system uses an essentially identical intersection function to see if the player walked into a wall; if a ray is cast in one direction and has an odd number of intersections with sides of one block, we are inside that block in 2d level space; this principle is used by the collider for collision with blocks.*
 
