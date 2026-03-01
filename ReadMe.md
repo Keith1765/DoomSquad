@@ -58,7 +58,7 @@ Entities are rendered to always face the player; represent something that is abl
 
 Rendered in the same way as entities; can be interacted with using F for various effects
 
--   Map Switcher: has a map icon; loads the player onto a different map
+-   Map Switcher: has a map icon; loads the player onto a different map, but only if there is max one entity left on the map
 -   Spawner: has a yellow warning icon, spawns a Dummy TODO change
 -   Heal Station: red heart icon; restores a small amount of health; onyl usable once
 -   Jump Pad (sometimes called Elevator in Code): propels the player upwards
