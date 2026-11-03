@@ -106,6 +106,8 @@ impl Interactable {
         };
         Some(interactable)
     }
+    
+    
     pub fn update(
         &mut self,
         window: &Window,
@@ -113,8 +115,11 @@ impl Interactable {
         game_state: &mut game::Game,
         audio: &mut Audio,
     ) -> Vec<InteractableEvent> {
+
         let entity_type = self.interactable_type.clone();
+
         let mut events: Vec<InteractableEvent> = Vec::new();
+
         match entity_type {
             InteractableType::Button(button_type) => {
                 self.button_behaviour(
@@ -141,6 +146,8 @@ impl Interactable {
         }
         events
     }
+
+
     fn button_behaviour(
         &mut self,
         _window: &Window,
@@ -163,6 +170,7 @@ impl Interactable {
                     }
                     audio.play_sfx("button_press", 1.0);
                 }
+
                 ButtonType::Spawner => {
                     let enemy_type = map_enemy_type(self.parameter_1 as i32);
                     let entity = generate_entities(
@@ -177,8 +185,9 @@ impl Interactable {
                         0.0,
                     );
                     audio.play_sfx("summoner", 1.0);
-                    if let Some(entity) = entity {
-                        game_state.entities.push(entity);
+
+                    if let Some(entity) = entity { //unwraps entitiy value from generate_entities call
+                        game_state.entities.push(entity); 
                     }
                 }
                 ButtonType::Heal => {
@@ -190,6 +199,8 @@ impl Interactable {
             }
         }
     }
+
+
     fn jump_pad_behaviour(
         &mut self,
         _window: &Window,
@@ -207,6 +218,8 @@ impl Interactable {
             audio.play_sfx("jump_pad", 0.3);
         }
     }
+
+
     fn slot_maschine_behaviour(
         &mut self,
         _window: &Window,

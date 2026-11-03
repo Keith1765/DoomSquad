@@ -55,20 +55,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         SURFACE_DEFAULT_COLOR,
     );
 
-    let mut game = game::Game::new_game(&renderer_data).unwrap();
+    let mut game = game::Game::new_game(&renderer_data).unwrap(); 
     let mut audio = Audio::init();
     let mut menu = Menu::new();
 
-    let mut app_state = AppState::StartScreen;
+    let mut app_state = AppState::StartScreen; //MENU
 
     while window.is_open() {
-        let escape_clicked = window.is_key_pressed(Key::Escape, KeyRepeat::No);
+        let escape_clicked = window.is_key_pressed(Key::Escape, KeyRepeat::No); //impl exit clicked statt escape
 
         match app_state {
-            AppState::StartScreen => {
+            AppState::StartScreen => { 
                 window.set_cursor_visibility(true);
 
-                if escape_clicked {
+                if escape_clicked { 
                     break;
                 } else {
                     app_state = menu.update_and_draw_start_menu(
@@ -81,10 +81,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
 
+            //TO DO: impl logic for menu
+            AppState::KeyBinds => {
+                window.set_cursor_visibility(true);
+
+                if exit_clicked { //impl exit clicked statt escape
+                    AppState::StartScreen;
+                }
+            }
+
             AppState::Playing => {
                 window.set_cursor_visibility(false);
 
-                if escape_clicked {
+                if escape_clicked { //impl exit clicked statt escape
                     app_state = AppState::GamePaused;
                 } else if game.player.hp <= 0.0 {
                     app_state = AppState::GameOver;
@@ -106,7 +115,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             AppState::GamePaused => {
                 window.set_cursor_visibility(true);
 
-                if escape_clicked {
+                if escape_clicked { 
                     app_state = AppState::StartScreen;
                 } else {
                     app_state = menu.update_and_draw_game_paused(
@@ -121,7 +130,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             AppState::GameOver => {
                 window.set_cursor_visibility(true);
 
-                if escape_clicked {
+                if escape_clicked { 
                     app_state = AppState::StartScreen;
                 } else {
                     app_state = menu.update_and_draw_game_over(&mut window, &mut buffer, &mut game);
@@ -136,7 +145,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Err(e) = window.update_with_buffer(&buffer, SCREEN_WIDTH, SCREEN_HEIGHT) {
             eprintln!("failed to update the window: {e}");
             return Err(Box::new(e));
-        }
+        } 
     }
     Ok(())
 }

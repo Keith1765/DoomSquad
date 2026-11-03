@@ -31,6 +31,7 @@ pub enum AppState {
     GameOver,
     GamePaused,
     Quit,
+    KeyBinds,
 }
 
 /// Simple layout container for button definitions.
@@ -57,7 +58,7 @@ impl Menu {
     }
 
     /// Renders the main menu and handles user interactions.
-    pub fn update_and_draw_start_menu(
+    pub fn update_and_draw_start_menu(  //called from main when AppState::StartScreen
         &mut self,
         window: &mut Window,
         buffer: &mut [u32],
@@ -73,6 +74,7 @@ impl Menu {
         let click1 = window.is_key_pressed(Key::Key1, KeyRepeat::No);
         let click2 = window.is_key_pressed(Key::Key2, KeyRepeat::No);
         let click3 = window.is_key_pressed(Key::Key3, KeyRepeat::No);
+        let click4 = window.is_key_pressed(Key::Key4, KeyRepeat::No);
 
         // Render titles
         Self::draw_text_centered(
@@ -94,18 +96,23 @@ impl Menu {
             COL_TEXT_WHITE,
         );
 
+        //
+        //
         // Define button layouts
+        //
+        //
         let btn_start = ButtonDef {
             x: 230,
-            y: 160,
-            w: 340,
+            y: 160, //change!!!
+            w: 340, //change!!!
             h: 50,
             text: "[1] NEW GAME".to_string(),
         };
+
         let btn_load = ButtonDef {
             x: 230,
-            y: 230,
-            w: 340,
+            y: 230, //change!!!
+            w: 340, //change!!!
             h: 50,
             text: "[2] LOAD MAP".to_string(),
         };
@@ -115,23 +122,33 @@ impl Menu {
         } else {
             "[3] SOUND: OFF"
         };
+
         let btn_audio = ButtonDef {
             x: 230,
-            y: 300,
-            w: 340,
+            y: 300, //change!!!
+            w: 340, //change!!!
             h: 50,
             text: audio_text.to_string(),
         };
 
         let btn_quit = ButtonDef {
             x: 230,
-            y: 370,
-            w: 340,
+            y: 370,  //change!!!
+            w: 340,  //change!!!
             h: 50,
             text: "[ESC] QUIT GAME".to_string(),
         };
 
-        // Interaction processing
+        //TO DO: change//assign correct values for 
+        let btn_keys: = ButtonDef {
+            x : 230,
+            y : 0,  //change!!!
+            w : 0,  //change!!!
+            h : 50 ,
+            text: "[4] CONFIGURE KEYBINDS".to_string(),
+        };
+
+        // Interaction processing --> ggf. change AppState to Playing
         if self.draw_flat_button(buffer, &btn_start, mx, my) && clicked || click1 {
             *game = Game::new_game(renderer_data).unwrap(); // ! this unwrap is intentionally accepted
             game.map_swap(renderer_data, 1); // Jump straight to map 1 (map 0 is reserved for testing)
@@ -159,9 +176,47 @@ impl Menu {
             return AppState::Quit;
         }
 
+        //TO DO: Add interaction logic when btn_keys is pressed
+        if self.draw_flat_button(buffer, &btn_keys, mx, my) &&clicked || click4 {
+            //TO DO: Add interaction logic when btn_keys is pressed
+
+
+            //return AppState::KeyBinds;   ?? Maybe also add main() logic to handle new menu
+        }
+
         // Keep looping in the menu until an action changes the state
         AppState::StartScreen
     }
+
+     pub fn update_and_draw_key_bind(
+        &mut self,
+        window: &mut Window,
+        buffer: &mut [u32],
+        game: &mut Game,
+    ) -> AppState { 
+        
+        buffer.fill(COL_BG_MAIN);
+
+        let (mx, my, clicked) = self.get_mouse_state(window);
+        //let  = window.is_key_pressed(Key::, KeyRepeat::);
+
+        Self::draw_text_centered(
+            buffer,
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT,
+            "KEY BINDINGS",
+            80,
+            6,
+            COL_TEXT_WHITE,
+        );
+
+        // TO DO:
+
+
+        // Keep looping in the key binding menu until an action changes the state
+        AppState::KeyBinds
+    }
+
 
     /// Renders the death screen and allows the user to save their current level progress.
     pub fn update_and_draw_game_over(
@@ -192,6 +247,7 @@ impl Menu {
             h: 60,
             text: "[1] SAVE MAP INDEX".to_string(),
         };
+
         let btn_menu = ButtonDef {
             x: 230,
             y: 300,
@@ -213,7 +269,7 @@ impl Menu {
         AppState::GameOver
     }
 
-    /// Renders the pause menu (triggered by pressing ESC during gameplay).
+    /// Renders the pause menu (triggered by pressing ESC during gameplay). --->>>Change to new key bind
     pub fn update_and_draw_game_paused(
         &mut self,
         window: &mut Window,
