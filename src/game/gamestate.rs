@@ -10,6 +10,7 @@ use crate::{
     },
     parser::map_parser::parse_map,
     render::RendererData,
+    menu::menu_handler::Actions
 };
 
 use super::map::Map;
@@ -36,9 +37,11 @@ pub struct Game {
     pub projectile_that_hit: Vec<usize>,
     pub map_index: usize,
     pub last_map_index: usize,
+    pub keybinds: HashMap<Actions, Key>
 }
 
 impl Game {
+
     pub fn new_game(renderer_data: &RendererData) -> Option<Self> {
         let path = Path::new("assets/maps/ggb");
 
@@ -65,7 +68,7 @@ impl Game {
                     return None;
                 }
             };
-            
+
             let game = Self {
                 player: Player::new_with_position(
                     parse_player_position(path.to_string(), renderer_data).ok()?,
@@ -99,8 +102,10 @@ impl Game {
         self.interactables = interactables;
 
         let mut entity_spawns = Vec::new();
+
         //update player
         let event = self.player.update(window, &self.map, renderer_data, audio);
+
         //add possible spawn events
         entity_spawns.extend(event);
 
@@ -141,6 +146,8 @@ impl Game {
             }
         }
     }
+
+
     pub fn map_swap(&mut self, renderer_data: &RendererData, new_map_index: usize) {
         let path = Path::new("assets/maps/ggb");
         let entries_result = fs::read_dir(path);

@@ -61,8 +61,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut app_state = AppState::StartScreen; //MENU
 
+
     while window.is_open() {
-        let escape_clicked = window.is_key_pressed(Key::Escape, KeyRepeat::No); //impl exit clicked statt escape
+        let escape_clicked = window.is_key_pressed(Key::Escape, KeyRepeat::No); 
+        let exit: = window.is_key_pressed(key: , KeyRepeat::No);  //impl exit clicked statt escape
 
         match app_state {
             AppState::StartScreen => { 
@@ -85,8 +87,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             AppState::KeyBinds => {
                 window.set_cursor_visibility(true);
 
-                if escape_clicked { //impl exit clicked statt escape
+                if escape_clicked { //impl exit clicked statt escape or leave it at esc
                     AppState::StartScreen;
+                } else {
+                    app_state = menu.update_and_draw_key_config_menu(
+                        &mut window, 
+                        &mut buffer,
+                        &mut game,
+                        keybind
+                    );
+                }
+            }
+
+            AppState::BindNewKey => {
+                window.set_cursor_visibility(false);
+                if escape_clicked {
+                    AppState::ConfigKeys;
+                } else {
+                    app_state = menu.update_and_draw_new_keybind(&mut window, &mut buffer, &mut game, keybind_config)
                 }
             }
 

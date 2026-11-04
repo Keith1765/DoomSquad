@@ -5,11 +5,14 @@
 //! processing mouse clicks, and taking care of saving and loading the player's progress.
 
 use font8x8::{BASIC_FONTS, UnicodeFonts};
+use minifb::Key::Escape;
 use minifb::{Key, KeyRepeat, MouseButton, MouseMode, Window};
+use std::collections::{BinaryHeap, HashMap};
 use std::fs;
 
 use crate::audio::audio_handler::Audio;
 use crate::game::gamestate::Game;
+use crate::menu::menu_handler::Actions::MvLeft;
 use crate::render::RendererData;
 
 const SCREEN_WIDTH: usize = 800;
@@ -31,7 +34,8 @@ pub enum AppState {
     GameOver,
     GamePaused,
     Quit,
-    KeyBinds,
+    ConfigKeys,
+	BindNewKey(Actions)
 }
 
 /// Simple layout container for button definitions.
@@ -42,6 +46,43 @@ struct ButtonDef {
     h: usize,
     text: String,
 }
+
+#[derive(Clone,Copy,Debug,Eq, PartialEq, Hash)]
+pub enum Actions {
+	MvForward, 
+	MvBackward,
+	MvLeft,
+	MvRight,
+	Jump,
+	RocketJump,
+	Sprint,
+	Crouch,
+	Interact,
+	MvCrosshairDown,
+	MvCrosshairUp,
+	TurnRight,
+	TurnLeft,
+	FireBullet,
+	FireArrow,
+	ToggleGodmode,
+	ToggleFineAim,
+	LockActiveEnemies,
+	Exit
+}
+
+
+
+
+
+//pub struct KeyAction {
+//	action_2_key : HashMap<Actions, Key>,
+//}
+
+//impl KeyAction {
+//	pub fn get_key_action() {
+//		
+//	}
+
 
 /// Holds the minimal state required for the IMGUI.
 /// Since `minifb` natively handles keyboard debouncing via `KeyRepeat::No`,
@@ -181,7 +222,7 @@ impl Menu {
             //TO DO: Add interaction logic when btn_keys is pressed
 
 
-            return AppState::KeyBinds;   // Maybe also add main() logic to handle new menu
+            return AppState::ConfigKeys;   // Maybe also add main() logic to handle new menu
         }
 
 
@@ -190,35 +231,183 @@ impl Menu {
     }
 
      
-     pub fn update_and_draw_key_bind(
+    pub fn update_and_draw_key_config_menu(
         &mut self,
         window: &mut Window,
         buffer: &mut [u32],
         game: &mut Game,
+		keybind_config: &mut  //load keybind file
     ) -> AppState { 
         
         buffer.fill(COL_BG_MAIN);
 
         let (mx, my, clicked) = self.get_mouse_state(window);
-        let click4 = window.is_key_pressed(Key::Key4, KeyRepeat::No);
+        //let click4 = window.is_key_pressed(Key::Key4, KeyRepeat::No);
+		//window.get_keys_pressed(KeyRepeat::No);
 
         Self::draw_text_centered(
             buffer,
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            "KEY BINDINGS",
+            "CONFIGURE KEY BINDINGS",
             30,
             6,
             COL_TEXT_WHITE,
         );
 
         // TO DO: Add btns 4 new key binds
+		//starting coordinates
+		let mut y = 80;
+		let x= 30;
+		let actions: [Actions;19] = [
+			Actions::MvForward,
+			Actions::MvBackward,
+			Actions::MvLeft,
+			Actions::MvRight,
+			Actions::Jump,
+			Actions::RocketJump,
+			Actions::Sprint,
+			Actions::Crouch,
+			Actions::Interact,
+			Actions::MvCrosshairDown,
+			Actions::MvCrosshairDown,
+			Actions::TurnRight,
+			Actions::TurnLeft,
+			Actions::FireBullet,
+			Actions::FireArrow,
+			Actions::ToggleGodmode,
+			Actions::ToggleFineAim,
+			Actions::LockActiveEnemies,
+			Actions::Exit
+		];
+
+		//Read saved keybinds
+
+		
+
+		for action in actions.iter() {
+
+			let default_key = match action {
+				Actions::MvForward => Key::W,
+				Actions::MvBackward =>Key::S,
+				Actions::MvLeft => Key::A,
+				Actions::MvRight => Key::D,
+				Actions::Jump => Key::Space,
+				Actions::RocketJump => Key::R,
+				Actions::Sprint => Key::LeftShift,
+				Actions::Crouch => Key::C,
+				Actions::Interact => Key::F,
+				Actions::MvCrosshairDown => Key::Down,
+				Actions::MvCrosshairDown =>Key::Up,
+				Actions::TurnRight => Key::Right,
+				Actions::TurnLeft => Key::Left,
+				Actions::FireBullet => Key::RightCtrl,
+				Actions::FireArrow => Key::RightShift,
+				Actions::ToggleGodmode => G,
+				Actions::ToggleFineAim => E,
+				Actions::LockActiveEnemies => L,
+				Actions::Exit => Escape,
+				
+			};
+			//look up current key bound to action in action_2_key HashMap sonst default
+			let current_key = game.keybinds.get(action).copy().unwrap_or(default_key);
+
+			let text = format!("{}: [{}]", action , current_key);
+
+			let btn_current_key = ButtonDef {x, y, w, h, text};
+
+			if self.draw_flat_button(buffer, &btn_current_key, mx, my) && clicked {
+				return AppState::BindNewKey(*action);
+			}
+
+			y+=60;
+
+			
+
+ 		}       
+		
+		
+		 //Save new key bind
+        if self.draw_flat_button(buffer, &btn_key, mx, my) && clicked || //todefine 
+        {
+            // Persist the current keybind to txt so it can be loaded next session
+            let _ = fs::write("keybinds.txt", context:  );
+			
+        }
 
 
+
+		//back btn interaction
+		let btn_back = ButtonDef {
+            x : 210,
+            y : 315,  //change!!!
+            w : 370,  
+            h : 50 ,
+            text: "[ESC] GO BACK".to_string(),
+        };
+
+		//back btn interaction
+		if self.draw_flat_button(buffer, &btn_back, mx, my) && clicked { //check if esc returns
+			return AppState::StartScreen;
+		}
+
+
+        
         // Keep looping in the key binding menu until an action changes the state
-        AppState::KeyBinds
+        AppState::ConfigKeys
     }
 
+
+
+
+
+	pub fn update_and_draw_new_keybind(
+        &mut self,
+        window: &mut Window,
+        buffer: &mut [u32],
+        game: &mut Game,
+		key_action: 
+		keybind_config: &mut  //load keybind file
+    ) -> AppState { 
+        
+        buffer.fill(COL_BG_MAIN);
+
+		let (mx, my, clicked) = self.get_mouse_state(window);
+
+		let new_keybind= window.get_keys_pressed(KeyRepeat::No);
+
+		Self::draw_text_centered(
+            buffer,
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT,
+            "PRESS KEY TO BIND IT",
+            30,
+            6,
+            COL_TEXT_WHITE,
+        );
+
+		//To do:
+		//1. match key pressed to action
+		//Update UI in menu to show what key we want to bind
+		//add save btn to make binding final
+		//Save binding in config txt
+		//Add back btn
+
+		let btn_back = ButtonDef {
+            x : 210,
+            y : 315,  //change!!!
+            w : 370,  
+            h : 50 ,
+            text: "[ESC] GO BACK".to_string(),
+        };
+
+		//back btn interaction
+		if self.draw_flat_button(buffer, &btn_back, mx, my) && clicked { //check if esc returns
+			return AppState::ConfigKeys;
+		}
+
+		AppState::BindNewKey(action)
+	}
 
     /// Renders the death screen and allows the user to save their current level progress.
     pub fn update_and_draw_game_over(
@@ -470,4 +659,48 @@ impl Menu {
             cursor_x += 8 * scale;
         }
     }
+
+	//Helper structs
+	struct DefaultKeys{
+		w: Actions,
+		s: Actions,
+		a: Actions,
+		d: Actions,
+		shift: Actions,
+
+	}
+
+	impl DefaultKeys {
+		w  = MvForward, 
+		s = MvBackward,
+		d: MvLeft,
+		MvRight,
+		Jump,
+		RocketJump,
+		Sprint,
+		Crouch,
+		Interact,
+		MvCrosshairDown,
+		MvCrosshairUp,
+		TurnRight,
+		TurnLeft,
+		FireBullet,
+		FireArrow,
+		ToggleGodmode,
+		ToggleFineAim,
+		LockActiveEnemies,
+		Exit
+		
+		 
+	}
+
+
+
+
+
+
+
+
 }
+
+
