@@ -172,8 +172,9 @@ impl Player {
         renderer_data: &RendererData,
         audio: &mut Audio,
     ) -> Vec<EntityEvent> {
+
         let mut events: Vec<EntityEvent> = Vec::new();
-        //reseting keyinput idfk how to do it an other way
+        //reseting keyinput idfk how to do it another way
         self.interacting = false;
         if window.is_key_pressed(Key::F, KeyRepeat::No) {
             self.interacting = true;
@@ -294,6 +295,7 @@ impl Player {
         {
             step_successful = self.mover.step(self.move_speed, 0.0, map, self.godmode);
         }
+
         if (window.is_key_down(Key::A)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == A))
             || (self.is_jumping && (self.last_input == A))
@@ -302,6 +304,7 @@ impl Player {
                 .mover
                 .step(self.move_speed, -PI / 2.0, map, self.godmode);
         }
+
         if (window.is_key_down(Key::D)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == D))
             || (self.is_jumping && (self.last_input == D))
@@ -310,6 +313,7 @@ impl Player {
                 .mover
                 .step(self.move_speed, PI / 2.0, map, self.godmode);
         }
+
 
         if (window.is_key_down(Key::S)
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == S))
@@ -341,7 +345,7 @@ impl Player {
             self.move_speed = MOVE_SPEED;
         }
 
-        //implementing Sprint that gradually increases movement speed
+        // Sprint that gradually increases movement speed
         if window.is_key_down(Key::LeftShift) && !self.godmode {
             if self.move_speed < SPRINT_SPEED - 0.1 {
                 self.move_speed += 0.1;
@@ -359,6 +363,7 @@ impl Player {
         if (self.slide_cooldown > 0) && !window.is_key_down(Key::C) {
             self.slide_cooldown -= 1;
         }
+
         //init slide gives speed boost
         if window.is_key_down(Key::C)
             && !self.is_sliding
@@ -369,7 +374,7 @@ impl Player {
             audio.play_sfx("slide", 1.0);
             self.move_speed += 5.0;
             self.is_sliding = true;
-            self.save_input(window);
+            self.save_input(window); //what do??
         }
 
         //during slide speed decreases
@@ -405,11 +410,10 @@ impl Player {
 
         //jumping init
         if (window.is_key_pressed(Key::Space, KeyRepeat::No)
-            && ((!self.is_jumping
-                && (self.mover.foot_level - self.mover.floor_level).abs()
+            && ((!self.is_jumping && (self.mover.foot_level - self.mover.floor_level).abs()
                     < DISTANCE_TO_FLOOR_WHILE_ALLOWED_JUMPING)
                 || self.jumping_allowed))
-            || window.is_key_pressed(Key::R, KeyRepeat::No)
+            || window.is_key_pressed(Key::R, KeyRepeat::No) //R - Rocket jump
         {
             self.gravity = GRAVITY_CONST;
             self.is_jumping = true;
@@ -419,6 +423,7 @@ impl Player {
                 self.slide_cooldown = SLIDE_COOLDOWN_TIME;
                 self.move_speed += 3.0;
             }
+
             //normal jump init
             if window.is_key_pressed(Key::Space, KeyRepeat::No) {
                 audio.play_sfx("jump", 1.0);

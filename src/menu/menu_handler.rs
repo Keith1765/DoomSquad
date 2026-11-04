@@ -82,7 +82,7 @@ impl Menu {
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
             "DOOMSQUAD",
-            50,
+            20,
             6,
             COL_TITLE_RED,
         );
@@ -91,7 +91,7 @@ impl Menu {
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
             "MAIN MENU",
-            105,
+            75,
             2,
             COL_TEXT_WHITE,
         );
@@ -102,17 +102,17 @@ impl Menu {
         //
         //
         let btn_start = ButtonDef {
-            x: 230,
-            y: 160, //change!!!
-            w: 340, //change!!!
+            x: 210,
+            y: 105, //change!!!
+            w: 370, 
             h: 50,
             text: "[1] NEW GAME".to_string(),
         };
 
         let btn_load = ButtonDef {
-            x: 230,
-            y: 230, //change!!!
-            w: 340, //change!!!
+            x: 210,
+            y: 175, //change!!!
+            w: 370, 
             h: 50,
             text: "[2] LOAD MAP".to_string(),
         };
@@ -124,28 +124,28 @@ impl Menu {
         };
 
         let btn_audio = ButtonDef {
-            x: 230,
-            y: 300, //change!!!
-            w: 340, //change!!!
+            x: 210,
+            y: 245, //change!!!
+            w: 370,
             h: 50,
             text: audio_text.to_string(),
         };
 
         let btn_quit = ButtonDef {
-            x: 230,
-            y: 370,  //change!!!
-            w: 340,  //change!!!
+            x: 210,
+            y: 385,  //change!!!
+            w: 370,  
             h: 50,
             text: "[ESC] QUIT GAME".to_string(),
         };
 
         //TO DO: change//assign correct values for 
-        let btn_keys: = ButtonDef {
-            x : 230,
-            y : 0,  //change!!!
-            w : 0,  //change!!!
+        let btn_keys = ButtonDef {
+            x : 210,
+            y : 315,  //change!!!
+            w : 370,  
             h : 50 ,
-            text: "[4] CONFIGURE KEYBINDS".to_string(),
+            text: "[4] CHANGE KEYBINDS".to_string(),
         };
 
         // Interaction processing --> ggf. change AppState to Playing
@@ -181,13 +181,15 @@ impl Menu {
             //TO DO: Add interaction logic when btn_keys is pressed
 
 
-            //return AppState::KeyBinds;   ?? Maybe also add main() logic to handle new menu
+            return AppState::KeyBinds;   // Maybe also add main() logic to handle new menu
         }
+
 
         // Keep looping in the menu until an action changes the state
         AppState::StartScreen
     }
 
+     
      pub fn update_and_draw_key_bind(
         &mut self,
         window: &mut Window,
@@ -198,19 +200,19 @@ impl Menu {
         buffer.fill(COL_BG_MAIN);
 
         let (mx, my, clicked) = self.get_mouse_state(window);
-        //let  = window.is_key_pressed(Key::, KeyRepeat::);
+        let click4 = window.is_key_pressed(Key::Key4, KeyRepeat::No);
 
         Self::draw_text_centered(
             buffer,
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
             "KEY BINDINGS",
-            80,
+            30,
             6,
             COL_TEXT_WHITE,
         );
 
-        // TO DO:
+        // TO DO: Add btns 4 new key binds
 
 
         // Keep looping in the key binding menu until an action changes the state
@@ -269,8 +271,8 @@ impl Menu {
         AppState::GameOver
     }
 
-    /// Renders the pause menu (triggered by pressing ESC during gameplay). --->>>Change to new key bind
-    pub fn update_and_draw_game_paused(
+    /// Renders the pause menu (triggered by pressing ESC during gameplay). 
+    pub fn update_and_draw_game_paused( //--->>>Change to new key bind
         &mut self,
         window: &mut Window,
         buffer: &mut [u32],

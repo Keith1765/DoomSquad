@@ -41,7 +41,9 @@ pub struct Game {
 impl Game {
     pub fn new_game(renderer_data: &RendererData) -> Option<Self> {
         let path = Path::new("assets/maps/ggb");
+
         let entries_result = fs::read_dir(path);
+
         let mut entries: Vec<_> = match entries_result {
             Ok(read_dir) => read_dir.filter_map(Result::ok).collect(),
             Err(e) => {
@@ -49,7 +51,9 @@ impl Game {
                 return None;
             }
         };
+
         entries.sort_by_key(|e| e.path());
+
         if let Some(entry) = entries.first() {
             // we initially load the first map
             let path_buf = entry.path();
@@ -61,6 +65,7 @@ impl Game {
                     return None;
                 }
             };
+            
             let game = Self {
                 player: Player::new_with_position(
                     parse_player_position(path.to_string(), renderer_data).ok()?,

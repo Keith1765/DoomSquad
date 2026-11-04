@@ -85,7 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             AppState::KeyBinds => {
                 window.set_cursor_visibility(true);
 
-                if exit_clicked { //impl exit clicked statt escape
+                if escape_clicked { //impl exit clicked statt escape
                     AppState::StartScreen;
                 }
             }
