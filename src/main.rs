@@ -91,15 +91,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             AppState::ConfigKeys => {
                 window.set_cursor_visibility(true);
 
-                if escape_clicked {
-                    app_state = AppState::StartScreen;
-                } else {
-                    app_state = menu.update_and_draw_key_config_menu(
-                        &mut window, 
-                        &mut buffer,
-                        &mut game,
-                    );
-                }
+                
+                app_state = menu.update_and_draw_key_config_menu(
+                    &mut window, 
+                    &mut buffer,
+                    &mut game,
+                );
+                
             }
 
 

@@ -303,7 +303,7 @@ impl Menu {
                 buffer, 
                 SCREEN_WIDTH,
                 SCREEN_HEIGHT, 
-                &format!("PRESS A KEY FOR \"{}\" (ESC TO CANCEL)", target_action.actions_display_name()), 
+                &format!("PRESS A KEY FOR \"{}\"", target_action.actions_display_name()), 
                 48, 
                 2, 
                 COL_TITLE_BLUE
